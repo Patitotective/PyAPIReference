@@ -14,7 +14,7 @@ About:
 import inspect
 import os
 import sys
-import inspect_object
+from inspect_object import inspect_object
 #import PREFS
 
 from importlib.util import spec_from_file_location, module_from_spec
@@ -78,7 +78,7 @@ class MainWidget(QWidget):
 		spec.loader.exec_module(module)
 
 		# Get non-built in objects 
-		print(inspect_object.inspect_object(module)) # For now just print members on module
+		print(inspect_object(module)) # For now just print members on module
 
 
 def init_app():

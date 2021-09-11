@@ -1,8 +1,6 @@
-def hi():
-	def bye():
-		pass
-
-
-def Test():
+class Test:
 	def __init__(self):
-		self.name = "hi"
+		self.name = "carlitos"
+
+	def say_hi(self):
+		print(f"hi {self.name}")
