@@ -3,3 +3,4 @@ def hello():
 
 class Test:
 	x = 5
+
