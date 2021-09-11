@@ -1,6 +1,3 @@
-def hello():
-	pass
-
-class Test:
-	x = 5
-
+def hi():
+	def bye():
+		pass

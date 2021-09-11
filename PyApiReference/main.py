@@ -71,49 +71,50 @@ class MainWidget(QWidget):
 
 		# Get spec from file path and load module from spec
 		filename_without_extension = os.path.splitext(filename)[0]
-		spec = spec_from_file_location(filename_without_extension, filename)
+		spec = spec_from_file_location(filename_without_extension, filename_with_path)
 		module = module_from_spec(spec)
 		spec.loader.exec_module(module)
 
 		# Get non-built in objects 
-		print(inspect_statement(module)) # For now just print members on module
+		print(inspect_object(module)) # For now just print members on module
 
-def inspect_object(object, include_dunder_methods=True, dunder_methods_to_include=("__init__")):
+def inspect_object(object_, include_dunder_methods=False, dunder_methods_to_include=("__init__")):
 	"""Find all members of Python object, if class call itself.
 
 	Errors:
 		Right now when inspecting module, class in that module will be create a nested dictionary, ignoring class type.
 		Not working with nested functions. (Need to implement a way to show member type on nested dictionaries)
 	"""
-	result = {}
-	module_members = inspect.getmembers(object)
+	result = []
+	module_members = inspect.getmembers(object_)
 
 	for member_name, member in module_members:
 		# If the member name starts with __ (means dunder method) and the member name is not onto the 
 		# dunder_methods_to_include check if include_dunder_methods is True, if it is 
 		# Add /ignore (backslash ignore) at the end of the member name 
 		# (this way we can identify dunder methods to ignore when showing onto the screen) 
+		member_base_name = member_name		
+		
 		if member_name.startswith("__") and member_name not in dunder_methods_to_include:
 			if not include_dunder_methods:
 				continue
 
-			member_base_name = member_name
 			member_name += r"\ignore"
 
 		# If the member it's a class call itself to get all members in the class
 		# (Need to add same with functions, because of nested functions)
-		if inspect.isclass(member):
+		if inspect.isclass(member) or inspect.isfunction(member) or inspect.ismethod(member):
 			if member_base_name == "__class__" or member_base_name == "__base__":
 				# If not ignore __class__ and __base__ dunder methods will end on
 				# RecursionError: maximum recursion depth exceeded while calling a Python object
 				continue
 			
-			result[member_name] = inspect_object(member)
+			result.append((member_name, member, (inspect_object(member))))
 			continue
 
 		# If the member is not a class
 		# Add it to result with name as key and member as value
-		result[member_name] = member
+		result.append((member_name, member))
 
 	return result
 
@@ -124,17 +125,10 @@ def init_app():
 
 	sys.exit(app.exec_())
 
-class Test:
-	def __init__(self):
-		self.name = "Test"
-
-	def print_name(self):
-		def hello():
-			pass
-		
-		print(self.name)
-
+def hello():
+	def bye():
+		pass
 
 if __name__ == "__main__":
-	print(inspect_object(Test, include_dunder_methods=False)) # Testing inspect_object
-	#init_app() # Uncomment this to run the gui
+	#print(inspect.getmembers(hello)) # Testing inspect_object
+	init_app() # Uncomment this to run the gui
