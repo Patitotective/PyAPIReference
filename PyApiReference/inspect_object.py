@@ -37,7 +37,6 @@ def prefs(func):
 
     return wrapper_function # Return function to call
 
-@prefs
 def inspect_object(object_):
 	"""Find all members of Python object.
 
