@@ -1,7 +1,7 @@
 # PyApiReference
 _PyApiReference is a GUI application to generate Python API References._
 
-### _WORK IN PROGESS_
+### _WORK IN PROGRESS._
 
 About
 ---
