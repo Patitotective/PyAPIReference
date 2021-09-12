@@ -4,3 +4,5 @@ class Test:
 
 	def say_hi(self):
 		print(f"hi {self.name}")
+
+print(Test.__dict__)

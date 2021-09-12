@@ -61,52 +61,82 @@ def inspect_object(object_):
 		we need to implement a way to only include __init__ dunder method when class (when class the type is <type>).
 	"""
 	object_name = object_.__name__
-	result = {object_name: get_object_attributes(object_)}	
-	object_members = get_object_members(object_)
-
-	for member_name, member in object_members:
-		result[object_name][member_name] = get_object_attributes(member)
+	result = {object_name: get_object_properties(object_)}	
 
 	return result
 
-def get_object_members(object_: object, dunder_methods_to_include: tuple=("__init__")):
-	def filter_member(member_name):
+def get_object_members(object_: object):
+	def filter_member(member_name, member):
+		dunder_methods = PREFS.read_prefs_file("dunder_methods")
+		if type(object_).__name__ in dunder_methods:
+			dunder_methods_to_include = dunder_methods[type(object_).__name__]
+		else:
+			dunder_methods_to_include = ()
+
 		if member_name.startswith("__") and member_name.endswith("__") and member_name not in dunder_methods_to_include:
 			return False
 
 		return True
 
 	result = inspect.getmembers(object_)
-	# x[0] means member_name
-	result = filter(lambda x: filter_member(x[0]), result)
+	# filter_member(*x) means filter_member(x[0], x[1])
+	result = filter(lambda x: filter_member(*x), result)
 
 	return result
 
 def get_object_content(object_: object):
-	"""
+	"""Given an object get attributes of all of it's members.
 	"""
 	result = {}
 	
 	for member_name, member in get_object_members(object_):
-		result[member_name] = get_object_attributes(member)
+		result[member_name] = get_object_properties(member)
 
 	return result
 
-def get_object_attributes(object_: object):
+def get_object_properties(object_: object):
+	"""Given an object return it's attributes.
+	class, module -> type, content
+	callable (function, lambda, methods) -> parameters (see get_callable_parameters), return_annotation 
+	"""
 	result = {"type": type(object_)}
-
-	if inspect.isfunction(object_) or inspect.ismethod(object_):
-			result["parameters"] = get_callable_parameters(object_)	
-			
-			if "return" in object_.__annotations__:
-				result["return_annotation"] = object_.__annotations__["return"]	
 		
-	elif inspect.isclass(object_):
+	if inspect.isclass(object_) or inspect.ismodule(object_):
 		result["content"] = get_object_content(object_)
+	
+	elif inspect.isfunction(object_) or inspect.ismethod(object_):
+		result["parameters"] = get_callable_parameters(object_)	
+			
+		if "return" in object_.__annotations__:
+			result["return_annotation"] = object_.__annotations__["return"]	
 
 	return result
 
 def get_callable_parameters(callable_: callable):
+	"""Given a callable object (functions, lambda or methods) get all it's parameters, 
+	each parameter annotation (a: str, b: int), default value (a=1, b=2) and kind (positional, keyword, etc).
+	If no annotation or default value None.
+
+	Example:
+		def say_hi(name: str, last_name: str, age: int=20):
+			print(f"hi {name} {last_name}, you are {age} years old.")
+
+		print(get_callable_parameters(say_hi))
+		
+		>>> 
+		name=>
+			annotation=<class 'str'>
+			default=None
+			kind=POSITIONAL_OR_KEYWORD
+		last_name=>
+			annotation=<class 'str'>
+			default=None
+			kind=POSITIONAL_OR_KEYWORD
+		age=>
+			annotation=<class 'int'>
+			default=20
+			kind=POSITIONAL_OR_KEYWORD
+	"""
 	result = {}
 
 	for parameter in inspect.signature(callable_).parameters.values():
