@@ -3,7 +3,7 @@ import PREFS
 import example
 from types import ModuleType
 
-def prefs(func):
+def prefs(func: callable):
     """This decorator will pass the result of the given func to PREFS.convert_to_prefs, 
     to print a dictionary using PREFS format.
     Example:
@@ -32,7 +32,7 @@ def prefs(func):
 
     return wrapper_function # Return function to call
 
-def inspect_object(object_):
+def inspect_object(object_: object):
 	"""Find all members of Python object.
 	Example:
 		def say_hi(name: str) -> str:
@@ -55,7 +55,7 @@ def inspect_object(object_):
 	return result
 
 def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
-	def filter_member(member_name, member):
+	def filter_member(member_name: str, member: object):
 		if isinstance(member, exclude_types):
 			return False
 

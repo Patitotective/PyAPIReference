@@ -1,7 +1,7 @@
-"""PyApiReference is a GUI application to generate Python Api References.
+"""PyAPIReference is a GUI application to generate Python Api References.
 
 About:
-	GitHub: https://github.com/Patitotective/PyApiReference
+	GitHub: https://github.com/Patitotective/PyAPIReference
 	Patitotective:
 		Discord: patitotective#0127
 		GitHub: https://github.com/Patitotective
@@ -23,7 +23,7 @@ from PyQt5.QtCore import Qt
 # Dependencies
 from inspect_object import inspect_object
 from collapsible_widget import CollapsibleWidget
-
+from scrollarea import ScrollArea
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -34,29 +34,75 @@ class MainWindow(QMainWindow):
 		self.show()
 
 	def init_window(self):
-		self.setWindowTitle("PyApiReference")
-		self.setStyleSheet("background-color: #dcdee0;")
+		self.setWindowTitle("PyAPIReference")
 
 		self.main_widget = MainWidget(parent=self)
+		
+		self.setStyleSheet(f"""
+		QMainWindow, QWidget {{
+			background-color: {self.main_widget.theme[self.main_widget.current_theme]['background_color']};
+		}}
+		QWidget {{
+			color: {self.main_widget.theme[self.main_widget.current_theme]['font_color']};
+		}}
+		QPushButton {{
+			border: none;
+			padding: 2px 2px 2px;
+			background-color: {self.main_widget.theme[self.main_widget.current_theme]['button']['background_color']};
+		}}
+		QPushButton:hover {{
+			background-color: {self.main_widget.theme[self.main_widget.current_theme]['button']['background_color_hover']};			
+		}}
+		"""
+		)
+
 		self.setCentralWidget(self.main_widget)
+
+	def close_app(self):
+		print("Closed PyAPIReference")
+
+		# Close window and exit program to close all dialogs open.
+		self.close()
+		sys.exit()
+
+	def closeEvent(self, event) -> None:
+		"""This will be called when the windows is closed."""
+		self.close_app()
+		event.accept()
+
 
 class MainWidget(QWidget):
 	def __init__(self, parent=None):
 		super().__init__()
 
 		self.widgets = {
-			"module_content_widget": [], 
+			"module_content_scrollarea": [], 
 		}
 
+		self.theme = PREFS.read_prefs_file("theme")
+
+		self.init_prefs()
 		self.init_window()
+
+	@property	
+	def current_theme(self):
+		return self.prefs.file["theme"]
 
 	def init_window(self):
 		self.setLayout(QGridLayout())
 
 		self.main_frame()
 
+	def init_prefs(self):
+		default_prefs = {
+			"current_module": {}, 
+			"theme": "light", 
+		}
+
+		self.prefs = PREFS.PREFS(default_prefs, filename="Prefs/prefs")
+
 	def main_frame(self):
-		logo = QLabel("PyApiReference")
+		logo = QLabel("PyAPIReference")
 		logo.setStyleSheet("font-size: 20px; font-weight: bold;")
 		logo.setAlignment(Qt.AlignCenter)
 
@@ -65,29 +111,29 @@ class MainWidget(QWidget):
 
 		self.layout().addWidget(logo, 0, 0, 1, 0, Qt.AlignTop)
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
-		self.layout().setRowStretch(1, 1)		
+		self.layout().setRowStretch(1, 1)
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
 			parent=self, 
 			caption="Select a file", 
-			directory=os.path.basename(os.getcwd()), # Get basename of current directory, e.g.: PyApiReference/PyApiReference/main.py -> PyApiReference/PyApiReference
+			directory=os.path.basename(os.getcwd()), # Get basename of current directory, e.g.: PyAPIReference/PyAPIReference/main.py -> PyAPIReference/PyAPIReference
 			filter="Python files (*.py)") # Filter Python files
 
 		# If filename equals empty string means no selected file
 		if path == '':
 			return
 
-		module_content = inspect_object(self.get_module_from_path(path))
+		self.module_content = inspect_object(self.get_module_from_path(path))
 
-		if len(self.widgets["module_content_widget"]) > 0:	
-			self.widgets["module_content_widget"][0].setParent(None)
-			self.widgets["module_content_widget"] = []
+		if len(self.widgets["module_content_scrollarea"]) > 0:	
+			self.widgets["module_content_scrollarea"][0].setParent(None)
+			self.widgets["module_content_scrollarea"] = []
 		
-		self.layout().addWidget(self.create_module_content_widget(module_content), 2, 0, 1, 0, Qt.AlignTop)
+		self.layout().addWidget(self.create_module_content_widget(self.module_content), 2, 0, Qt.AlignTop)
 
 	def get_module_from_path(self, path: str):
-		filename = os.path.basename(path) # filename means only the filename without the path, e.g.: PyApiReference/PyApiReference/main.py -> main.py
+		filename = os.path.basename(path) # filename means only the filename without the path, e.g.: PyAPIReference/PyAPIReference/main.py -> main.py
 		filename_without_extension = os.path.splitext(filename)[0]
 	
 		spec = spec_from_file_location(filename_without_extension, path)
@@ -101,14 +147,26 @@ class MainWidget(QWidget):
 		module_content_widget.setLayout(QGridLayout())
 
 		module_collapsible = self.create_collapsible_object(module_content)
+		module_collapsible.uncollapse()
 
 		module_content_widget.layout().addWidget(module_collapsible, 0, 0, Qt.AlignTop)
 
-		self.widgets["module_content_widget"].append(module_content_widget)
-		return module_content_widget
+		module_content_scrollarea = ScrollArea(module_content_widget)
 
+		self.widgets["module_content_scrollarea"].append(module_content_scrollarea)
+		return module_content_scrollarea
+
+	def create_collapsible_widget(self, title: str) -> QWidget:
+		collapsible_widget = CollapsibleWidget(
+			title, 
+			collapse_button_hover_background_color=self.theme[self.current_theme]["collapsible"]["background_color_hover"], 
+			collapse_button_background_color=self.theme[self.current_theme]["background_color"])
+
+		return collapsible_widget
 
 	def create_collapsible_object(self, object_content: dict):
+		"""Generates a collapsible widget for a given object_content generated by inspect_object
+		"""
 		def create_object_properties_widget(object_properties: dict):
 			"""Given an dictionary with the object_properties return a widget with properties positioned on labels.
 			"""
@@ -121,23 +179,30 @@ class MainWidget(QWidget):
 					continue
 
 				elif property_name == "parameters":
-					parameters_collapsible_widget = CollapsibleWidget(property_name)
+					parameters_collapsible = self.create_collapsible_widget(property_name)
+					
 					for parameter_name, parameter_properties in property_value.items():
-						parameters_collapsible_widget.addWidget(QLabel(parameter_name))					
+					
+						parameter_collapsible = self.create_collapsible_widget(parameter_name) 
+						for parameter_property_name, parameter_property_value in parameter_properties.items():
+							if parameter_property_name == "kind":
+								parameter_property_value = parameter_property_value.description # 
+							
+							parameter_collapsible.addWidget(QLabel(f"{parameter_property_name}: {parameter_property_value}"))
 
-					object_properties_widget.layout().addRow(parameters_collapsible_widget)				
+						parameters_collapsible.addWidget(parameter_collapsible)
+
+					object_properties_widget.layout().addRow(parameters_collapsible)	
 					continue
 
-				object_properties_widget.layout().addRow(property_name, QLabel(str(property_value)))				
+				object_properties_widget.layout().addRow(property_name, QLabel(str(property_value)))
 		
 			return object_properties_widget
 
-		"""Generates a collapsible widget for a given object_content generated by inspect_object
-		"""
 		object_name = tuple(object_content)[0]
 		object_properties = object_content[object_name]
 
-		collapsible_object = CollapsibleWidget(object_name)
+		collapsible_object = self.create_collapsible_widget(object_name)
 		collapsible_object.addWidget(create_object_properties_widget(object_content[object_name]))
 
 		if "content" in object_properties:
