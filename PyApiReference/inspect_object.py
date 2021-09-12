@@ -108,7 +108,10 @@ def get_object_properties(object_: object):
 			
 		if "return" in object_.__annotations__:
 			result["return_annotation"] = object_.__annotations__["return"]	
-
+	
+	else:
+		result["value"] = object_
+	
 	return result
 
 def get_callable_parameters(callable_: callable):
