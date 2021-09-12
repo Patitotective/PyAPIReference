@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import inspect
 import PREFS
 import example
