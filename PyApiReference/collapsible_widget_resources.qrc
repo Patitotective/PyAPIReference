@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="horizontal_arrow_collapsible.png">Images/horizontal_arrow_collapsible.png</file>
+    <file alias="vertical_arrow_collapsible.png">Images/vertical_arrow_collapsible.png</file>
+</qresource>
+</RCC>
