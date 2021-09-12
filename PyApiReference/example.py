@@ -1,6 +1,6 @@
 #Inheritance Example
 class Test3:
-	pass
+	a = 1
 
 
 class Test2(Test3):

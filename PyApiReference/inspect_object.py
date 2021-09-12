@@ -2,6 +2,7 @@ from collections import OrderedDict
 import inspect
 import PREFS
 import example
+from types import ModuleType
 
 def prefs(func):
     """This decorator will pass the result of the given func to PREFS.convert_to_prefs, 
@@ -32,7 +33,6 @@ def prefs(func):
 
     return wrapper_function # Return function to call
 
-@prefs
 def inspect_object(object_):
 	"""Find all members of Python object.
 	Example:
@@ -48,16 +48,19 @@ def inspect_object(object_):
 				kind=POSITIONAL_OR_KEYWORD
 			return_annotation=<class 'str'>
 	Errors:
-		Right now the example is not really true, it also includes an __init__ dunder method which it wouldn't, 
-		we need to implement a way to only include __init__ dunder method when class (when class the type is <type>).
+		Tatkes too much time, need to add some optimization.
 	"""
 	object_name = object_.__name__
 	result = {object_name: get_object_properties(object_)}	
 
 	return result
 
-def get_object_members(object_: object):
+def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
 	def filter_member(member_name, member):
+		if isinstance(member, exclude_types):
+			return False
+
+
 		dunder_methods = PREFS.read_prefs_file("dunder_methods")
 		if type(object_).__name__ in dunder_methods:
 			dunder_methods_to_include = dunder_methods[type(object_).__name__]
@@ -95,6 +98,7 @@ def get_object_properties(object_: object):
 	if inspect.isclass(object_) or inspect.ismodule(object_):
 		if inspect.isclass(object_):
 			result["inherits"] = list(inspect.getmro(object_)[1:-1])
+		
 		result["content"] = get_object_content(object_)
 	
 	elif inspect.isfunction(object_) or inspect.ismethod(object_):
