@@ -1,5 +1,5 @@
 # PyApiReference
-_PyApiReference is a GUI application to generate Python Api References._
+_PyApiReference is a GUI application to generate Python API References._
 
 ### _WORK IN PROGESS_
 

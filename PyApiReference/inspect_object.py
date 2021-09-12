@@ -6,27 +6,22 @@ import example
 def prefs(func):
     """This decorator will pass the result of the given func to PREFS.convert_to_prefs, 
     to print a dictionary using PREFS format.
-
     Example:
     	# Without prefs decorator
     	def dictionary():
     		return {'keybindings': {'Ctrl+C': 'Copy', 'Ctrl+V': 'Paste'}} 
     	
     	print(dictionary())
-
 		>>> {'keybindings': {'Ctrl+C': 'Copy', 'Ctrl+V': 'Paste'}}
-
     	# With prefs decorator
     	@prefs # This is called a decorator
     	def dictionary():
     		return {'keybindings': {"Ctrl+C": "Copy", "Ctrl+V": "Paste"}} 
     	
     	print(dictionary())
-
     	>>> keybindings=>
     			Ctrl+C='Copy'
     			Ctrl+C='Paste'
-
     Notes:
     	Only works with dictionaries.
     """
@@ -37,15 +32,13 @@ def prefs(func):
 
     return wrapper_function # Return function to call
 
+@prefs
 def inspect_object(object_):
 	"""Find all members of Python object.
-
 	Example:
 		def say_hi(name: str) -> str:
 			print(f"hi {name}")
-
 		print(inspect_object(say_hi))
-
 		>>> say_hi=>
 			type=<class 'function'>
 			parameters=>
@@ -54,7 +47,6 @@ def inspect_object(object_):
 				default=None
 				kind=POSITIONAL_OR_KEYWORD
 			return_annotation=<class 'str'>
-
 	Errors:
 		Right now the example is not really true, it also includes an __init__ dunder method which it wouldn't, 
 		we need to implement a way to only include __init__ dunder method when class (when class the type is <type>).
@@ -101,6 +93,8 @@ def get_object_properties(object_: object):
 	result = {"type": type(object_)}
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
+		if inspect.isclass(object_):
+			result["inherits"] = list(inspect.getmro(object_)[1:-1])
 		result["content"] = get_object_content(object_)
 	
 	elif inspect.isfunction(object_) or inspect.ismethod(object_):
@@ -118,11 +112,9 @@ def get_callable_parameters(callable_: callable):
 	"""Given a callable object (functions, lambda or methods) get all it's parameters, 
 	each parameter annotation (a: str, b: int), default value (a=1, b=2) and kind (positional, keyword, etc).
 	If no annotation or default value None.
-
 	Example:
 		def say_hi(name: str, last_name: str, age: int=20):
 			print(f"hi {name} {last_name}, you are {age} years old.")
-
 		print(get_callable_parameters(say_hi))
 		
 		>>> 
@@ -148,5 +140,4 @@ def get_callable_parameters(callable_: callable):
 		"kind": parameter.kind
 	}
 
-	return result	
-
+	return result
