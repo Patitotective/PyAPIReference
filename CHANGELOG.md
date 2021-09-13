@@ -1,5 +1,10 @@
 # Change Log
 
+### v0.1.02 (12/09/2021)
+- Addded scrollarea on module collapsible area.
+- Added dark theme.
+- Changed files and folders from `PyApiReference` to `PyAPIReference`.
+
 #### v0.1.01 (12/09/2021)
 - Optimized `inspect_object` by excluding modules from inspecting.
 	- How:  
