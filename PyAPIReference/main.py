@@ -17,7 +17,7 @@ import sys
 import PREFS
 from importlib.util import spec_from_file_location, module_from_spec
 # PyQt5
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox
 from PyQt5.QtCore import Qt
 
 # Dependencies
@@ -54,12 +54,31 @@ class MainWindow(QMainWindow):
 		}}
 		QPushButton {{
 			border: none;
-			padding: 2px 2px 2px;
+			padding: 2px 2px 2px 2px;
 			background-color: {theme[self.main_widget.current_theme]['button']['background_color']};
 		}}
 		QPushButton:hover {{
 			background-color: {theme[self.main_widget.current_theme]['button']['background_color_hover']};			
 		}}
+		QMenuBar, QMenu {{
+			background-color: {theme['menubar']['background_color']};
+			color: {theme['menubar']['font_color']};
+		}}
+
+		QMenuBar:item {{
+			padding: 1px 4px;
+			background: transparent;
+			border-radius: 4px;
+		}}
+
+		QMenu:item {{
+			color: {theme['menubar']['item']['menu_item_font_color']};
+		}}
+
+		QMenu::item:selected, QMenuBar::item:selected {{
+			background-color: {theme['menubar']['item']['background_color_selected']};
+			color: {theme['menubar']['item']['menu_item_font_color_selected']};
+		}}		
 		"""
 		)
 

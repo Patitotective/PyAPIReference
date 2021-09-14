@@ -1,5 +1,8 @@
 # Change Log
 
+### v0.1.03 (14/09/2021)
+- Added style to the menubar which won't change with the theme.
+
 ### v0.1.02 (12/09/2021)
 - Addded scrollarea on module collapsible area.
 - Added dark theme.
