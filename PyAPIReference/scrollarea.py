@@ -71,7 +71,7 @@ class ScrollArea(QScrollArea):
 			    subcontrol-origin: margin;
 			}
 
-			QScrollBar::add-line:horizontal:hover,QScrollBar::add-line:horizontal:on
+			QScrollBar::add-line:horizontal:hover, QScrollBar::add-line:horizontal:on
 			{
 			    border-image: url(:/qss_icons/rc/right_arrow.png);
 			    height: 10px;
@@ -89,17 +89,6 @@ class ScrollArea(QScrollArea):
 			    subcontrol-origin: margin;
 			}
 
-			QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal
-			{
-			    background: none;
-			}
-
-
-			QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal
-			{
-			    background: none;
-			}
-
 			QScrollBar:vertical
 			{
 			    background-color: #C4C4C4;
@@ -111,7 +100,7 @@ class ScrollArea(QScrollArea):
 
 			QScrollBar::handle:vertical
 			{
-			    background-color: #807E7E;      /* #605F5F; */
+			    background-color: #807E7E;
 			    min-width: 5px;
 			    border-radius: 4px;
 			}
@@ -160,12 +149,7 @@ class ScrollArea(QScrollArea):
 			    subcontrol-origin: margin;
 			}
 
-			QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical
-			{
-			    background: none;
-			}
-
-			QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
+			QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical, QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical, QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal, QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal
 			{
 			    background: none;
 			}

@@ -46,39 +46,39 @@ class MainWindow(QMainWindow):
 		theme = self.main_widget.theme
 
 		self.setStyleSheet(f"""
-		QMainWindow, QWidget {{
-			background-color: {theme[self.main_widget.current_theme]['background_color']};
-		}}
-		QWidget {{
-			color: {theme[self.main_widget.current_theme]['font_color']};
-		}}
-		QPushButton {{
-			border: none;
-			padding: 2px 2px 2px 2px;
-			background-color: {theme[self.main_widget.current_theme]['button']['background_color']};
-		}}
-		QPushButton:hover {{
-			background-color: {theme[self.main_widget.current_theme]['button']['background_color_hover']};			
-		}}
-		QMenuBar, QMenu {{
-			background-color: {theme['menubar']['background_color']};
-			color: {theme['menubar']['font_color']};
-		}}
+			QMainWindow, QWidget {{
+				background-color: {theme[self.main_widget.current_theme]['background_color']};
+			}}
+			QWidget {{
+				color: {theme[self.main_widget.current_theme]['font_color']};
+			}}
+			QPushButton {{
+				border: none;
+				padding: 2px 2px 2px 2px;
+				background-color: {theme[self.main_widget.current_theme]['button']['background_color']};
+			}}
+			QPushButton:hover {{
+				background-color: {theme[self.main_widget.current_theme]['button']['background_color_hover']};			
+			}}
+			QMenuBar, QMenu {{
+				background-color: {theme['menubar']['background_color']};
+				color: {theme['menubar']['font_color']};
+			}}
 
-		QMenuBar:item {{
-			padding: 1px 4px;
-			background: transparent;
-			border-radius: 4px;
-		}}
+			QMenuBar:item {{
+				padding: 1px 4px;
+				background: transparent;
+				border-radius: 4px;
+			}}
 
-		QMenu:item {{
-			color: {theme['menubar']['item']['menu_item_font_color']};
-		}}
+			QMenu:item {{
+				color: {theme['menubar']['item']['menu_item_font_color']};
+			}}
 
-		QMenu::item:selected, QMenuBar::item:selected {{
-			background-color: {theme['menubar']['item']['background_color_selected']};
-			color: {theme['menubar']['item']['menu_item_font_color_selected']};
-		}}		
+			QMenu::item:selected, QMenuBar::item:selected {{
+				background-color: {theme['menubar']['item']['background_color_selected']};
+				color: {theme['menubar']['item']['menu_item_font_color_selected']};
+			}}
 		"""
 		)
 
@@ -125,8 +125,11 @@ class MainWindow(QMainWindow):
 		answer = create_settings_dialog(self.main_widget.prefs, parent=self)
 
 		if answer == 1: # Means apply
-			self.close() # Close
-			self.__init__() # Init again
+			self.reset_app()
+
+	def reset_app(self):
+		self.close() # Close
+		self.__init__() # Init again
 
 	def close_app(self):
 		print("Closed PyAPIReference")
@@ -180,7 +183,7 @@ class MainWidget(QWidget):
 
 		self.layout().addWidget(logo, 0, 0, 1, 0, Qt.AlignTop)
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
-		self.layout().setRowStretch(1, 1)
+		#self.layout().setRowStretch(1, 1)
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
@@ -200,6 +203,7 @@ class MainWidget(QWidget):
 			self.widgets["module_content_scrollarea"] = []
 		
 		self.layout().addWidget(self.create_module_content_widget(self.module_content), 2, 0, Qt.AlignTop)
+		self.layout().setRowStretch(2, 1)
 
 	def get_module_from_path(self, path: str):
 		filename = os.path.basename(path) # filename means only the filename without the path, e.g.: PyAPIReference/PyAPIReference/main.py -> main.py
@@ -297,10 +301,5 @@ def init_app():
 
 	sys.exit(app.exec_())
 
-def hello():
-	def bye():
-		pass
-
 if __name__ == "__main__":
-	#print(inspect.getmembers(hello)) # Testing inspect_object
-	init_app() # Uncomment this to run the gui
+	init_app()
