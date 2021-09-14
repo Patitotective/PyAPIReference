@@ -92,11 +92,46 @@ def get_object_properties(object_: object):
 	class, module -> type, content
 	callable (function, lambda, methods) -> parameters (see get_callable_parameters), return_annotation 
 	"""
-	result = {"type": type(object_)}
+
+	object_type = ""
+	slot_wrapper = False
+
+	if inspect.ismodule(object_): 
+		object_type = "module"
+	
+	elif inspect.isclass(object_):
+		object_type = "class"
+	
+	elif inspect.isfunction(object_):
+		object_type = "function"
+	
+	elif (type(object_).__name__) == "wrapper_descriptor":
+		'''Check if the method is a slot wrapper. 
+		WARNING: Definition may not be 100% correct.
+		Slot wrappers are built-in-methods that were not defined in a class by the user but still available
+		Example:
+			class Test:
+				pass
+
+		The Test class still contains methods which are inherited from the object class.
+		Slot wrapper example => '__init__': <slot wrapper '__init__' of 'type' objects>
+		'''
+		slot_wrapper = True
+		object_type = "slot_wrapper"
+	
+	else:
+		object_type = type(object_).__name__
+
+
+	if object_type:
+		result = {"type": object_type}
+	else:
+		result = {"type": type(object_)}
+		
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
 		if inspect.isclass(object_):
-			result["inherits"] = list(inspect.getmro(object_)[1:-1])
+			result["inherits"] = [i.__name__ for i in inspect.getmro(object_)[1:-1]]
 		
 		result["content"] = get_object_content(object_)
 	
@@ -104,10 +139,13 @@ def get_object_properties(object_: object):
 		result["parameters"] = get_callable_parameters(object_)	
 			
 		if "return" in object_.__annotations__:
-			result["return_annotation"] = object_.__annotations__["return"]	
+			result["return_annotation"] = (object_.__annotations__["return"]).__name__	
 	
 	else:
-		result["value"] = object_
+		if slot_wrapper:
+			result["value"] = "wrapper_descriptor"
+		else:
+			result["value"] = object_
 	
 	return result
 
@@ -138,9 +176,8 @@ def get_callable_parameters(callable_: callable):
 
 	for parameter in inspect.signature(callable_).parameters.values():
 		result[parameter.name] = {
-		"annotation": parameter.annotation if not parameter.annotation == inspect._empty else None, 
+		"annotation": (parameter.annotation).__name__ if not parameter.annotation == inspect._empty else None, 
 		"default": parameter.default if not parameter.default == inspect._empty else None, 
-		"kind": parameter.kind
+		"kind": parameter.kind.description
 	}
-
 	return result

@@ -1,6 +1,10 @@
 # Change Log
 
-## v0.1.04(14/09/2021)
+## v0.1.05 (14/09/2021)
+- Added option to export object tree as a JSON file   
+- Bugs
+  - Object tree doesnt display some attributes. Example: Not displaying *a = 1* from class Test3 (from example.py)
+## v0.1.04 (14/09/2021)
 - Fixed bug when window get bigger and removed border on scrollarea.
 
 ### v0.1.03 (14/09/2021)

@@ -15,7 +15,9 @@ import inspect
 import os
 import sys
 import PREFS
+from json import dump
 from importlib.util import spec_from_file_location, module_from_spec
+
 # PyQt5
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox
 from PyQt5.QtCore import Qt
@@ -90,6 +92,14 @@ class MainWindow(QMainWindow):
 		
 		## File menu ##
 		file_menu = bar.addMenu('&File')
+		
+		# Create a export action to export as json
+		save_action = create_qaction(
+			menu=file_menu, 
+			text="Export as JSON", 
+			shortcut="Ctrl+J", 
+			callback=self.export_as_json, 
+			parent=self)
 
 		# Create a close action that will call self.close_app
 		close_action = create_qaction(
@@ -141,11 +151,29 @@ class MainWindow(QMainWindow):
 		"""This will be called when the windows is closed."""
 		self.close_app()
 		event.accept()
+	
+	def export_as_json(self) -> None:
+		"""Export the object tree as a json file"""
+
+		if not self.main_widget.module_content:
+			# If user has not loaded a file, display export error
+			error_message = QMessageBox()
+			error_message.setIcon(QMessageBox.Warning)
+			error_message.setText("Nothing to Save!")
+			error_message.setWindowTitle("Export as JSON")
+			error_message.exec_()
+		else:	
+			options = QFileDialog.Options()
+			file_path = QFileDialog.getSaveFileName(self,"Save as JSON",os.getcwd(),"JSON Files (*.json)", options=options)
+			if file_path[0]:
+				with open(file_path[0], "w") as file:
+					dump(self.main_widget.module_content, file, indent=4)
 
 
 class MainWidget(QWidget):
 	def __init__(self, parent=None):
 		super().__init__()
+		self.module_content = None
 
 		self.widgets = {
 			"module_content_scrollarea": [], 
@@ -257,9 +285,7 @@ class MainWidget(QWidget):
 					for parameter_name, parameter_properties in property_value.items():
 					
 						parameter_collapsible = self.create_collapsible_widget(parameter_name) 
-						for parameter_property_name, parameter_property_value in parameter_properties.items():
-							if parameter_property_name == "kind":
-								parameter_property_value = parameter_property_value.description # 
+						for parameter_property_name, parameter_property_value in parameter_properties.items(): 
 							
 							parameter_collapsible.addWidget(QLabel(f"{parameter_property_name}: {parameter_property_value}"))
 
