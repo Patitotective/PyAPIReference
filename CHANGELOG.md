@@ -1,5 +1,8 @@
 # Change Log
 
+## v0.1.04(14/09/2021)
+- Fixed bug when window get bigger and removed border on scrollarea.
+
 ### v0.1.03 (14/09/2021)
 - Added style to the menubar which won't change with the theme.
 
