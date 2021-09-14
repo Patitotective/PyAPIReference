@@ -24,12 +24,17 @@ from PyQt5.QtCore import Qt
 from inspect_object import inspect_object
 from collapsible_widget import CollapsibleWidget
 from scrollarea import ScrollArea
+from settings_dialog import create_settings_dialog
+from extra import create_qaction
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
 		super().__init__()
 
+		print("PyAPIReference started")
+
 		self.init_window()
+		self.create_menu_bar()
 
 		self.show()
 
@@ -38,32 +43,77 @@ class MainWindow(QMainWindow):
 
 		self.main_widget = MainWidget(parent=self)
 		
+		theme = self.main_widget.theme
+
 		self.setStyleSheet(f"""
 		QMainWindow, QWidget {{
-			background-color: {self.main_widget.theme[self.main_widget.current_theme]['background_color']};
+			background-color: {theme[self.main_widget.current_theme]['background_color']};
 		}}
 		QWidget {{
-			color: {self.main_widget.theme[self.main_widget.current_theme]['font_color']};
+			color: {theme[self.main_widget.current_theme]['font_color']};
 		}}
 		QPushButton {{
 			border: none;
 			padding: 2px 2px 2px;
-			background-color: {self.main_widget.theme[self.main_widget.current_theme]['button']['background_color']};
+			background-color: {theme[self.main_widget.current_theme]['button']['background_color']};
 		}}
 		QPushButton:hover {{
-			background-color: {self.main_widget.theme[self.main_widget.current_theme]['button']['background_color_hover']};			
+			background-color: {theme[self.main_widget.current_theme]['button']['background_color_hover']};			
 		}}
 		"""
 		)
 
 		self.setCentralWidget(self.main_widget)
 
+	def create_menu_bar(self):
+		"""Create menu bar."""
+		bar = self.menuBar() # Get the menu bar of the mainwindow
+		
+		## File menu ##
+		file_menu = bar.addMenu('&File')
+
+		# Create a close action that will call self.close_app
+		close_action = create_qaction(
+			menu=file_menu, 
+			text="Close", 
+			shortcut="Ctrl+Q", 
+			callback=self.close_app, 
+			parent=self)
+
+		## Edit menu ##
+		edit_menu = bar.addMenu('&Edit') # Add a menu called edit
+
+		# Create a settings action that will open the settings dialog
+		settings_action = create_qaction( 
+			menu=edit_menu, 
+			text="&Settings", 
+			shortcut="Ctrl+S", 
+			callback=self.open_settings_dialog, 
+			parent=self)
+
+		## About menu ##
+		about_menu = bar.addMenu('&About') # Add a menu called about
+
+		# Create an about action that will create an instance of AboutDialog
+		about_qt_action = create_qaction(
+			menu=about_menu, 
+			text="About Q&t", 
+			shortcut="Ctrl+t", 
+			callback=lambda: QMessageBox.aboutQt(self), 
+			parent=self)
+
+	def open_settings_dialog(self):
+		answer = create_settings_dialog(self.main_widget.prefs, parent=self)
+
+		if answer == 1: # Means apply
+			self.close() # Close
+			self.__init__() # Init again
+
 	def close_app(self):
 		print("Closed PyAPIReference")
 
 		# Close window and exit program to close all dialogs open.
 		self.close()
-		sys.exit()
 
 	def closeEvent(self, event) -> None:
 		"""This will be called when the windows is closed."""
