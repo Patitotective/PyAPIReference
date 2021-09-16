@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.07 (15/09/2021)
+- Added docstrings of objects to tree 
+- Fixed bug if default parameter was class or function (`get_callable_parameters` in `inspect_object.py`)
+
 ## v0.1.06 (15/09/2021)
 - Changed widgets margin on `collapsible_widget.py`.
 - Added `get_module_from_path` on `extra.py` (used on `main.py`).
