@@ -8,6 +8,7 @@
 - Added default filename when `Export as JSON` which is the module name plus `.json`.
 - Added recursion when `create_object_properties_widgets`.
 - `inherits` property now it's an collapsible object.
+- Added row span to `module_content_widget` so it fills the screen.
 
 ## v0.1.05 (14/09/2021)
 - Added option to export object tree as a JSON file   
