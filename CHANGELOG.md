@@ -1,11 +1,27 @@
 # Change Log
 
+## 0.1.10 (16/09/2021)
+- Now annotation support collapsible widget.
+- Settings no more resizable.
+- `inspect_object.py`
+	- Changed way object type was obtained.
+	- Get docstring from every object.
+	- Now supports multiple function return annotation or parameter annotations.
+	- Other `str` and `__name__` stuff.
+
 ## v0.1.09 (16/09/2021)
 - Changed way `collapsible_widget` theme works.
 - Restore opened file when closing application (also when applying on settings dialog).
 - If no inherits or no parameters ignore collapsible (instead of displaying and empty one).
 - Created `FormLayout` on `settings_dialog.py` that centers the widgets (not like `QFormLayout`).
 	- Added `multipledispatch` on `requirements.txt`
+
+## v0.1.08 (16/09/2021)
+- Added export as PREFS and YAML options
+
+## v0.1.07 (15/09/2021)
+- Added docstrings of objects to tree 
+- Fixed bug if default parameter was class or function (`get_callable_parameters` in `inspect_object.py`)
 
 ## v0.1.06 (15/09/2021)
 - Changed widgets margin on `collapsible_widget.py`.

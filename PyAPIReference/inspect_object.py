@@ -111,61 +111,32 @@ def get_object_properties(object_: object):
 	callable (function, lambda, methods) -> parameters (see get_callable_parameters), return_annotation 
 	"""
 
-	object_type = ""
-	slot_wrapper = False
+	object_type = type(object_).__name__
 
-	if inspect.ismodule(object_): 
-		object_type = "module"
-	
-	elif inspect.isclass(object_):
-		object_type = "class"
-	
-	elif inspect.isfunction(object_):
-		object_type = "function"
-	
-	elif (type(object_).__name__) == "wrapper_descriptor":
-		'''Check if the method is a slot wrapper. 
-		WARNING: Definition may not be 100% correct.
-		Slot wrappers are built-in-methods that were not defined in a class by the user but still available
-		Example:
-			class Test:
-				pass
-
-		The Test class still contains methods which are inherited from the object class.
-		Slot wrapper example => '__init__': <slot wrapper '__init__' of 'type' objects>
-		'''
-		slot_wrapper = True
-		object_type = "slot_wrapper"
-	
-	else:
-		object_type = type(object_).__name__
-
-
-	if object_type:
-		result = {"type": object_type}
-	else:
-		result = {"type": type(object_)}
-		
+	result = {"type": object_type, "docstring": object_.__doc__}
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
-		result["docstring"] = object_.__doc__
+		
 		if inspect.isclass(object_):
 			result["inherits"] = [i.__name__ for i in inspect.getmro(object_)[1:-1]]
 		
 		result["content"] = get_object_content(object_)
 	
 	elif inspect.isfunction(object_) or inspect.ismethod(object_):
-		result["docstring"] = object_.__doc__
+		
 		result["parameters"] = get_callable_parameters(object_)	
 			
 		if "return" in object_.__annotations__:
-			result["return_annotation"] = object_.__annotations__["return"].__name__ if object_.__annotations__["return"] is not None else None 	
+			result["return_annotation"] = []
 	
+			if isinstance(object_.__annotations__["return"], tuple):
+				for annotation in object_.__annotations__["return"]:
+					result["return_annotation"].append(str(annotation.__name__) if not annotation == inspect._empty else None)
+			else:
+				result["return_annotation"] = str(object_.__annotations__["return"].__name__) if object_.__annotations__["return"] is not None else None 
+
 	else:
-		if slot_wrapper:
-			result["value"] = "wrapper_descriptor"
-		else:
-			result["value"] = object_
+		result["value"] = str(object_)
 	
 	return result
 
@@ -198,16 +169,24 @@ def get_callable_parameters(callable_: callable):
 		
 		if parameter.default == inspect._empty:
 			default_parameter = None
-	
-		elif inspect.isclass(parameter.default) or inspect.isfunction(parameter.default):
-			default_parameter = parameter.default.__name__
-
 		else:
-			default_parameter = parameter.default
+			try:
+				default_parameter = parameter.default.__name__
+			except AttributeError:
+				default_parameter = str(parameter.default)
+
 		
 		result[parameter.name] = {
-		"annotation": (parameter.annotation).__name__ if not parameter.annotation == inspect._empty else None, 
+		"annotation": [], 
 		"default": default_parameter, 
 		"kind": parameter.kind.description
-	}
+		}
+
+		if isinstance(parameter.annotation, tuple):
+			for annotation in parameter.annotation:
+				result[parameter.name]["annotation"].append(str(annotation.__name__) if not annotation == inspect._empty else None)
+			continue
+
+		result[parameter.name]["annotation"] = str(parameter.annotation.__name__) if not parameter.annotation == inspect._empty else None
+
 	return result

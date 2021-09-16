@@ -52,6 +52,7 @@ def create_settings_dialog(prefs, *, title="Settings dialog", parent=None):
 	dialog = QDialog(parent=parent)
 	dialog.setWindowTitle(title)
 	dialog.setLayout(FormLayout())
+	dialog.setMaximumSize(0, 0)
 
 	dark_theme_toggle = AnimatedToggle()
 	if prefs.file["theme"] == "light":

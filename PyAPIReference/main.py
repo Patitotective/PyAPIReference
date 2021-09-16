@@ -164,7 +164,8 @@ class MainWindow(QMainWindow):
 			return
 
 		if file_type == "prefs":
-			file_name = os.path.splitext(path)[0]
+			file_name = os.path.splitext(path)[0] # Remove extension
+
 			PREFS.PREFS(self.main_widget.module_content, filename=file_name)
 			return
 
@@ -310,7 +311,7 @@ class MainWidget(QWidget):
 			if not not not property_value: # Means empty
 				return
 
-			if isinstance(property_value, list):
+			if isinstance(property_value, (list, tuple)):
 				for nested_property_value in property_value:
 					if not not not nested_property_value: # Meanse emtpy
 						continue
@@ -345,7 +346,7 @@ class MainWidget(QWidget):
 				if property_name == "content":
 					continue
 
-				elif property_name == "parameters" or property_name == "inherits":
+				elif isinstance(property_value, (list, tuple, dict)):
 					property_content = {property_name: property_value}
 
 					property_collapsible = create_propety_collapsible(property_content)
