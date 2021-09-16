@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QFrame, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
+
 if __name__ == "__main__":
     import collapsible_widget_resources
 else:

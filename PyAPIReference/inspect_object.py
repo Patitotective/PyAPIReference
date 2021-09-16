@@ -58,8 +58,7 @@ def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
 		if isinstance(member, exclude_types):
 			return False
 
-
-		dunder_methods = PREFS.read_prefs_file("dunder_methods")
+		dunder_methods = PREFS.read_prefs_file("dunder_methods.prefs")
 		if type(object_).__name__ in dunder_methods:
 			dunder_methods_to_include = dunder_methods[type(object_).__name__]
 		else:

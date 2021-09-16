@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.12 (16/09/2021)
+- Fixed **PREFS** export function.
+- Updated all to new **PREFS** version.
+
 ## v0.1.11 (16/09/2021)
 - Moved GUI stuff to `GUI` folder.
 

@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Export as JSON", 
 			shortcut="Ctrl+J", 
-			callback=lambda x: self.export_as_file("json"), 
+			callback=lambda x: self.export_module_content("json"), 
 			parent=self)
 		
 		# Create a export action to export as PREFS
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Export as PREFS", 
 			shortcut="Ctrl+P", 
-			callback=lambda x: self.export_as_file("prefs"), 
+			callback=lambda x: self.export_module_content("prefs"), 
 			parent=self)
 		
 		# Create a export action to export as YAML
@@ -116,7 +116,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Export as YAML", 
 			shortcut="Ctrl+Y", 
-			callback=lambda x: self.export_as_file("yaml"), 
+			callback=lambda x: self.export_module_content("yaml"), 
 			parent=self)
 
 		# Create a close action that will call self.close_app
@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
 			callback=lambda: QMessageBox.aboutQt(self), 
 			parent=self)
 
-	def export_as_file(self, file_type) -> None:
+	def export_module_content(self, file_type) -> None:
 		"""Export the object tree as a file"""
 
 		if not self.main_widget.module_content:
@@ -163,15 +163,13 @@ class MainWindow(QMainWindow):
 		if path == '':
 			return
 
-		if file_type == "prefs":
-			file_name = os.path.splitext(path)[0] # Remove extension
-
-			PREFS.PREFS(self.main_widget.module_content, filename=file_name)
-			return
-
 		with open(path, "w") as file:
-			if file_type == "json":
+			if file_type == "prefs":
+				file.write(PREFS.convert_to_prefs(self.main_widget.module_content))
+			
+			elif file_type == "json":
 				json.dump(self.main_widget.module_content, file, indent=4)
+			
 			elif file_type == "yaml":
 				yaml.dump(self.main_widget.module_content, file)
 	
@@ -205,7 +203,7 @@ class MainWidget(QWidget):
 			"module_content_scrollarea": [], 
 		}
 
-		self.theme = PREFS.read_prefs_file("GUI/theme")
+		self.theme = PREFS.read_prefs_file("GUI/theme.prefs")
 		self.module_content = None
 
 		self.init_prefs()
@@ -226,7 +224,7 @@ class MainWidget(QWidget):
 			"theme": "light", 
 		}
 
-		self.prefs = PREFS.PREFS(default_prefs, filename="Prefs/prefs")
+		self.prefs = PREFS.PREFS(default_prefs, filename="Prefs/settings.prefs")
 
 	def main_frame(self):
 		logo = QLabel("PyAPIReference")
