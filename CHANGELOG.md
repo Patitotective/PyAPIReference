@@ -1,5 +1,8 @@
 # Change Log
 
+## v0.1.08 (16/09/2021)
+- Added export as PREFS and YAML options
+
 ## v0.1.07 (15/09/2021)
 - Added docstrings of objects to tree 
 - Fixed bug if default parameter was class or function (`get_callable_parameters` in `inspect_object.py`)
