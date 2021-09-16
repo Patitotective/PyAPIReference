@@ -17,10 +17,11 @@ class Test(Test2):
 		super().__init__()
 
 	def say_hi(self):
+		"""Test Docstring"""
 		print(f"hi {self.name}")
 
 
-def say_hi(name: str) -> str:
-    print(f"hi {name}")
+def say_hi(name: str, class_test=Test) -> str:
+	print(f"hi {name}")
 
 

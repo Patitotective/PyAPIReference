@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.1.07 (16/09/2021)
+## v0.1.09 (16/09/2021)
 - Changed way `collapsible_widget` theme works.
 - Restore opened file when closing application (also when applying on settings dialog).
 - If no inherits or no parameters ignore collapsible (instead of displaying and empty one).
