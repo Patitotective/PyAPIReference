@@ -87,8 +87,27 @@ def get_object_content(object_: object):
 	return result
 
 def get_object_properties(object_: object):
-	"""Given an object return it's attributes.
-	class, module -> type, content
+	"""Given an object return it's type and content.
+	Example:
+		class Test2(Test1):
+			def __init__(self):
+				pass
+
+			def test_fun(self):
+				pass
+		
+		>>>
+		type = class
+		inherits =>
+			Test1
+		content =>
+			__init__=>
+				type = function 
+				parameters ...
+			test_func =>
+				type = function
+				parameters ...
+
 	callable (function, lambda, methods) -> parameters (see get_callable_parameters), return_annotation 
 	"""
 
@@ -129,12 +148,14 @@ def get_object_properties(object_: object):
 		
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
+		result["docstring"] = object_.__doc__
 		if inspect.isclass(object_):
 			result["inherits"] = [i.__name__ for i in inspect.getmro(object_)[1:-1]]
 		
 		result["content"] = get_object_content(object_)
 	
 	elif inspect.isfunction(object_) or inspect.ismethod(object_):
+		result["docstring"] = object_.__doc__
 		result["parameters"] = get_callable_parameters(object_)	
 			
 		if "return" in object_.__annotations__:
@@ -174,9 +195,19 @@ def get_callable_parameters(callable_: callable):
 	result = {}
 
 	for parameter in inspect.signature(callable_).parameters.values():
+		
+		if parameter.default == inspect._empty:
+			default_parameter = None
+	
+		elif inspect.isclass(parameter.default) or inspect.isfunction(parameter.default):
+			default_parameter = parameter.default.__name__
+
+		else:
+			default_parameter = parameter.default
+		
 		result[parameter.name] = {
 		"annotation": (parameter.annotation).__name__ if not parameter.annotation == inspect._empty else None, 
-		"default": parameter.default if not parameter.default == inspect._empty else None, 
+		"default": default_parameter, 
 		"kind": parameter.kind.description
 	}
 	return result
