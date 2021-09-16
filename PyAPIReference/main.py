@@ -26,10 +26,10 @@ from PyQt5.QtCore import Qt
 
 # Dependencies
 from inspect_object import inspect_object
-from collapsible_widget import CollapsibleWidget
-from scrollarea import ScrollArea
-from settings_dialog import create_settings_dialog
-from extra import create_qaction, get_module_from_path
+from GUI.collapsible_widget import CollapsibleWidget
+from GUI.scrollarea import ScrollArea
+from GUI.settings_dialog import create_settings_dialog
+from extra import create_qaction, get_module_from_path, convert_to_code_block
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -205,7 +205,7 @@ class MainWidget(QWidget):
 			"module_content_scrollarea": [], 
 		}
 
-		self.theme = PREFS.read_prefs_file("theme")
+		self.theme = PREFS.read_prefs_file("GUI/theme")
 		self.module_content = None
 
 		self.init_prefs()
@@ -332,7 +332,7 @@ class MainWidget(QWidget):
 						property_collapsible.addWidget(nested_property_collapsible)
 						continue
 					
-					property_collapsible.addWidget(QLabel(f"{nested_property_name}: {nested_property_value}"))
+					property_collapsible.addWidget(QLabel(f"{nested_property_name}: {convert_to_code_block(nested_property_value)}"))
 		
 			return property_collapsible
 
@@ -357,7 +357,7 @@ class MainWidget(QWidget):
 					object_properties_widget.layout().addRow(property_collapsible)
 					continue
 
-				object_properties_widget.layout().addRow(QLabel(f"{property_name}: {property_value}"))
+				object_properties_widget.layout().addRow(QLabel(f"{property_name}: {convert_to_code_block(property_value)}"))
 		
 			return object_properties_widget
 

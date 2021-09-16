@@ -24,3 +24,10 @@ def get_module_from_path(path: str):
 	spec.loader.exec_module(module)
 
 	return module
+
+def convert_to_code_block(string: str) -> str:
+	result = "<pre style='background-color: #404040; color: white;'>"
+	result += str(string)
+	result += "</pre>"
+
+	return result

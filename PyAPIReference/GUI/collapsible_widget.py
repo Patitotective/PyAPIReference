@@ -2,7 +2,10 @@ import sys
 from PyQt5.QtWidgets import QFrame, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-import collapsible_widget_resources
+if __name__ == "__main__":
+    import collapsible_widget_resources
+else:
+    import GUI.collapsible_widget_resources
 
 VERTICAL_ARROW_PATH = ":/vertical_arrow_collapsible.png"
 HORIZONTAL_ARROW_PATH = ":/horizontal_arrow_collapsible.png"
