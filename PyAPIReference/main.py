@@ -16,6 +16,7 @@ import sys
 import os
 import time
 import json
+import yaml
 
 import PREFS
 
@@ -94,12 +95,28 @@ class MainWindow(QMainWindow):
 		## File menu ##
 		file_menu = bar.addMenu('&File')
 
-		# Create a export action to export as json
+		# Create a export action to export as JSON
 		json_action = create_qaction(
 			menu=file_menu, 
 			text="Export as JSON", 
 			shortcut="Ctrl+J", 
-			callback=self.export_as_json, 
+			callback=lambda x: self.export_as_file("json"), 
+			parent=self)
+		
+		# Create a export action to export as PREFS
+		prefs_action = create_qaction(
+			menu=file_menu, 
+			text="Export as PREFS", 
+			shortcut="Ctrl+P", 
+			callback=lambda x: self.export_as_file("prefs"), 
+			parent=self)
+		
+		# Create a export action to export as YAML
+		yaml_action = create_qaction(
+			menu=file_menu, 
+			text="Export as YAML", 
+			shortcut="Ctrl+Y", 
+			callback=lambda x: self.export_as_file("yaml"), 
 			parent=self)
 
 		# Create a close action that will call self.close_app
@@ -132,22 +149,31 @@ class MainWindow(QMainWindow):
 			callback=lambda: QMessageBox.aboutQt(self), 
 			parent=self)
 
-	def export_as_json(self) -> None:
-		"""Export the object tree as a json file"""
+	def export_as_file(self, file_type) -> None:
+		"""Export the object tree as a file"""
 
 		if not self.main_widget.module_content:
 			# If user has not loaded a file, display export error
-			error_message = QMessageBox.warning(self, "Export as JSON", "Nothing to save.")
+			error_message = QMessageBox.warning(self, f"Export as {file_type.capitalize()}", "Nothing to save.")
 			return
 		
-		default_filename = f"{tuple(self.main_widget.module_content)[0]}.json"
-		path, file_filter = QFileDialog.getSaveFileName(self, "Export as JSON", default_filename, "JSON Files (*.json)")
+		default_filename = f"{tuple(self.main_widget.module_content)[0]}.{file_type}"
+		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {file_type.capitalize()}", default_filename, f"{file_type.capitalize()} Files (*.{file_type})")
+		
 		if path == '':
 			return
 
-		with open(path, "w") as file:
-			json.dump(self.main_widget.module_content, file, indent=4)
+		if file_type == "prefs":
+			file_name = os.path.splitext(path)[0]
+			PREFS.PREFS(self.main_widget.module_content, filename=file_name)
+			return
 
+		with open(path, "w") as file:
+			if file_type == "json":
+				json.dump(self.main_widget.module_content, file, indent=4)
+			elif file_type == "yaml":
+				yaml.dump(self.main_widget.module_content, file)
+	
 	def open_settings_dialog(self):
 		answer = create_settings_dialog(self.main_widget.prefs, parent=self)
 
