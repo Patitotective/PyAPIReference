@@ -27,6 +27,9 @@ class CollapsibleWidget(QWidget):
         self.setParent(parent)
 
         self.setLayout(QVBoxLayout())
+        self.layout().setSpacing(0)
+        self.layout().setContentsMargins(5, 0, 5, 0)    
+
         self.layout().addWidget(self.title_frame, Qt.AlignTop)
         self.layout().addWidget(self.init_content())
 

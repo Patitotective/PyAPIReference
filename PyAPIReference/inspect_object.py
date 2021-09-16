@@ -1,6 +1,5 @@
 import inspect
 import PREFS
-import example
 from types import ModuleType
 
 def prefs(func: callable):
@@ -139,7 +138,7 @@ def get_object_properties(object_: object):
 		result["parameters"] = get_callable_parameters(object_)	
 			
 		if "return" in object_.__annotations__:
-			result["return_annotation"] = (object_.__annotations__["return"]).__name__	
+			result["return_annotation"] = object_.__annotations__["return"].__name__ if object_.__annotations__["return"] is not None else None 	
 	
 	else:
 		if slot_wrapper:

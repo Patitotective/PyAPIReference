@@ -12,14 +12,15 @@ About:
 
 # Libraries
 import inspect
-import os
 import sys
+import os
+import time
+import json
+
 import PREFS
-from json import dump
-from importlib.util import spec_from_file_location, module_from_spec
 
 # PyQt5
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox, QVBoxLayout
 from PyQt5.QtCore import Qt
 
 # Dependencies
@@ -27,7 +28,7 @@ from inspect_object import inspect_object
 from collapsible_widget import CollapsibleWidget
 from scrollarea import ScrollArea
 from settings_dialog import create_settings_dialog
-from extra import create_qaction
+from extra import create_qaction, get_module_from_path
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -92,9 +93,9 @@ class MainWindow(QMainWindow):
 		
 		## File menu ##
 		file_menu = bar.addMenu('&File')
-		
+
 		# Create a export action to export as json
-		save_action = create_qaction(
+		json_action = create_qaction(
 			menu=file_menu, 
 			text="Export as JSON", 
 			shortcut="Ctrl+J", 
@@ -131,6 +132,22 @@ class MainWindow(QMainWindow):
 			callback=lambda: QMessageBox.aboutQt(self), 
 			parent=self)
 
+	def export_as_json(self) -> None:
+		"""Export the object tree as a json file"""
+
+		if not self.main_widget.module_content:
+			# If user has not loaded a file, display export error
+			error_message = QMessageBox.warning(self, "Export as JSON", "Nothing to save.")
+			return
+		
+		default_filename = f"{tuple(self.main_widget.module_content)[0]}.json"
+		path, file_filter = QFileDialog.getSaveFileName(self, "Export as JSON", default_filename, "JSON Files (*.json)")
+		if path == '':
+			return
+
+		with open(path, "w") as file:
+			json.dump(self.main_widget.module_content, file, indent=4)
+
 	def open_settings_dialog(self):
 		answer = create_settings_dialog(self.main_widget.prefs, parent=self)
 
@@ -151,35 +168,18 @@ class MainWindow(QMainWindow):
 		"""This will be called when the windows is closed."""
 		self.close_app()
 		event.accept()
-	
-	def export_as_json(self) -> None:
-		"""Export the object tree as a json file"""
-
-		if not self.main_widget.module_content:
-			# If user has not loaded a file, display export error
-			error_message = QMessageBox()
-			error_message.setIcon(QMessageBox.Warning)
-			error_message.setText("Nothing to Save!")
-			error_message.setWindowTitle("Export as JSON")
-			error_message.exec_()
-		else:	
-			options = QFileDialog.Options()
-			file_path = QFileDialog.getSaveFileName(self,"Save as JSON",os.getcwd(),"JSON Files (*.json)", options=options)
-			if file_path[0]:
-				with open(file_path[0], "w") as file:
-					dump(self.main_widget.module_content, file, indent=4)
 
 
 class MainWidget(QWidget):
 	def __init__(self, parent=None):
 		super().__init__()
-		self.module_content = None
 
 		self.widgets = {
 			"module_content_scrollarea": [], 
 		}
 
 		self.theme = PREFS.read_prefs_file("theme")
+		self.module_content = None
 
 		self.init_prefs()
 		self.init_window()
@@ -211,46 +211,41 @@ class MainWidget(QWidget):
 
 		self.layout().addWidget(logo, 0, 0, 1, 0, Qt.AlignTop)
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
-		#self.layout().setRowStretch(1, 1)
+		self.layout().setRowStretch(1, 1)
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
 			parent=self, 
 			caption="Select a file", 
-			directory=os.path.basename(os.getcwd()), # Get basename of current directory, e.g.: PyAPIReference/PyAPIReference/main.py -> PyAPIReference/PyAPIReference
+			directory=os.getcwd(), # Get current directory
 			filter="Python files (*.py)") # Filter Python files
 
 		# If filename equals empty string means no selected file
 		if path == '':
 			return
 
-		self.module_content = inspect_object(self.get_module_from_path(path))
+		module = get_module_from_path(path)
+		self.module_content = inspect_object(module)
+		self.add_module_content_widget()		
 
+	def add_module_content_widget(self):
 		if len(self.widgets["module_content_scrollarea"]) > 0:	
 			self.widgets["module_content_scrollarea"][0].setParent(None)
 			self.widgets["module_content_scrollarea"] = []
 		
-		self.layout().addWidget(self.create_module_content_widget(self.module_content), 2, 0, Qt.AlignTop)
-		self.layout().setRowStretch(2, 1)
+		self.layout().addWidget(self.create_module_content_widget(), 2, 0, 1, 0)
+		self.layout().setRowStretch(2, 1)		
+		self.layout().setRowStretch(1, 0)
 
-	def get_module_from_path(self, path: str):
-		filename = os.path.basename(path) # filename means only the filename without the path, e.g.: PyAPIReference/PyAPIReference/main.py -> main.py
-		filename_without_extension = os.path.splitext(filename)[0]
-	
-		spec = spec_from_file_location(filename_without_extension, path)
-		module = module_from_spec(spec)
-		spec.loader.exec_module(module)
-
-		return module
-
-	def create_module_content_widget(self, module_content: dict):
+	def create_module_content_widget(self):
 		module_content_widget = QWidget()
-		module_content_widget.setLayout(QGridLayout())
+		module_content_widget.setLayout(QVBoxLayout())
 
-		module_collapsible = self.create_collapsible_object(module_content)
+		module_collapsible = self.create_collapsible_object(self.module_content)
 		module_collapsible.uncollapse()
 
-		module_content_widget.layout().addWidget(module_collapsible, 0, 0, Qt.AlignTop)
+		module_content_widget.layout().addWidget(module_collapsible)
+		module_content_widget.layout().addStretch(1)
 
 		module_content_scrollarea = ScrollArea(module_content_widget)
 
@@ -268,6 +263,30 @@ class MainWidget(QWidget):
 	def create_collapsible_object(self, object_content: dict):
 		"""Generates a collapsible widget for a given object_content generated by inspect_object
 		"""
+
+		def create_propety_collapsible(property_content: dict):
+			"""Given a dicionary with {property_name: property_value}, where property_value could be a dictionary or a list
+			return a collapsible widget.
+			"""		
+			property_name = tuple(property_content)[0]
+			property_value = property_content[property_name]
+			property_collapsible = self.create_collapsible_widget(property_name)
+
+			if isinstance(property_value, list):
+				for nested_property_value in property_value:
+					property_collapsible.addWidget(QLabel(str(nested_property_value)))
+			
+			elif isinstance(property_value, dict):
+				for nested_property_name, nested_property_value in property_value.items():
+					if isinstance(nested_property_value, dict):
+						nested_property_content = {nested_property_name: nested_property_value}
+						property_collapsible.addWidget(create_propety_collapsible(nested_property_content))
+						continue
+					
+					property_collapsible.addWidget(QLabel(f"{nested_property_name}: {nested_property_value}"))
+		
+			return property_collapsible
+
 		def create_object_properties_widget(object_properties: dict):
 			"""Given an dictionary with the object_properties return a widget with properties positioned on labels.
 			"""
@@ -275,26 +294,17 @@ class MainWidget(QWidget):
 			object_properties_widget.setLayout(QFormLayout())
 
 			for property_name, property_value in object_properties.items():
-				property_content = {property_name: property_value}
 				if property_name == "content":
 					continue
 
-				elif property_name == "parameters":
-					parameters_collapsible = self.create_collapsible_widget(property_name)
-					
-					for parameter_name, parameter_properties in property_value.items():
-					
-						parameter_collapsible = self.create_collapsible_widget(parameter_name) 
-						for parameter_property_name, parameter_property_value in parameter_properties.items(): 
-							
-							parameter_collapsible.addWidget(QLabel(f"{parameter_property_name}: {parameter_property_value}"))
+				elif property_name == "parameters" or property_name == "inherits":
+					property_content = {property_name: property_value}
 
-						parameters_collapsible.addWidget(parameter_collapsible)
-
-					object_properties_widget.layout().addRow(parameters_collapsible)	
+					property_collapsible = create_propety_collapsible(property_content)
+					object_properties_widget.layout().addRow(property_collapsible)
 					continue
 
-				object_properties_widget.layout().addRow(property_name, QLabel(str(property_value)))
+				object_properties_widget.layout().addRow(QLabel(f"{property_name}: {property_value}"))
 		
 			return object_properties_widget
 
@@ -310,7 +320,7 @@ class MainWidget(QWidget):
 			property_name = "parameters"		
 		else:
 			print(f"Not valid object {object_name} with {object_properties} properties")
-			return 	collapsible_object
+			return collapsible_object
 
 		for member_name, member_properties in object_content[object_name][property_name].items():
 			member_content = {member_name: member_properties}

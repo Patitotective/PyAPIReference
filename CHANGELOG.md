@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.1.06 (15/09/2021)
+- Changed widgets margin on `collapsible_widget.py`.
+- Added `get_module_from_path` on `extra.py` (used on `main.py`).
+- Fixed bug when no annotation on parameters (`get_object_properties` on `inspect_object.py`).
+- Made `export_as_json` more pythonic.
+- Added default filename when `Export as JSON` which is the module name plus `.json`.
+- Added recursion when `create_object_properties_widgets`.
+- `inherits` property now it's an collapsible object.
+
 ## v0.1.05 (14/09/2021)
 - Added option to export object tree as a JSON file   
 - Bugs
