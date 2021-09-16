@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.1.07 (16/09/2021)
+- Changed way `collapsible_widget` theme works.
+- Restore opened file when closing application (also when applying on settings dialog).
+- If no inherits or no parameters ignore collapsible (instead of displaying and empty one).
+- Created `FormLayout` on `settings_dialog.py` that centers the widgets (not like `QFormLayout`).
+	- Added `multipledispatch` on `requirements.txt`
+
 ## v0.1.06 (15/09/2021)
 - Changed widgets margin on `collapsible_widget.py`.
 - Added `get_module_from_path` on `extra.py` (used on `main.py`).
