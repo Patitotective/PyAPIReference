@@ -1,6 +1,9 @@
 # Change Log
 
-## 0.1.10 (16/09/2021)
+## v0.1.11 (16/09/2021)
+- Moved GUI stuff to `GUI` folder.
+
+## v0.1.10 (16/09/2021)
 - Now annotation support collapsible widget.
 - Settings no more resizable.
 - `inspect_object.py`
