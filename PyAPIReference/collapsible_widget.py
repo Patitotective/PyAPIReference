@@ -9,15 +9,13 @@ HORIZONTAL_ARROW_PATH = ":/horizontal_arrow_collapsible.png"
 
 class CollapsibleWidget(QWidget):
     def __init__(self, 
+        theme, 
         title: str=None, 
-        collapse_button_hover_background_color: str="#c7cccf", 
-        collapse_button_background_color: str="#dcdee0",         
         parent: QWidget=None
     ):
         super().__init__()
         
-        self.collapse_button_hover_background_color = collapse_button_hover_background_color
-        self.collapse_button_background_color = collapse_button_background_color
+        self.theme = theme
 
         self.is_collapsed = True
 
@@ -77,10 +75,10 @@ class CollapsibleWidget(QWidget):
                 padding: 3px 5px 3px 5px;
                 text-align: left;
                 border: none;
-                background-color: {parent.collapse_button_background_color};
+                background-color: {parent.theme["background_color"]};
             }}
             *:hover {{
-                background-color: {parent.collapse_button_hover_background_color};
+                background-color: {parent.theme["collapsible"]["background_color_hover"]};
             }}
             """
             )

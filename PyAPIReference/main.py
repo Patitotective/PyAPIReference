@@ -195,7 +195,7 @@ class MainWidget(QWidget):
 
 	def init_prefs(self):
 		default_prefs = {
-			"current_module": {}, 
+			"current_module": "", # The path when you open a file to restore it 
 			"theme": "light", 
 		}
 
@@ -213,6 +213,14 @@ class MainWidget(QWidget):
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
+		if not self.prefs.file["current_module"] == "":
+			if not os.path.isfile(self.prefs.file["current_module"]):
+				return # Ignore it because is not a valid path
+
+			module = get_module_from_path(self.prefs.file["current_module"])
+			self.module_content = inspect_object(module)
+			self.add_module_content_widget()				
+
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
 			parent=self, 
@@ -223,6 +231,8 @@ class MainWidget(QWidget):
 		# If filename equals empty string means no selected file
 		if path == '':
 			return
+
+		self.prefs.write_prefs("current_module", path)
 
 		module = get_module_from_path(path)
 		self.module_content = inspect_object(module)
@@ -254,9 +264,8 @@ class MainWidget(QWidget):
 
 	def create_collapsible_widget(self, title: str) -> QWidget:
 		collapsible_widget = CollapsibleWidget(
-			title, 
-			collapse_button_hover_background_color=self.theme[self.current_theme]["collapsible"]["background_color_hover"], 
-			collapse_button_background_color=self.theme[self.current_theme]["background_color"])
+			self.theme[self.current_theme], 
+			title)
 
 		return collapsible_widget
 
@@ -272,15 +281,28 @@ class MainWidget(QWidget):
 			property_value = property_content[property_name]
 			property_collapsible = self.create_collapsible_widget(property_name)
 
+			if not not not property_value: # Means empty
+				return
+
 			if isinstance(property_value, list):
 				for nested_property_value in property_value:
+					if not not not nested_property_value: # Meanse emtpy
+						continue
+
 					property_collapsible.addWidget(QLabel(str(nested_property_value)))
 			
 			elif isinstance(property_value, dict):
 				for nested_property_name, nested_property_value in property_value.items():
-					if isinstance(nested_property_value, dict):
+					if not not not nested_property_value: # Means empty
+						continue
+					elif isinstance(nested_property_value, dict):
 						nested_property_content = {nested_property_name: nested_property_value}
-						property_collapsible.addWidget(create_propety_collapsible(nested_property_content))
+						
+						nested_property_collapsible = create_propety_collapsible(nested_property_content)
+						if nested_property_collapsible is None:
+							continue
+
+						property_collapsible.addWidget(nested_property_collapsible)
 						continue
 					
 					property_collapsible.addWidget(QLabel(f"{nested_property_name}: {nested_property_value}"))
@@ -301,6 +323,10 @@ class MainWidget(QWidget):
 					property_content = {property_name: property_value}
 
 					property_collapsible = create_propety_collapsible(property_content)
+					
+					if property_collapsible is None:
+						continue
+					
 					object_properties_widget.layout().addRow(property_collapsible)
 					continue
 

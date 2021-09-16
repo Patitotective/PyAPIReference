@@ -5,7 +5,7 @@ _PyAPIReference is a GUI application to generate Python API References._
 
 About
 ---
-GitHub: https://github.com/Patitotective/PyApiReference.
+GitHub: https://github.com/Patitotective/PyAPIReference.
 - Patitotective:
 	- Discord: patitotective#0127.
 	- GitHub: https://github.com/Patitotective.

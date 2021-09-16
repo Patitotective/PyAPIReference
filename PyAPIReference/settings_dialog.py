@@ -1,6 +1,42 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QFormLayout, QStyle
+from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle
 from PyQt5.QtCore import Qt
 from qtwidgets import AnimatedToggle
+from multipledispatch import dispatch
+
+class FormLayout(QVBoxLayout):
+	"""This layout will work as QFormLayout but this will center the two columns vertically.
+	QFormLayout:
+		--- ___
+	This:
+		--- ---
+	"""
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+	@dispatch(QWidget, QWidget)
+	def addRow(self, widget1: QWidget, widget2: QWidget):
+		row = QWidget()
+		row.setLayout(QHBoxLayout())
+		
+		row.layout().addWidget(widget1)
+		row.layout().addWidget(widget2)
+
+		self.addWidget
+		self.addWidget(row)
+
+	@dispatch(str, QWidget)
+	def addRow(self, string: str, widget: QWidget):
+		row = QWidget()
+		row.setLayout(QHBoxLayout())
+		
+		row.layout().addWidget(QLabel(string))
+		row.layout().addWidget(widget)
+
+		self.addWidget(row)
+
+	@dispatch(QWidget)
+	def addRow(self, widget: QWidget):
+		self.addWidget(widget)
 
 def create_settings_dialog(prefs, *, title="Settings dialog", parent=None):
 	def apply_changes():
@@ -15,7 +51,7 @@ def create_settings_dialog(prefs, *, title="Settings dialog", parent=None):
 
 	dialog = QDialog(parent=parent)
 	dialog.setWindowTitle(title)
-	dialog.setLayout(QFormLayout())
+	dialog.setLayout(FormLayout())
 
 	dark_theme_toggle = AnimatedToggle()
 	if prefs.file["theme"] == "light":
