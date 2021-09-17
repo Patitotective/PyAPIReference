@@ -1,3 +1,7 @@
 #PREFS
-current_module='/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/example.py'
-theme='light'
+current_module=''
+theme='dark'
+state=>
+	pos=(0, 0)
+	size=(0, 0)
+	is_maximized=False

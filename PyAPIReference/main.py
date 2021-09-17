@@ -17,6 +17,7 @@ import os
 import time
 import json
 import yaml
+from enum import Enum, auto
 
 import PREFS
 
@@ -31,6 +32,13 @@ from GUI.scrollarea import ScrollArea
 from GUI.settings_dialog import create_settings_dialog
 from extra import create_qaction, get_module_from_path, convert_to_code_block
 
+
+class ExportTypes(Enum):
+	PREFS = auto()
+	JSON = auto()
+	YAML = auto()
+
+
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
 		super().__init__()
@@ -41,6 +49,7 @@ class MainWindow(QMainWindow):
 		self.create_menu_bar()
 
 		self.show()
+		self.restore_geometry()
 
 	def init_window(self):
 		self.setWindowTitle("PyAPIReference")
@@ -100,7 +109,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Export as JSON", 
 			shortcut="Ctrl+J", 
-			callback=lambda x: self.export_module_content("json"), 
+			callback=lambda x: self.export_module_content(ExportTypes.JSON), 
 			parent=self)
 		
 		# Create a export action to export as PREFS
@@ -108,7 +117,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Export as PREFS", 
 			shortcut="Ctrl+P", 
-			callback=lambda x: self.export_module_content("prefs"), 
+			callback=lambda x: self.export_module_content(ExportTypes.PREFS), 
 			parent=self)
 		
 		# Create a export action to export as YAML
@@ -116,7 +125,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Export as YAML", 
 			shortcut="Ctrl+Y", 
-			callback=lambda x: self.export_module_content("yaml"), 
+			callback=lambda x: self.export_module_content(ExportTypes.YAML), 
 			parent=self)
 
 		# Create a close action that will call self.close_app
@@ -164,13 +173,13 @@ class MainWindow(QMainWindow):
 			return
 
 		with open(path, "w") as file:
-			if file_type == "prefs":
+			if file_type == ExportTypes.PREFS:
 				file.write(PREFS.convert_to_prefs(self.main_widget.module_content))
 			
-			elif file_type == "json":
+			elif file_type == ExportTypes.JSON:
 				json.dump(self.main_widget.module_content, file, indent=4)
 			
-			elif file_type == "yaml":
+			elif file_type == ExportTypes.YAML:
 				yaml.dump(self.main_widget.module_content, file)
 	
 	def open_settings_dialog(self):
@@ -183,8 +192,30 @@ class MainWindow(QMainWindow):
 		self.close() # Close
 		self.__init__() # Init again
 
+	def restore_geometry(self):
+		pos, size = self.main_widget.prefs.file["state"]["pos"], self.main_widget.prefs.file["state"]["size"]
+		is_maximized = self.main_widget.prefs.file["state"]["is_maximized"]
+
+		if is_maximized:
+			self.showMaximized()
+			return
+
+		self.move(*pos)
+		self.resize(*size)
+
+	def save_geometry(self):
+		geometry = self.geometry()
+
+		pos = geometry.x(), geometry.y() 
+		size = geometry.width(), geometry.height()
+
+		self.main_widget.prefs.write_prefs("state/pos", pos)
+		self.main_widget.prefs.write_prefs("state/size", size)
+		self.main_widget.prefs.write_prefs("state/is_maximized", self.isMaximized())
+
 	def close_app(self):
 		print("Closed PyAPIReference")
+		self.save_geometry()
 
 		# Close window and exit program to close all dialogs open.
 		self.close()
@@ -222,6 +253,11 @@ class MainWidget(QWidget):
 		default_prefs = {
 			"current_module": "", # The path when you open a file to restore it 
 			"theme": "light", 
+			"state": {
+				"pos": (0, 0), 
+				"size": (0, 0), 
+				"is_maximized": False, 
+			}
 		}
 
 		self.prefs = PREFS.PREFS(default_prefs, filename="Prefs/settings.prefs")

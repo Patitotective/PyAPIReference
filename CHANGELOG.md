@@ -1,5 +1,8 @@
 # Change Log
 
+## v0.1.13 (16/09/2021)
+- Added `restore_geometry` and `save_geometry` methods on `MainWindow` class.
+
 ## v0.1.12 (16/09/2021)
 - Fixed **PREFS** export function.
 - Updated all to new **PREFS** version.
