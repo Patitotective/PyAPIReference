@@ -1,5 +1,8 @@
 # Change Log
 
+## v0.1.14 (17/09/2021)
+- Fixed export option.
+
 ## v0.1.13 (16/09/2021)
 - Added `restore_geometry` and `save_geometry` methods on `MainWindow` class.
 

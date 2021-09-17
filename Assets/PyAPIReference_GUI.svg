@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.7286111"
-     inkscape:cx="46.279929"
-     inkscape:cy="3.1817451"
+     inkscape:zoom="2.8284271"
+     inkscape:cx="458.55875"
+     inkscape:cy="-22.45064"
      inkscape:window-width="1920"
      inkscape:window-height="950"
      inkscape:window-x="0"
@@ -56,5 +56,48 @@
        inkscape:export-filename="/home/cristobal/Documents/Projects/PyApiReference/PyApiReference/Images/horizontal_arrow_collapsible.png"
        inkscape:export-xdpi="21.166666"
        inkscape:export-ydpi="21.166666" />
+    <rect
+       style="fill:#25282d;fill-opacity:1;fill-rule:evenodd;stroke-width:0.776105;stroke-linecap:round;stroke-linejoin:round"
+       id="rect970"
+       width="70.330605"
+       height="36.990765"
+       x="88.264694"
+       y="-15.217684"
+       ry="9.4335766" />
+    <text
+       xml:space="preserve"
+       style="font-size:9.61863px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.192371;stroke-opacity:1"
+       x="123.26647"
+       y="17.298462"
+       id="text13685"><tspan
+         sodipodi:role="line"
+         id="tspan13683"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.61863px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.192371;stroke-opacity:1"
+         x="123.26647"
+         y="17.298462">Reference</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:26.4583px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;stroke:none;stroke-width:0.264583;stroke-opacity:0"
+       x="129.9045"
+       y="9.6143284"
+       id="text2364"><tspan
+         sodipodi:role="line"
+         style="font-size:18.5208px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:0"
+         x="129.9045"
+         y="9.6143284"
+         id="tspan2366"><tspan
+           id="tspan10344"
+           style="font-size:26.4583px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:0">API</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:10.2072px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.204142;stroke-opacity:1"
+       x="106.23782"
+       y="9.5428782"
+       id="text93163"><tspan
+         sodipodi:role="line"
+         id="tspan93161"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.2072px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.204142;stroke-opacity:1"
+         x="106.23782"
+         y="9.5428782">Py</tspan></text>
   </g>
 </svg>

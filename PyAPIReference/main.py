@@ -34,9 +34,9 @@ from extra import create_qaction, get_module_from_path, convert_to_code_block
 
 
 class ExportTypes(Enum):
-	PREFS = auto()
-	JSON = auto()
-	YAML = auto()
+	PREFS = "prefs"
+	JSON = "json"
+	YAML = "yaml"
 
 
 class MainWindow(QMainWindow):
@@ -163,11 +163,11 @@ class MainWindow(QMainWindow):
 
 		if not self.main_widget.module_content:
 			# If user has not loaded a file, display export error
-			error_message = QMessageBox.warning(self, f"Export as {file_type.capitalize()}", "Nothing to save.")
+			error_message = QMessageBox.warning(self, f"Export as {file_type.name}", "Nothing to save.")
 			return
 		
-		default_filename = f"{tuple(self.main_widget.module_content)[0]}.{file_type}"
-		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {file_type.capitalize()}", default_filename, f"{file_type.capitalize()} Files (*.{file_type})")
+		default_filename = f"{tuple(self.main_widget.module_content)[0]}.{file_type.value}"
+		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {file_type.name}", default_filename, f"{file_type.name} Files (*.{file_type.value})")
 		
 		if path == '':
 			return
