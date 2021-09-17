@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.18 (17/09/2021)
+- Changed `inspect_object` to run on seperate thread. Prevents GUI freezing.    
+Visual suggestion: Need to gray out button when disabled
+
 ## v0.1.17 (17/09/2021)
 - Added breakline after logo on `README.md`.
 
