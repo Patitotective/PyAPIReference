@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.1.15 (17/09/2021)
+- Added `logo.png`, `icon.png` and `icon.ico`.
+- Added icon to window.
+
 ## v0.1.14 (17/09/2021)
 - Fixed export option.
 

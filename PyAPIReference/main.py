@@ -23,9 +23,11 @@ import PREFS
 
 # PyQt5
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox, QVBoxLayout
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 
 # Dependencies
+import resources # Qt resources resources.qrc
 from inspect_object import inspect_object
 from GUI.collapsible_widget import CollapsibleWidget
 from GUI.scrollarea import ScrollArea
@@ -53,6 +55,7 @@ class MainWindow(QMainWindow):
 
 	def init_window(self):
 		self.setWindowTitle("PyAPIReference")
+		self.setWindowIcon(QIcon(':/icon.png'))
 
 		self.main_widget = MainWidget(parent=self)
 		
