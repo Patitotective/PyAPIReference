@@ -1,4 +1,5 @@
 #Inheritance Example
+from time import sleep
 class Test3:
 	a = 1
 
@@ -24,4 +25,5 @@ class Test(Test2):
 def say_hi(name: str, class_test=Test) -> str:
 	print(f"hi {name}")
 
-
+# Sleep represents "large file"
+sleep(10)

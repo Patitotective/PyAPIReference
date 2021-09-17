@@ -24,7 +24,7 @@ import PREFS
 # PyQt5
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox, QVBoxLayout
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
 
 # Dependencies
 import resources # Qt resources resources.qrc
@@ -270,20 +270,18 @@ class MainWidget(QWidget):
 		logo.setStyleSheet("font-size: 20px; font-weight: bold;")
 		logo.setAlignment(Qt.AlignCenter)
 
-		load_file_button = QPushButton("Load file")
-		load_file_button.clicked.connect(self.load_file)
+		self.load_file_button = QPushButton("Load file")
+		self.load_file_button.clicked.connect(self.load_file)
 
 		self.layout().addWidget(logo, 0, 0, 1, 0, Qt.AlignTop)
-		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
+		self.layout().addWidget(self.load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
 		if not self.prefs.file["current_module"] == "":
 			if not os.path.isfile(self.prefs.file["current_module"]):
 				return # Ignore it because is not a valid path
 
-			module = get_module_from_path(self.prefs.file["current_module"])
-			self.module_content = inspect_object(module)
-			self.add_module_content_widget()				
+			self.create_inspect_thread(self.prefs.file["current_module"])				
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
@@ -298,9 +296,33 @@ class MainWidget(QWidget):
 
 		self.prefs.write_prefs("current_module", path)
 
-		module = get_module_from_path(path)
-		self.module_content = inspect_object(module)
-		self.add_module_content_widget()		
+		self.create_inspect_thread(path)
+
+	def create_inspect_thread(self, path):
+		# Disable Load File button
+		self.load_file_button.setEnabled(False)
+
+		self.thread = QThread()
+		self.inspect_obj = Inspect(path)
+		self.inspect_obj.moveToThread(self.thread)
+
+		# Start: inspect object / Finish: create widget 
+		self.thread.started.connect(self.inspect_obj.run_inspect_object)
+		self.inspect_obj.finished.connect(self.call_create_widget)
+		
+		# Delete thread and inspect objects
+		self.inspect_obj.finished.connect(self.thread.quit)
+		self.inspect_obj.finished.connect(self.inspect_obj.deleteLater)
+		self.thread.finished.connect(self.thread.deleteLater)
+		
+		self.thread.start()	
+
+	def call_create_widget(self):
+		self.module_content = Inspect.module_content
+		self.add_module_content_widget()
+		
+		# Enable Load File button
+		self.load_file_button.setEnabled(True)		
 
 	def add_module_content_widget(self):
 		if len(self.widgets["module_content_scrollarea"]) > 0:	
@@ -420,6 +442,21 @@ class MainWidget(QWidget):
 				continue
 
 		return collapsible_object
+
+class Inspect(QObject):
+	module_content = None
+	finished = pyqtSignal()
+
+	def __init__(self, path):
+		super().__init__()
+		self.path = path
+
+	def run_inspect_object(self):
+		module = get_module_from_path(self.path)
+		self.module_content = inspect_object(module)
+		Inspect.module_content = self.module_content
+		self.finished.emit()
+
 
 def init_app():
 	app = QApplication(sys.argv)
