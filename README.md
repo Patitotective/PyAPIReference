@@ -1,5 +1,5 @@
 # PyAPIReference
-[![PyAPIReference logo](https://github.com/Patitotective/PyAPIReference/blob/main/Assets/logo.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![PyAPIReference logo](https://github.com/Patitotective/PyAPIReference/blob/main/Assets/logo.png?raw=true)](https://github.com/Patitotective/PyAPIReference)  
 _PyAPIReference is a GUI application to generate Python API References._
 
 ### _WORK IN PROGRESS._

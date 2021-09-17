@@ -1,5 +1,8 @@
 # Change Log
 
+## v0.1.17 (17/09/2021)
+- Added breakline after logo on `README.md`.
+
 ## v0.1.16 (17/09/2021)
 - Resized `logo.png` (now `500x263`).
 
