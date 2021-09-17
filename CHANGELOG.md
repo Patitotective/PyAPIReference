@@ -1,5 +1,8 @@
 # Change Log
 
+## v0.1.16 (17/09/2021)
+- Resized `logo.png` (now `500x263`).
+
 ## v0.1.15 (17/09/2021)
 - Added `logo.png`, `icon.png` and `icon.ico`.
 - Added icon to window.
