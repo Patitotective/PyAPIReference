@@ -1,5 +1,10 @@
 # Change Log
 
+### v0.1.20 (17/09/2021)
+- When docstring (or other string) has more than one line, create a collapsible for it.
+- Set `UbuntuMono` as font for the whole app (needed to fix, because menu bar is included).
+- Added `UbuntuMono` font to assets.
+
 ### v0.1.19 (17/09/2021)
 - `GUI/theme.prefs`
 	- Added disabled color to buttons.

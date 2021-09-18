@@ -36,7 +36,7 @@ from PyQt5.QtWidgets import (
 	QMenu, 
 	)
 
-from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
 
 # Dependencies
@@ -74,7 +74,6 @@ class MainWindow(QMainWindow):
 		super().__init__()
 
 		print("PyAPIReference started")
-		self.load_fonts()
 
 		self.init_window()
 		self.create_menu_bar()
@@ -92,10 +91,6 @@ class MainWindow(QMainWindow):
 
 		self.setCentralWidget(self.main_widget)
 
-	def load_fonts(self):
-		for font in os.listdir("Fonts"):
-			QFontDatabase.addApplicationFont(f'Fonts/{font}')
-
 	def set_stylesheet(self):
 		theme = self.main_widget.theme
 		current_theme = self.main_widget.current_theme
@@ -103,7 +98,7 @@ class MainWindow(QMainWindow):
 		self.setStyleSheet(f"""
 			QMainWindow, QWidget {{
 				background-color: {theme[current_theme]['background_color']};
-				font-family: {theme['font_family']};				
+				font-family: {theme['font_family']};
 			}}
 			QWidget {{
 				color: {theme[current_theme]['font_color']};
@@ -444,10 +439,8 @@ class MainWidget(QWidget):
 			
 			elif isinstance(property_value, dict):
 				for nested_property_name, nested_property_value in property_value.items():
-					
 					if not not not nested_property_value: # Means empty
 						continue
-
 					elif isinstance(nested_property_value, dict):
 						nested_property_content = {nested_property_name: nested_property_value}
 						
@@ -459,10 +452,7 @@ class MainWidget(QWidget):
 						continue
 					
 					property_collapsible.addWidget(QLabel(f"{nested_property_name}: {convert_to_code_block(nested_property_value)}"))
-			
-			elif isinstance(property_value, str):
-				property_collapsible.addWidget(QLabel(convert_to_code_block(property_value)))
-
+		
 			return property_collapsible
 
 		def create_object_properties_widget(object_properties: dict):
@@ -472,13 +462,10 @@ class MainWidget(QWidget):
 			object_properties_widget.setLayout(QFormLayout())
 
 			for property_name, property_value in object_properties.items():
-
-				multiple_line_string = "\n" in property_value if hasattr(property_value, '__iter__') else ""
-
 				if property_name == "content":
 					continue
 
-				elif isinstance(property_value, (list, tuple, dict)) or multiple_line_string:
+				elif isinstance(property_value, (list, tuple, dict)):
 					property_content = {property_name: property_value}
 
 					property_collapsible = create_propety_collapsible(property_content)
