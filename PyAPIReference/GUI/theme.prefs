@@ -1,10 +1,12 @@
 #PREFS
+font_family="UbuntuMono"
 light=>
 	background_color="#dcdee0"
 	font_color="#000000"
 	button=>
 		background_color="#cacfd3"
-		background_color_hover="#bac1c6"	
+		background_color_hover="#bac1c6"
+		background_color_disabled="#B5A29F"
 	collapsible=>
 		background_color_hover="#c7cccf"
 dark=>
@@ -13,6 +15,7 @@ dark=>
 	button=>
 		background_color="#404a54"
 		background_color_hover="#555e65"
+		background_color_disabled="#4A4444"		
 	collapsible=>
 		background_color_hover="#404a54"
 menubar=>

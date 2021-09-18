@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="2"
-     inkscape:cx="209.5"
-     inkscape:cy="95.25"
+     inkscape:zoom="1"
+     inkscape:cx="692"
+     inkscape:cy="140.5"
      inkscape:window-width="1920"
      inkscape:window-height="950"
      inkscape:window-x="0"
@@ -41,7 +41,7 @@
     <path
        id="path3290"
        style="fill:#82878b;fill-rule:evenodd;stroke-width:0.632286;stroke-linecap:round;stroke-linejoin:round"
-       d="m 113.56579,13.856 h 13.856 l -6.928,12 z"
+       d="m 190.53362,130.81701 h 13.856 l -6.928,12 z"
        inkscape:transform-center-y="2.0000028"
        sodipodi:nodetypes="cccc"
        inkscape:export-filename="/home/cristobal/Documents/Projects/PyApiReference/PyApiReference/Images/vertical_arrow_collapsible.png"
@@ -50,7 +50,7 @@
     <path
        id="path4408"
        style="fill:#82878b;fill-rule:evenodd;stroke-width:0.632286;stroke-linecap:round;stroke-linejoin:round"
-       d="M 113.56579,13.856 V 0 l 12,6.928 z"
+       d="m 190.53362,130.81701 v -13.856 l 12,6.928 z"
        sodipodi:nodetypes="cccc"
        inkscape:transform-center-x="-2.0000028"
        inkscape:export-filename="/home/cristobal/Documents/Projects/PyApiReference/PyApiReference/Images/horizontal_arrow_collapsible.png"
@@ -70,9 +70,9 @@
     <g
        id="g107888"
        transform="matrix(1.6383124,0,0,1.6383124,-153.79626,16.563577)"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
-       inkscape:export-xdpi="131.1424"
-       inkscape:export-ydpi="131.1424">
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/Images/logo_without_background.png"
+       inkscape:export-xdpi="66.11412"
+       inkscape:export-ydpi="66.11412">
       <text
          xml:space="preserve"
          style="font-size:7.50322px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.150063;stroke-opacity:1"
@@ -125,25 +125,182 @@
        id="rect108599"
        width="40"
        height="40"
-       x="7.955265"
-       y="58.080002"
+       x="166.9693"
+       y="68.661301"
        ry="14.180115"
        inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/icon.png"
        inkscape:export-xdpi="31.75"
        inkscape:export-ydpi="31.75" />
     <text
        xml:space="preserve"
-       style="font-size:21.1793px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;stroke-width:0.211793;stroke:#868686;stroke-opacity:1"
-       x="28.456825"
-       y="86.451416"
+       style="font-size:21.1793px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;stroke:#868686;stroke-width:0.211793;stroke-opacity:1"
+       x="187.47086"
+       y="97.032715"
        id="text109254"
        inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/icon.png"
        inkscape:export-xdpi="31.75"
        inkscape:export-ydpi="31.75"><tspan
          sodipodi:role="line"
          id="tspan109252"
-         style="fill:#ffffff;stroke-width:0.211793;stroke:#868686;stroke-opacity:1"
-         x="28.456823"
-         y="86.451416">API</tspan></text>
+         style="fill:#ffffff;stroke:#868686;stroke-width:0.211793;stroke-opacity:1"
+         x="187.47086"
+         y="97.032715">API</tspan></text>
+    <rect
+       style="fill:#25282d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.3772;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="rect110314"
+       width="128.00002"
+       height="64"
+       x="112.93382"
+       y="-1.1783441"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/template.png"
+       inkscape:export-xdpi="254.00002"
+       inkscape:export-ydpi="254.00002"
+       ry="22.969776" />
+    <g
+       id="g110330"
+       transform="matrix(1.6383124,0,0,1.6383124,-25.283061,10.093567)"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/template.png"
+       inkscape:export-xdpi="254.00002"
+       inkscape:export-ydpi="254.00002">
+      <text
+         xml:space="preserve"
+         style="font-size:7.50322px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.150063;stroke-opacity:1"
+         x="123.30244"
+         y="15.730945"
+         id="text110318"
+         inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
+         inkscape:export-xdpi="406.13101"
+         inkscape:export-ydpi="406.13101"><tspan
+           sodipodi:role="line"
+           id="tspan110316"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.50322px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.150063;stroke-opacity:1"
+           x="123.30244"
+           y="15.730945">Reference</tspan></text>
+      <g
+         id="g110328"
+         transform="translate(-0.13693935)">
+        <text
+           xml:space="preserve"
+           style="font-size:18.5208px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;stroke:none;stroke-width:0.264583;stroke-opacity:0"
+           x="129.9045"
+           y="9.6143284"
+           id="text110322"
+           inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
+           inkscape:export-xdpi="406.13101"
+           inkscape:export-ydpi="406.13101"><tspan
+             sodipodi:role="line"
+             style="font-size:18.5208px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:0"
+             x="129.9045"
+             y="9.6143284"
+             id="tspan110320">API</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-size:10.2072px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.204142;stroke-opacity:1"
+           x="111.33311"
+           y="9.5428782"
+           id="text110326"
+           inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
+           inkscape:export-xdpi="406.13101"
+           inkscape:export-ydpi="406.13101"><tspan
+             sodipodi:role="line"
+             id="tspan110324"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.2072px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.204142;stroke-opacity:1"
+             x="111.33311"
+             y="9.5428782">Py</tspan></text>
+      </g>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.96875px;line-height:1;font-family:Passion;-inkscape-font-specification:Passion;text-align:start;word-spacing:0px;text-anchor:start;white-space:pre;inline-size:83.269;fill:#c7c7c7;fill-opacity:1;stroke-width:0.264583"
+       x="236.91425"
+       y="29.198992"
+       id="text118857"
+       transform="translate(-113.55349,14.371816)"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/template.png"
+       inkscape:export-xdpi="254.00002"
+       inkscape:export-ydpi="254.00002"><tspan
+         x="236.91425"
+         y="29.198992"
+         id="tspan209246">Generate API References for Python modules easily with </tspan><tspan
+         x="236.91425"
+         y="33.167743"
+         id="tspan209248">an beautiful and intuitive GUI app.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.43958px;line-height:1.25;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';text-align:center;word-spacing:0px;text-anchor:middle;fill:#ffffff;stroke-width:0.264583"
+       x="157.29898"
+       y="61.596313"
+       id="text142154"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/template.png"
+       inkscape:export-xdpi="254.00002"
+       inkscape:export-ydpi="254.00002"><tspan
+         sodipodi:role="line"
+         id="tspan142152"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.43958px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#ffffff;stroke-width:0.264583"
+         x="157.29898"
+         y="61.596313">By Patitotective and devp4</tspan></text>
+    <rect
+       style="fill:#404a54;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.828902;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="rect180294"
+       width="103.80092"
+       height="0.87316042"
+       x="123.41614"
+       y="38.457314"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/template.png"
+       inkscape:export-xdpi="254.00002"
+       inkscape:export-ydpi="254.00002" />
+    <g
+       id="g203724"
+       transform="matrix(1.6383124,0,0,1.6383124,-155.50903,76.229266)"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/Images/logo_without_background.png"
+       inkscape:export-xdpi="66.11412"
+       inkscape:export-ydpi="66.11412">
+      <text
+         xml:space="preserve"
+         style="font-size:7.50322px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.150063;stroke-opacity:1"
+         x="123.30244"
+         y="15.730945"
+         id="text203712"
+         inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
+         inkscape:export-xdpi="406.13101"
+         inkscape:export-ydpi="406.13101"><tspan
+           sodipodi:role="line"
+           id="tspan203710"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.50322px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.150063;stroke-opacity:1"
+           x="123.30244"
+           y="15.730945">Reference</tspan></text>
+      <g
+         id="g203722"
+         transform="translate(-0.13693935)">
+        <text
+           xml:space="preserve"
+           style="font-size:18.5208px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;stroke:none;stroke-width:0.264583;stroke-opacity:0"
+           x="129.9045"
+           y="9.6143284"
+           id="text203716"
+           inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
+           inkscape:export-xdpi="406.13101"
+           inkscape:export-ydpi="406.13101"><tspan
+             sodipodi:role="line"
+             style="font-size:18.5208px;fill:#ffffff;fill-opacity:1;stroke:#868686;stroke-width:0.264583;stroke-opacity:1"
+             x="129.9045"
+             y="9.6143284"
+             id="tspan203714">API</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-size:10.2072px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.204142;stroke-opacity:1"
+           x="111.33311"
+           y="9.5428782"
+           id="text203720"
+           inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/Assets/logo.png"
+           inkscape:export-xdpi="406.13101"
+           inkscape:export-ydpi="406.13101"><tspan
+             sodipodi:role="line"
+             id="tspan203718"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.2072px;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';fill:#646e76;fill-opacity:1;stroke:#868686;stroke-width:0.204142;stroke-opacity:1"
+             x="111.33311"
+             y="9.5428782">Py</tspan></text>
+      </g>
+    </g>
   </g>
 </svg>

@@ -22,8 +22,21 @@ from enum import Enum, auto
 import PREFS
 
 # PyQt5
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QFileDialog, QPushButton, QGridLayout, QFormLayout, QMessageBox, QVBoxLayout
-from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (
+	QApplication, 
+	QMainWindow, 
+	QWidget, 
+	QLabel, 
+	QFileDialog, 
+	QPushButton, 
+	QGridLayout, 
+	QFormLayout, 
+	QMessageBox, 
+	QVBoxLayout, 
+	QMenu, 
+	)
+
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
 
 # Dependencies
@@ -32,13 +45,28 @@ from inspect_object import inspect_object
 from GUI.collapsible_widget import CollapsibleWidget
 from GUI.scrollarea import ScrollArea
 from GUI.settings_dialog import create_settings_dialog
-from extra import create_qaction, get_module_from_path, convert_to_code_block
+from extra import create_qaction, convert_to_code_block, get_module_from_path
 
 
 class ExportTypes(Enum):
 	PREFS = "prefs"
 	JSON = "json"
 	YAML = "yaml"
+
+
+class InspectModule(QObject):
+	module_content = None
+	finished = pyqtSignal()
+
+	def __init__(self, path):
+		super().__init__()
+		self.path = path
+
+	def run(self):
+		module = get_module_from_path(self.path)
+		self.module_content = inspect_object(module)
+		InspectModule.module_content = self.module_content
+		self.finished.emit()
 
 
 class MainWindow(QMainWindow):
@@ -59,46 +87,53 @@ class MainWindow(QMainWindow):
 
 		self.main_widget = MainWidget(parent=self)
 		
+		self.set_stylesheet()
+
+		self.setCentralWidget(self.main_widget)
+
+	def set_stylesheet(self):
 		theme = self.main_widget.theme
+		current_theme = self.main_widget.current_theme
 
 		self.setStyleSheet(f"""
 			QMainWindow, QWidget {{
-				background-color: {theme[self.main_widget.current_theme]['background_color']};
+				background-color: {theme[current_theme]['background_color']};
+				font-family: {theme['font_family']};
 			}}
 			QWidget {{
-				color: {theme[self.main_widget.current_theme]['font_color']};
+				color: {theme[current_theme]['font_color']};
 			}}
+			
 			QPushButton {{
 				border: none;
 				padding: 2px 2px 2px 2px;
-				background-color: {theme[self.main_widget.current_theme]['button']['background_color']};
+				background-color: {theme[current_theme]['button']['background_color']};
 			}}
 			QPushButton:hover {{
-				background-color: {theme[self.main_widget.current_theme]['button']['background_color_hover']};			
+				background-color: {theme[current_theme]['button']['background_color_hover']};
 			}}
+			QPushButton:disabled {{
+				background-color: {theme[current_theme]['button']['background_color_disabled']};
+			}}
+			
 			QMenuBar, QMenu {{
 				background-color: {theme['menubar']['background_color']};
 				color: {theme['menubar']['font_color']};
 			}}
-
 			QMenuBar:item {{
 				padding: 1px 4px;
 				background: transparent;
 				border-radius: 4px;
 			}}
-
 			QMenu:item {{
 				color: {theme['menubar']['item']['menu_item_font_color']};
 			}}
-
 			QMenu::item:selected, QMenuBar::item:selected {{
 				background-color: {theme['menubar']['item']['background_color_selected']};
 				color: {theme['menubar']['item']['menu_item_font_color_selected']};
 			}}
 		"""
 		)
-
-		self.setCentralWidget(self.main_widget)
 
 	def create_menu_bar(self):
 		"""Create menu bar."""
@@ -107,29 +142,40 @@ class MainWindow(QMainWindow):
 		## File menu ##
 		file_menu = bar.addMenu('&File')
 
-		# Create a export action to export as JSON
-		json_action = create_qaction(
+		load_file_action = create_qaction(
 			menu=file_menu, 
-			text="Export as JSON", 
-			shortcut="Ctrl+J", 
-			callback=lambda x: self.export_module_content(ExportTypes.JSON), 
-			parent=self)
+			text="Load file", 
+			shortcut="Ctrl+O", 
+			callback=self.main_widget.load_file, 
+			parent=self)			
+
+		## Export menu ##
+		export_menu = file_menu.addMenu("Export tree...")
 		
 		# Create a export action to export as PREFS
-		prefs_action = create_qaction(
-			menu=file_menu, 
+		export_prefs_action = create_qaction(
+			menu=export_menu, 
 			text="Export as PREFS", 
-			shortcut="Ctrl+P", 
+			#shortcut="Ctrl+P", 
 			callback=lambda x: self.export_module_content(ExportTypes.PREFS), 
 			parent=self)
 		
+		# Create a export action to export as JSON
+		export_json_action = create_qaction(
+			menu=export_menu, 
+			text="Export as JSON", 
+			#shortcut="Ctrl+J", 
+			callback=lambda x: self.export_module_content(ExportTypes.JSON), 
+			parent=self)
+
 		# Create a export action to export as YAML
-		yaml_action = create_qaction(
-			menu=file_menu, 
+		export_yaml_action = create_qaction(
+			menu=export_menu, 
 			text="Export as YAML", 
-			shortcut="Ctrl+Y", 
+			#shortcut="Ctrl+Y", 
 			callback=lambda x: self.export_module_content(ExportTypes.YAML), 
 			parent=self)
+
 
 		# Create a close action that will call self.close_app
 		close_action = create_qaction(
@@ -235,6 +281,7 @@ class MainWidget(QWidget):
 
 		self.widgets = {
 			"module_content_scrollarea": [], 
+			"load_file_button": [], 
 		}
 
 		self.theme = PREFS.read_prefs_file("GUI/theme.prefs")
@@ -266,22 +313,28 @@ class MainWidget(QWidget):
 		self.prefs = PREFS.PREFS(default_prefs, filename="Prefs/settings.prefs")
 
 	def main_frame(self):
-		logo = QLabel("PyAPIReference")
-		logo.setStyleSheet("font-size: 20px; font-weight: bold;")
+		logo = QLabel()
+
+		pixmap = QPixmap("Images/logo_without_background.png")
+		logo.setPixmap(pixmap)
+
+		logo.setStyleSheet("margin-bottom: 10px;")
 		logo.setAlignment(Qt.AlignCenter)
 
-		self.load_file_button = QPushButton("Load file")
-		self.load_file_button.clicked.connect(self.load_file)
+		load_file_button = QPushButton("Load file")
+		load_file_button.clicked.connect(self.load_file)
+
+		self.widgets["load_file_button"].append(load_file_button)
 
 		self.layout().addWidget(logo, 0, 0, 1, 0, Qt.AlignTop)
-		self.layout().addWidget(self.load_file_button, 1, 0, Qt.AlignTop)
+		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
 		if not self.prefs.file["current_module"] == "":
 			if not os.path.isfile(self.prefs.file["current_module"]):
 				return # Ignore it because is not a valid path
 
-			self.create_inspect_thread(self.prefs.file["current_module"])				
+			self.create_inspect_module_thread(self.prefs.file["current_module"])				
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
@@ -296,34 +349,41 @@ class MainWidget(QWidget):
 
 		self.prefs.write_prefs("current_module", path)
 
-		self.create_inspect_thread(path)
+		self.create_inspect_module_thread(path)
 
-	def create_inspect_thread(self, path):
+	def create_inspect_module_thread(self, path):
 		# Disable Load File button
-		self.load_file_button.setEnabled(False)
+		self.widgets["load_file_button"][-1].setEnabled(False)
+
+		loading_label = QLabel("Loading...")
+		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+		loading_label.setStyleSheet("font-size: 20px; font-family: UbuntuMono;")
+
+		self.layout().addWidget(loading_label, 2, 0)
+		self.layout().setRowStretch(2, 10)
+
+		self.widgets["module_content_scrollarea"].append(loading_label)
 
 		self.thread = QThread()
-		self.inspect_obj = Inspect(path)
-		self.inspect_obj.moveToThread(self.thread)
+		self.worker = InspectModule(path)
+		self.worker.moveToThread(self.thread)
 
 		# Start: inspect object / Finish: create widget 
-		self.thread.started.connect(self.inspect_obj.run_inspect_object)
-		self.inspect_obj.finished.connect(self.call_create_widget)
+		self.thread.started.connect(self.worker.run)
+		self.worker.finished.connect(lambda: self.widgets["load_file_button"][-1].setEnabled(True))
+		self.worker.finished.connect(self.inspect_module_thread_finished)
 		
 		# Delete thread and inspect objects
-		self.inspect_obj.finished.connect(self.thread.quit)
-		self.inspect_obj.finished.connect(self.inspect_obj.deleteLater)
+		self.worker.finished.connect(self.thread.quit)
+		self.worker.finished.connect(self.worker.deleteLater)
 		self.thread.finished.connect(self.thread.deleteLater)
 		
 		self.thread.start()	
 
-	def call_create_widget(self):
-		self.module_content = Inspect.module_content
+	def inspect_module_thread_finished(self):
+		self.module_content = InspectModule.module_content
 		self.add_module_content_widget()
 		
-		# Enable Load File button
-		self.load_file_button.setEnabled(True)		
-
 	def add_module_content_widget(self):
 		if len(self.widgets["module_content_scrollarea"]) > 0:	
 			self.widgets["module_content_scrollarea"][0].setParent(None)
@@ -442,20 +502,6 @@ class MainWidget(QWidget):
 				continue
 
 		return collapsible_object
-
-class Inspect(QObject):
-	module_content = None
-	finished = pyqtSignal()
-
-	def __init__(self, path):
-		super().__init__()
-		self.path = path
-
-	def run_inspect_object(self):
-		module = get_module_from_path(self.path)
-		self.module_content = inspect_object(module)
-		Inspect.module_content = self.module_content
-		self.finished.emit()
 
 
 def init_app():

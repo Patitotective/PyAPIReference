@@ -26,4 +26,4 @@ def say_hi(name: str, class_test=Test) -> str:
 	print(f"hi {name}")
 
 # Sleep represents "large file"
-sleep(10)
+sleep(1)
