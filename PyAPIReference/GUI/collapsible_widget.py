@@ -15,6 +15,7 @@ class CollapsibleWidget(QWidget):
     def __init__(self, 
         theme, 
         title: str=None, 
+        color="default",
         parent: QWidget=None
     ):
         super().__init__()
@@ -23,7 +24,10 @@ class CollapsibleWidget(QWidget):
 
         self.is_collapsed = True
 
-        self.title_frame = self.CollapseButton(title, self.is_collapsed, parent=self)
+        if color == "default":
+            color = "white" if self.theme["background_color"] == "#25282d" else "black"
+        
+        self.title_frame = self.CollapseButton(title, color, self.is_collapsed, parent=self)
         self.title_frame.clicked.connect(self.toggle_collapsed)
 
         self.setParent(parent)
@@ -65,11 +69,10 @@ class CollapsibleWidget(QWidget):
         self.title_frame.update_arrow(self.is_collapsed)
 
     class CollapseButton(QPushButton):
-        def __init__(self, title: str="", is_collapsed: bool=True, parent: QWidget=None):
+        def __init__(self, title: str="", color: str="default", is_collapsed: bool=True, parent: QWidget=None):
             super().__init__()
 
             self.setParent(parent)
-
             self.setText(title)
             self.update_arrow()
 
@@ -78,6 +81,7 @@ class CollapsibleWidget(QWidget):
             *{{
                 padding: 3px 5px 3px 5px;
                 text-align: left;
+                color: {color};
                 border: none;
                 background-color: {parent.theme["background_color"]};
             }}

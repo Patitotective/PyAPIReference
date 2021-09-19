@@ -1,7 +1,11 @@
 #PREFS
-current_module=''
+current_module='C:/Users/DeepDev/Desktop/VsCode/PyApiReference/PyApiReference/example.py'
 theme='dark'
 state=>
-	pos=(0, 0)
-	size=(0, 0)
-	is_maximized=False
+	pos=(0, 23)
+	size=(1366, 705)
+	is_maximized=True
+colors=>
+	class='default'
+	function='default'
+	parameter='default'
