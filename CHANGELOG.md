@@ -1,5 +1,11 @@
 # Change Log
 
+### v0.1.21 (19/09/2021)
+- User can pick color pattern for (``classes, functions, parameters``) in Settings tab
+- Prefs/settings.prefs
+  - Added default color pattern (white for dark mode, black for light mode) 
+- Adding more colors soon
+
 ### v0.1.20 (17/09/2021)
 - When docstring (or other string) has more than one line, create a collapsible for it.
 - Set `UbuntuMono` as font for the whole app (needed to fix, because menu bar is included).
