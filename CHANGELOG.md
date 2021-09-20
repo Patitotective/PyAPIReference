@@ -1,6 +1,6 @@
 # Change Log
 
-### v0.1.22
+### v0.1.22 (19/09/2021)
 - Color pattern
 	- Now the `default` value will be a color instead of `"default"`.
 	- Created `find_object_type_color`, which will, given a string representing the type of the object, look up trough `colors` onto the prefs file for a color for the object type, if no color for the type, default font color.
