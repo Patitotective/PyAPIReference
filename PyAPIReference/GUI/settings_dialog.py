@@ -18,17 +18,18 @@ class FormLayout(QGridLayout):
 	This:
 		--- ---
 	"""
-	def __init__(self, *args, **kwargs):
+	def __init__(self, stretch=True, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
+		self.stretch = stretch
 		self.row = 0
 
 	def addRowEvent(self):
 		"""This function is called whenever a row is added.
 		"""
-		self.setRowStretch(self.row, 0)
+		if self.stretch: self.setRowStretch(self.row, 0)
 		self.row += 1
-		self.setRowStretch(self.row, 1)
+		if self.stretch: self.setRowStretch(self.row, 1)
 
 	@dispatch(QWidget, QWidget)
 	def addRow(self, widget1: QWidget, widget2: QWidget):		
@@ -74,7 +75,7 @@ class SettingsDialog(QDialog):
 
 		self.create_widgets()
 
-		self.setFixedSize(self.sizeHint())
+		self.setFixedSize(300, 450)
 
 	def create_widgets(self):
 		tabs = QTabWidget()
@@ -106,7 +107,7 @@ class SettingsDialog(QDialog):
 			self.prefs.write_prefs(f"colors/{object_type}", color.name())
 
 		theme_tab = QWidget()
-		theme_tab.setLayout(FormLayout())
+		theme_tab.setLayout(FormLayout(stretch=False))
 	
 		dark_theme_toggle = AnimatedToggle()
 		if self.prefs.file["theme"] == "light":

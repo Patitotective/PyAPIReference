@@ -1,5 +1,11 @@
 # Change Log
 
+### v0.1.24 (20/09/2021)
+- Now using [**PyQtDarkTheme**](https://github.com/5yutan5/PyQtDarkTheme) for both, light and dark theme.
+- Now `Fold all` action doesn't fold the collapsible widget itself.
+- Moved fonts and images to resources.
+- Fixed `create_property_collapsible` bug.
+
 ### v0.1.23 (20/09/2021)
 - `CollapsibleWidget` now has only 10 of margin at the left to representate indentation.
 - Added context menu to collapsible widget with `Fold, Unfold, Fold all and Unfold all` actions.

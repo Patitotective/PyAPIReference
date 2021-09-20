@@ -73,8 +73,6 @@ class CollapsibleWidget(QWidget):
             if isinstance(widget, CollapsibleWidget):
                 widget.collapse()
 
-        self.collapse()
-
     def unfold_all(self):
         for widget in get_widgets_from_layout(self.content_layout):
             if isinstance(widget, CollapsibleWidget):
@@ -120,20 +118,19 @@ class CollapsibleWidget(QWidget):
             self.setText(title)
             self.update_arrow()
 
-            self.setStyleSheet(
-            f"""
-            *{{
-                padding: 3px 5px 3px 5px;
-                text-align: left;
-                color: {color};
-                border: none;
-                background-color: {parent.THEME[parent.current_theme]["background_color"]};
-            }}
-            *:hover {{
-                background-color: {parent.THEME[parent.current_theme]["collapsible"]["background_color_hover"]};
-            }}
-            """
-            )
+            self.setStyleSheet(f"text-align: left; padding: 3px 5px 3px 5px; color: {color};")
+            # self.setStyleSheet(
+            # f"""
+            # *{{
+            #     color: {color};
+            #     border: none;
+            #     background-color: {parent.THEME[parent.current_theme]["background_color"]};
+            # }}
+            # *:hover {{
+            #     background-color: {parent.THEME[parent.current_theme]["collapsible"]["background_color_hover"]};
+            # }}
+            # """
+            # )
 
 
         def update_arrow(self, is_collapsed: bool=True):

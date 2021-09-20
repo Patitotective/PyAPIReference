@@ -20,7 +20,7 @@ class ScrollArea(QScrollArea):
 
 		self.setWidget(main_widget)
 		self.setWidgetResizable(True)
-		self.set_stylesheet()
+		#self.set_stylesheet()
 
 		main_widget.installEventFilter(self)
 

@@ -22,6 +22,8 @@ from enum import Enum, auto
 import PREFS
 
 # PyQt5
+import qdarktheme # Dark theme
+
 from PyQt5.QtWidgets import (
 	QApplication, 
 	QMainWindow, 
@@ -36,8 +38,8 @@ from PyQt5.QtWidgets import (
 	QMenu, 
 	)
 
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
+from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase
+from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream
 
 # Dependencies
 from GUI.collapsible_widget import CollapsibleWidget
@@ -84,11 +86,12 @@ class MainWindow(QMainWindow):
 
 	def init_window(self):
 		self.setWindowTitle("PyAPIReference")
-		self.setWindowIcon(QIcon(':/icon.png'))
+		self.setWindowIcon(QIcon(':/Images/icon.png'))
 
 		self.main_widget = MainWidget(parent=self)
 		
-		self.set_stylesheet()
+		#self.set_stylesheet()
+		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme))
 
 		self.setCentralWidget(self.main_widget)
 
@@ -282,6 +285,8 @@ class MainWidget(QWidget):
 	def __init__(self, parent=None):
 		super().__init__()
 
+		self.FONTS = ("UbuntuMono-B.ttf", "UbuntuMono-BI.ttf", "UbuntuMono-R.ttf", "UbuntuMono-RI.ttf")
+
 		self.widgets = {
 			"module_content_scrollarea": [], 
 			"load_file_button": [], 
@@ -290,12 +295,17 @@ class MainWidget(QWidget):
 		self.THEME = PREFS.read_prefs_file("GUI/theme.prefs")
 		self.module_content = None
 
+		self.load_fonts()
 		self.init_prefs()
 		self.init_window()
 
 	@property	
 	def current_theme(self):
 		return self.prefs.file["theme"]
+
+	def load_fonts(self):
+		for font in self.FONTS:
+			QFontDatabase.addApplicationFont(f':/Fonts/{font}')
 
 	def init_window(self):
 		self.setLayout(QGridLayout())
@@ -328,7 +338,7 @@ class MainWidget(QWidget):
 	def main_frame(self):
 		logo = QLabel()
 
-		pixmap = QPixmap("Images/logo_without_background.png")
+		pixmap = QPixmap(":/Images/logo_without_background.png")
 		logo.setPixmap(pixmap)
 
 		logo.setStyleSheet("margin-bottom: 10px;")
@@ -446,7 +456,7 @@ class MainWidget(QWidget):
 			property_name = tuple(property_content)[0]
 			property_value = property_content[property_name]
 			
-			if "type" in property_value:
+			if "type" in property_value and isinstance(property_value, dict):
 				color = self.find_object_type_color(property_value["type"])
 			else:
 				color = self.find_object_type_color(property_name)
@@ -541,6 +551,7 @@ class MainWidget(QWidget):
 
 def init_app():
 	app = QApplication(sys.argv)
+	app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps) # https://github.com/5yutan5/PyQtDarkTheme#usage
 	main_window = MainWindow()
 
 	sys.exit(app.exec_())

@@ -1,5 +1,13 @@
 <!DOCTYPE RCC><RCC version="1.0">
-<qresource>
+<qresource prefix="/Images">
     <file alias="icon.png">Images/icon.png</file>
+    <file alias="logo_without_background.png">Images/logo_without_background.png</file>    
+</qresource>
+<qresource prefix="/Fonts">
+    <file alias="UbuntuMono-B.ttf">Fonts/UbuntuMono-B.ttf</file>
+    <file alias="UbuntuMono-BI.ttf">Fonts/UbuntuMono-BI.ttf</file>
+    <file alias="UbuntuMono-R.ttf">Fonts/UbuntuMono-R.ttf</file>
+    <file alias="UbuntuMono-RI.ttf">Fonts/UbuntuMono-RI.ttf</file>    
 </qresource>
 </RCC>
+<!-- pyrcc5 resources.qrc -o resources.py -->
