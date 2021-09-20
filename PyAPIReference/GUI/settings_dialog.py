@@ -1,8 +1,15 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox
+from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox, QTabWidget, QFormLayout, QColorDialog
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+
 from qtwidgets import AnimatedToggle
 from multipledispatch import dispatch
 import PREFS
+
+if __name__ == "__main__":
+	from outlined_label import OutlinedLabel
+else:
+	from GUI.outlined_label import OutlinedLabel
 
 class FormLayout(QVBoxLayout):
 	"""This layout will work as QFormLayout but this will center the two columns vertically.
@@ -39,60 +46,79 @@ class FormLayout(QVBoxLayout):
 	def addRow(self, widget: QWidget):
 		self.addWidget(widget)
 
-def create_settings_dialog(prefs, *, title="Settings dialog", parent=None):
-	def apply_changes():
-		dark_theme_toggle_state = dark_theme_toggle.checkState()
-		
-		if dark_theme_toggle_state == 0:
-			prefs.write_prefs("theme", "light")
-		elif dark_theme_toggle_state == 2:
-			prefs.write_prefs("theme", "dark")		
+class SettingsDialog(QDialog):
+	def __init__(self, prefs, *args, title="Settings", parent=None, **kwargs):
+		super().__init__(parent=parent, *args, **kwargs)
 
-		class_color = class_drop_down.currentText()
-		function_color = function_drop_down.currentText()
-		paramter_color = parameter_drop_down.currentText()
+		self.setWindowTitle(title)
+		self.setLayout(QFormLayout())
+		self.setMaximumSize(0, 0)
 
-		prefs.write_prefs("colors", {"class": class_color, "function": function_color, "parameter": paramter_color})
+		self.prefs = prefs
 
-		dialog.done(1)
+		self.create_widgets()
 
-	dialog = QDialog(parent=parent)
-	dialog.setWindowTitle(title)
-	dialog.setLayout(FormLayout())
-	dialog.setMaximumSize(0, 0)
+	def create_widgets(self):
+		tabs = QTabWidget()
 
-	dark_theme_toggle = AnimatedToggle()
-	if prefs.file["theme"] == "light":
-		state = 0
-	elif prefs.file["theme"] == "dark":
-		state = 1
-		
-	dark_theme_toggle.setCheckState(state)
+		tabs.addTab(self.create_theme_tab(), "Theme")
 
-	current_class, current_func, current_param = prefs.file["colors"]["class"], prefs.file["colors"]["function"], prefs.file["colors"]["parameter"]
-	color_items = ["default", "red", "green", "blue"]
-	class_drop_down = QComboBox()
-	class_drop_down.addItems(color_items)
-	class_drop_down.setCurrentIndex(color_items.index(current_class))
+		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
+		apply_button.clicked.connect(lambda: self.done(1))
 
-	function_drop_down = QComboBox()
-	function_drop_down.addItems(color_items)
-	function_drop_down.setCurrentIndex(color_items.index(current_func))
+		self.layout().addRow(tabs)
+		self.layout().addRow(apply_button)
 	
-	parameter_drop_down = QComboBox()
-	parameter_drop_down.addItems(color_items)
-	parameter_drop_down.setCurrentIndex(color_items.index(current_param))
+	def create_theme_tab(self):
+		def dark_theme_toggle_changed(state: int):
+			if state == 0:
+				self.prefs.write_prefs("theme", "light")
+			elif state == 2:
+				self.prefs.write_prefs("theme", "dark")		
 
-	apply_button = QPushButton(icon=dialog.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
-	apply_button.clicked.connect(apply_changes)
+		def get_type_color(button, object_type, default_color, title="Pick a color", parent=None):
+			color = QColorDialog.getColor(QColor(default_color), title=title, parent=parent)
 
-	# Add widgets to layout
-	dialog.layout().addRow("Dark theme: ", dark_theme_toggle)
+			if not QColor.isValid(color):
+				return
 
-	dialog.layout().addRow("Class Color: ", class_drop_down)
-	dialog.layout().addRow("Function Color: ", function_drop_down)
-	dialog.layout().addRow("Parameter Color: ", parameter_drop_down)
+			button.setStyleSheet(f"color: {color.name()};")
+			button.setText(color.name())
+			self.prefs.write_prefs(f"colors/{object_type}", color.name())
 
-	dialog.layout().addRow(apply_button)
+		theme_tab = QWidget()
+		theme_tab.setLayout(FormLayout())
+	
+		dark_theme_toggle = AnimatedToggle()
+		if self.prefs.file["theme"] == "light":
+			state = 0
+		elif self.prefs.file["theme"] == "dark":
+			state = 1
+			
+		dark_theme_toggle.setCheckState(state)
+		dark_theme_toggle.stateChanged.connect(dark_theme_toggle_changed)
 
-	return dialog.exec_()
+		theme_tab.layout().addRow("Dark theme: ", dark_theme_toggle)
+
+		for object_type, type_color in self.prefs.file["colors"].items():
+			"""
+			colors=>
+				class="#a6e22e"
+
+			So object_type will be class (str) and type_color will be "#a6e22e" (str).
+			"""
+
+			color_label = QLabel(object_type)
+
+			color_button = QPushButton(type_color)
+			color_button.setStyleSheet(
+			f"""
+			color: {type_color};
+			"""
+			)
+
+			color_button.clicked.connect(lambda ignore, button=color_button, object_type=object_type: get_type_color(button, object_type, self.prefs.file["colors"][object_type], parent=self))
+
+			theme_tab.layout().addRow(f"{object_type.capitalize()} color: ", color_button)
+
+		return theme_tab

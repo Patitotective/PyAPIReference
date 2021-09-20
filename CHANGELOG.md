@@ -1,5 +1,16 @@
 # Change Log
 
+### v0.1.22
+- Color pattern
+	- Now the `default` value will be a color instead of `"default"`.
+	- Created `find_object_type_color`, which will, given a string representing the type of the object, look up trough `colors` onto the prefs file for a color for the object type, if no color for the type, default font color.
+- Settings dialog
+	- Converted the settings dialog into a class.
+	- Settings now in tabs (`QTabWidget`).
+- When inspecting object if found `type` type return `class` instead.
+- `theme` to `THEME` (because it's a constant)
+- Added `logo_without_background.png` image to display on the top of the application.
+
 ### v0.1.21 (19/09/2021)
 - User can pick color pattern for (``classes, functions, parameters``) in Settings tab
 - Prefs/settings.prefs

@@ -40,11 +40,13 @@ from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal
 
 # Dependencies
-import resources # Qt resources resources.qrc
-from inspect_object import inspect_object
 from GUI.collapsible_widget import CollapsibleWidget
 from GUI.scrollarea import ScrollArea
-from GUI.settings_dialog import create_settings_dialog
+from GUI.settings_dialog import SettingsDialog
+from GUI.outlined_label import OutlinedLabel
+
+import resources # Qt resources resources.qrc
+from inspect_object import inspect_object
 from extra import create_qaction, convert_to_code_block, get_module_from_path
 
 
@@ -92,33 +94,33 @@ class MainWindow(QMainWindow):
 		self.setCentralWidget(self.main_widget)
 
 	def set_stylesheet(self):
-		theme = self.main_widget.theme
+		THEME = self.main_widget.THEME
 		current_theme = self.main_widget.current_theme
 
 		self.setStyleSheet(f"""
 			QMainWindow, QWidget {{
-				background-color: {theme[current_theme]['background_color']};
-				font-family: {theme['font_family']};
+				background-color: {THEME[current_theme]['background_color']};
+				font-family: {THEME['font_family']};
 			}}
 			QWidget {{
-				color: {theme[current_theme]['font_color']};
+				color: {THEME[current_theme]['font_color']};
 			}}
 			
 			QPushButton {{
 				border: none;
 				padding: 2px 2px 2px 2px;
-				background-color: {theme[current_theme]['button']['background_color']};
+				background-color: {THEME[current_theme]['button']['background_color']};
 			}}
 			QPushButton:hover {{
-				background-color: {theme[current_theme]['button']['background_color_hover']};
+				background-color: {THEME[current_theme]['button']['background_color_hover']};
 			}}
 			QPushButton:disabled {{
-				background-color: {theme[current_theme]['button']['background_color_disabled']};
+				background-color: {THEME[current_theme]['button']['background_color_disabled']};
 			}}
 			
 			QMenuBar, QMenu {{
-				background-color: {theme['menubar']['background_color']};
-				color: {theme['menubar']['font_color']};
+				background-color: {THEME['menubar']['background_color']};
+				color: {THEME['menubar']['font_color']};
 			}}
 			QMenuBar:item {{
 				padding: 1px 4px;
@@ -126,11 +128,11 @@ class MainWindow(QMainWindow):
 				border-radius: 4px;
 			}}
 			QMenu:item {{
-				color: {theme['menubar']['item']['menu_item_font_color']};
+				color: {THEME['menubar']['item']['menu_item_font_color']};
 			}}
 			QMenu::item:selected, QMenuBar::item:selected {{
-				background-color: {theme['menubar']['item']['background_color_selected']};
-				color: {theme['menubar']['item']['menu_item_font_color_selected']};
+				background-color: {THEME['menubar']['item']['background_color_selected']};
+				color: {THEME['menubar']['item']['menu_item_font_color_selected']};
 			}}
 		"""
 		)
@@ -232,7 +234,8 @@ class MainWindow(QMainWindow):
 				yaml.dump(self.main_widget.module_content, file)
 	
 	def open_settings_dialog(self):
-		answer = create_settings_dialog(self.main_widget.prefs, parent=self)
+		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
+		answer = settings_dialog.exec_()
 
 		if answer == 1: # Means apply
 			self.reset_app()
@@ -284,7 +287,7 @@ class MainWidget(QWidget):
 			"load_file_button": [], 
 		}
 
-		self.theme = PREFS.read_prefs_file("GUI/theme.prefs")
+		self.THEME = PREFS.read_prefs_file("GUI/theme.prefs")
 		self.module_content = None
 
 		self.init_prefs()
@@ -309,9 +312,10 @@ class MainWidget(QWidget):
 				"is_maximized": False, 
 			},
 			"colors": {
-				"class": "default",
-				"function": "default",
-				"parameter": "default",
+				"class": "#5c3566",
+				"function": "#ce5c00",
+				"parameters": "#4e9a06",
+				"docstring": "#3e3d32",				
 			}
 		}
 
@@ -362,7 +366,7 @@ class MainWidget(QWidget):
 
 		loading_label = QLabel("Loading...")
 		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-		loading_label.setStyleSheet("font-size: 20px; font-family: UbuntuMono;")
+		loading_label.setStyleSheet(f"font-size: 20px; font-family: {self.THEME['module_collapsible_font_family']};")
 
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 10)
@@ -401,6 +405,7 @@ class MainWidget(QWidget):
 	def create_module_content_widget(self):
 		module_content_widget = QWidget()
 		module_content_widget.setLayout(QVBoxLayout())
+		module_content_widget.setStyleSheet(f"font-family: {self.THEME['module_collapsible_font_family']};")
 
 		module_collapsible = self.create_collapsible_object(self.module_content)
 		module_collapsible.uncollapse()
@@ -413,10 +418,12 @@ class MainWidget(QWidget):
 		self.widgets["module_content_scrollarea"].append(module_content_scrollarea)
 		return module_content_scrollarea
 
-	def create_collapsible_widget(self, title: str, color="default") -> QWidget:
+	def create_collapsible_widget(self, title: str, color=None) -> QWidget:
 		collapsible_widget = CollapsibleWidget(
-			self.theme[self.current_theme], 
-			title, color)
+			self.THEME, 
+			self.current_theme, 
+			title, 
+			color)
 
 		return collapsible_widget
 
@@ -424,7 +431,7 @@ class MainWidget(QWidget):
 		"""Generates a collapsible widget for a given object_content generated by inspect_object
 		"""
 
-		def create_property_collapsible(property_content: dict, color="default"):
+		def create_property_collapsible(property_content: dict, color: str=None):
 			"""Given a dicionary with {property_name: property_value}, where property_value could be a dictionary or a list
 			return a collapsible widget.
 			"""		
@@ -440,27 +447,39 @@ class MainWidget(QWidget):
 					if not not not nested_property_value: # Means emtpy
 						continue
 
-					property_collapsible.addWidget(QLabel(str(nested_property_value)))
+					nested_property_label = QLabel(str(nested_property_value))
+	
+					# if property_name == "inherits":
+					# 	# If the property name it's inheritance do color them with class color
+					# 	nested_property_color = self.find_object_type_color("class")						
+					# 	nested_property_label.setStyleSheet(f"color: {nested_property_color};")
+
+					property_collapsible.addWidget(nested_property_label)
 			
 			elif isinstance(property_value, dict):
 				for nested_property_name, nested_property_value in property_value.items():
 					if not not not nested_property_value: # Means empty
 						continue
+
 					elif isinstance(nested_property_value, dict):
 						nested_property_content = {nested_property_name: nested_property_value}
 						
-						nested_property_collapsible = create_property_collapsible(nested_property_content)
+						nested_property_collapsible = create_property_collapsible(nested_property_content, color=color)
 						if nested_property_collapsible is None:
 							continue
 
 						property_collapsible.addWidget(nested_property_collapsible)
 						continue
-					
-					property_collapsible.addWidget(QLabel(f"{nested_property_name}: {convert_to_code_block(nested_property_value)}"))
+
+					nested_property_color = self.find_object_type_color(nested_property_name)
+					nested_property_label = QLabel(f"{nested_property_name}: {convert_to_code_block(nested_property_value)}")
+					nested_property_label.setStyleSheet(f"color: {nested_property_color};")
+
+					property_collapsible.addWidget(nested_property_label)
 		
 			return property_collapsible
 
-		def create_object_properties_widget(object_properties: dict, color="default"):
+		def create_object_properties_widget(object_properties: dict, color):
 			"""Given an dictionary with the object_properties return a widget with properties positioned on labels.
 			"""
 			object_properties_widget = QWidget()
@@ -473,10 +492,7 @@ class MainWidget(QWidget):
 				elif isinstance(property_value, (list, tuple, dict)):
 					property_content = {property_name: property_value}
 
-					if property_name == "parameters":
-						color = self.prefs.file["colors"]["parameter"]
-
-					property_collapsible = create_property_collapsible(property_content, color)
+					property_collapsible = create_property_collapsible(property_content, self.find_object_type_color(property_name))
 					
 					if property_collapsible is None:
 						continue
@@ -484,20 +500,18 @@ class MainWidget(QWidget):
 					object_properties_widget.layout().addRow(property_collapsible)
 					continue
 
-				object_properties_widget.layout().addRow(QLabel(f"{property_name}: {convert_to_code_block(property_value)}"))
+				property_color = self.find_object_type_color(property_name)
+				property_label = QLabel(f"{property_name}: {convert_to_code_block(property_value)}")
+				property_label.setStyleSheet(f"color: {property_color};")
+
+				object_properties_widget.layout().addRow(property_label)
 		
 			return object_properties_widget
 
 		object_name = tuple(object_content)[0]
 		object_properties = object_content[object_name]
 
-		color = "default"
-
-		if object_content[object_name]["type"] == "type":
-			color = self.prefs.file["colors"]["class"]
-
-		elif object_content[object_name]["type"] == "function":
-			color = self.prefs.file["colors"]["function"]
+		color = self.find_object_type_color(object_properties["type"])
 
 		collapsible_object = self.create_collapsible_widget(object_name, color)
 		collapsible_object.addWidget(create_object_properties_widget(object_content[object_name], color))
@@ -506,7 +520,6 @@ class MainWidget(QWidget):
 			property_name = "content"
 		elif "parameters" in object_properties:
 			property_name = "parameters"
-			color = self.prefs.file["colors"]["parameter"]	
 		else:
 			print(f"Not valid object {object_name} with {object_properties} properties")
 			return collapsible_object
@@ -519,6 +532,14 @@ class MainWidget(QWidget):
 				continue
 
 		return collapsible_object
+
+	def find_object_type_color(self, object_type: str) -> str:
+		for color_object_type in self.prefs.file["colors"]:
+
+			if object_type == color_object_type:
+				return self.prefs.file["colors"][color_object_type]
+				
+		return self.THEME[self.current_theme]["font_color"]
 
 
 def init_app():

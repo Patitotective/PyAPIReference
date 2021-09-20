@@ -13,19 +13,22 @@ HORIZONTAL_ARROW_PATH = ":/horizontal_arrow_collapsible.png"
 
 class CollapsibleWidget(QWidget):
     def __init__(self, 
-        theme, 
+        THEME, 
+        current_theme, 
         title: str=None, 
-        color="default",
+        color=None,
         parent: QWidget=None
     ):
         super().__init__()
         
-        self.theme = theme
+
+        self.THEME = THEME
+        self.current_theme = current_theme
 
         self.is_collapsed = True
 
-        if color == "default":
-            color = "white" if self.theme["background_color"] == "#25282d" else "black"
+        if color is None:
+            color = self.THEME[self.current_theme]["font_color"]
         
         self.title_frame = self.CollapseButton(title, color, self.is_collapsed, parent=self)
         self.title_frame.clicked.connect(self.toggle_collapsed)
@@ -69,7 +72,7 @@ class CollapsibleWidget(QWidget):
         self.title_frame.update_arrow(self.is_collapsed)
 
     class CollapseButton(QPushButton):
-        def __init__(self, title: str="", color: str="default", is_collapsed: bool=True, parent: QWidget=None):
+        def __init__(self, title: str="", color: str=None, is_collapsed: bool=True, parent: QWidget=None):
             super().__init__()
 
             self.setParent(parent)
@@ -83,10 +86,10 @@ class CollapsibleWidget(QWidget):
                 text-align: left;
                 color: {color};
                 border: none;
-                background-color: {parent.theme["background_color"]};
+                background-color: {parent.THEME[parent.current_theme]["background_color"]};
             }}
             *:hover {{
-                background-color: {parent.theme["collapsible"]["background_color_hover"]};
+                background-color: {parent.THEME[parent.current_theme]["collapsible"]["background_color_hover"]};
             }}
             """
             )

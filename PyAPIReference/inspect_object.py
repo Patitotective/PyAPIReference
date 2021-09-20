@@ -96,21 +96,24 @@ def get_object_properties(object_: object):
 				pass
 		
 		>>>
-		type = class
-		inherits =>
+		type=class
+		inherits=>
 			Test1
-		content =>
+		content=>
 			__init__=>
-				type = function 
+				type=function 
 				parameters ...
-			test_func =>
-				type = function
+			test_func=>
+				type=function
 				parameters ...
 
 	callable (function, lambda, methods) -> parameters (see get_callable_parameters), return_annotation 
 	"""
 
 	object_type = type(object_).__name__
+
+	if object_type == "type":
+		object_type = "class"
 
 	result = {"type": object_type, "docstring": object_.__doc__}
 		
