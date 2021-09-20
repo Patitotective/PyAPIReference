@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QFrame, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow
+from PyQt5.QtWidgets import QFrame, QWidget, QLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow, QMenu, QAction
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QCursor
 
 if __name__ == "__main__":
     import collapsible_widget_resources
@@ -21,6 +21,7 @@ class CollapsibleWidget(QWidget):
     ):
         super().__init__()
         
+        self.parent = parent
 
         self.THEME = THEME
         self.current_theme = current_theme
@@ -33,14 +34,53 @@ class CollapsibleWidget(QWidget):
         self.title_frame = self.CollapseButton(title, color, self.is_collapsed, parent=self)
         self.title_frame.clicked.connect(self.toggle_collapsed)
 
+        self.title_frame.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.title_frame.customContextMenuRequested.connect(self.context_menu)
+    
         self.setParent(parent)
 
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(0)
-        self.layout().setContentsMargins(5, 0, 5, 0)    
+        self.layout().setContentsMargins(0, 0, 0, 0)    
 
         self.layout().addWidget(self.title_frame, Qt.AlignTop)
         self.layout().addWidget(self.init_content())
+
+    def context_menu(self):
+        menu = QMenu(self.parent)
+        fold_action = QAction("Fold")
+        fold_action.triggered.connect(self.collapse)
+        
+        unfold_action = QAction("Unfold")
+        unfold_action.triggered.connect(self.uncollapse)
+
+        fold_all_action = QAction("Fold all")
+        fold_all_action.triggered.connect(lambda ignore: self.fold_all())
+        
+        unfold_all_action = QAction("Unfold all")
+        unfold_all_action.triggered.connect(lambda ignore: self.unfold_all())
+           
+        menu.addAction(fold_action)
+        menu.addAction(unfold_action)
+           
+        menu.addAction(fold_all_action)
+        menu.addAction(unfold_all_action)
+
+        menu.exec_(QCursor.pos())
+
+    def fold_all(self):
+        for widget in get_widgets_from_layout(self.content_layout):
+            if isinstance(widget, CollapsibleWidget):
+                widget.collapse()
+
+        self.collapse()
+
+    def unfold_all(self):
+        for widget in get_widgets_from_layout(self.content_layout):
+            if isinstance(widget, CollapsibleWidget):
+                widget.uncollapse()
+
+        self.uncollapse()
 
     def init_content(self):
         self.content = QWidget()
@@ -52,6 +92,7 @@ class CollapsibleWidget(QWidget):
         return self.content
 
     def addWidget(self, widget: QWidget):
+        widget.setContentsMargins(10, 0, 0, 0) # To representate indentation
         self.content_layout.addWidget(widget)
    
     def toggle_collapsed(self):
@@ -101,3 +142,13 @@ class CollapsibleWidget(QWidget):
 	        elif not is_collapsed:
 	            self.setIcon(QIcon(VERTICAL_ARROW_PATH))
 
+def get_widgets_from_layout(layout: QLayout, widget_type: QWidget=QWidget, exact_type: bool=False) -> iter:
+    for indx in range(layout.count()):
+        widget = layout.itemAt(indx).widget()
+        
+        if not isinstance(widget, widget_type) and not exact_type:
+            continue
+        elif not type(widget) is widget_type and exact_type:
+            continue
+
+        yield widget

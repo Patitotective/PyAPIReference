@@ -1,5 +1,12 @@
 # Change Log
 
+### v0.1.23 (20/09/2021)
+- `CollapsibleWidget` now has only 10 of margin at the left to representate indentation.
+- Added context menu to collapsible widget with `Fold, Unfold, Fold all and Unfold all` actions.
+- Now the tree will show class attributes.
+- Changed scrollarea step from 2 to 5.
+- Removed color pattern from `docstring` and added to `int, str, tuple, list and dict`.
+
 ### v0.1.22 (19/09/2021)
 - Color pattern
 	- Now the `default` value will be a color instead of `"default"`.

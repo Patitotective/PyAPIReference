@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1"
-     inkscape:cx="692"
-     inkscape:cy="140.5"
+     inkscape:zoom="2"
+     inkscape:cx="750.5"
+     inkscape:cy="432.25"
      inkscape:window-width="1920"
      inkscape:window-height="950"
      inkscape:window-x="0"
@@ -44,18 +44,18 @@
        d="m 190.53362,130.81701 h 13.856 l -6.928,12 z"
        inkscape:transform-center-y="2.0000028"
        sodipodi:nodetypes="cccc"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyApiReference/PyApiReference/Images/vertical_arrow_collapsible.png"
-       inkscape:export-xdpi="21.166666"
-       inkscape:export-ydpi="21.166666" />
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/GUI/Images/vertical_arrow_collapsible.png"
+       inkscape:export-xdpi="14.816673"
+       inkscape:export-ydpi="14.816673" />
     <path
        id="path4408"
        style="fill:#82878b;fill-rule:evenodd;stroke-width:0.632286;stroke-linecap:round;stroke-linejoin:round"
        d="m 190.53362,130.81701 v -13.856 l 12,6.928 z"
        sodipodi:nodetypes="cccc"
        inkscape:transform-center-x="-2.0000028"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyApiReference/PyApiReference/Images/horizontal_arrow_collapsible.png"
-       inkscape:export-xdpi="21.166666"
-       inkscape:export-ydpi="21.166666" />
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/GUI/Images/horizontal_arrow_collapsible.png"
+       inkscape:export-xdpi="14.816673"
+       inkscape:export-ydpi="14.816673" />
     <rect
        style="fill:#25282d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.06865;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
        id="rect970"
@@ -221,10 +221,10 @@
        inkscape:export-ydpi="254.00002"><tspan
          x="236.91425"
          y="29.198992"
-         id="tspan209246">Generate API References for Python modules easily with </tspan><tspan
+         id="tspan1084">Generate API References for Python modules easily with </tspan><tspan
          x="236.91425"
          y="33.167743"
-         id="tspan209248">an beautiful and intuitive GUI app.</tspan></text>
+         id="tspan1086">an beautiful and intuitive GUI app.</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.43958px;line-height:1.25;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';text-align:center;word-spacing:0px;text-anchor:middle;fill:#ffffff;stroke-width:0.264583"

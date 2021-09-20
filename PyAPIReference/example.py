@@ -1,4 +1,5 @@
-#Inheritance Example
+"""Example file to test
+"""
 from time import sleep
 class Test3:
 	a = 1
@@ -13,6 +14,7 @@ class Test2(Test3):
 
 
 class Test(Test2):
+	attribute = 10
 	def __init__(self):
 		self.name = "carlitos"
 		super().__init__()
@@ -22,7 +24,7 @@ class Test(Test2):
 		print(f"hi {self.name}")
 
 
-def say_hi(name: str, class_test=Test) -> str:
+def foo(name: str, class_test=Test) -> str:
 	print(f"hi {name}")
 
 # Sleep represents "large file"

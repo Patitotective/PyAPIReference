@@ -15,8 +15,8 @@ class ScrollArea(QScrollArea):
 		self.auto_scroll = auto_scroll
 		self.main_widget = main_widget
 
-		self.horizontalScrollBar().setSingleStep(2)
-		self.verticalScrollBar().setSingleStep(2)
+		self.horizontalScrollBar().setSingleStep(5)
+		self.verticalScrollBar().setSingleStep(5)
 
 		self.setWidget(main_widget)
 		self.setWidgetResizable(True)

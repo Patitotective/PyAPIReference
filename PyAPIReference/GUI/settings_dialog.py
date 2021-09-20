@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox, QTabWidget, QFormLayout, QColorDialog
+from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox, QTabWidget, QFormLayout, QColorDialog, QGridLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 
@@ -7,11 +7,11 @@ from multipledispatch import dispatch
 import PREFS
 
 if __name__ == "__main__":
-	from outlined_label import OutlinedLabel
+	from scrollarea import ScrollArea
 else:
-	from GUI.outlined_label import OutlinedLabel
+	from GUI.scrollarea import ScrollArea
 
-class FormLayout(QVBoxLayout):
+class FormLayout(QGridLayout):
 	"""This layout will work as QFormLayout but this will center the two columns vertically.
 	QFormLayout:
 		--- ___
@@ -21,42 +21,60 @@ class FormLayout(QVBoxLayout):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
-	@dispatch(QWidget, QWidget)
-	def addRow(self, widget1: QWidget, widget2: QWidget):
-		row = QWidget()
-		row.setLayout(QHBoxLayout())
-		
-		row.layout().addWidget(widget1)
-		row.layout().addWidget(widget2)
+		self.row = 0
 
-		self.addWidget
-		self.addWidget(row)
+	def addRowEvent(self):
+		"""This function is called whenever a row is added.
+		"""
+		self.setRowStretch(self.row, 0)
+		self.row += 1
+		self.setRowStretch(self.row, 1)
+
+	@dispatch(QWidget, QWidget)
+	def addRow(self, widget1: QWidget, widget2: QWidget):		
+		self.addWidget(widget1, self.row, 0)
+		self.addWidget(widget2, self.row, 1)
+
+		self.addRowEvent()
 
 	@dispatch(str, QWidget)
 	def addRow(self, string: str, widget: QWidget):
-		row = QWidget()
-		row.setLayout(QHBoxLayout())
-		
-		row.layout().addWidget(QLabel(string))
-		row.layout().addWidget(widget)
+		self.addWidget(QLabel(string), self.row, 0)
+		self.addWidget(widget, self.row, 1)
 
-		self.addWidget(row)
+		self.addRowEvent()
+	
+	@dispatch(QWidget, str)
+	def addRow(self, string: str, widget: QWidget):
+		self.addWidget(widget, self.row, 0)
+		self.addWidget(QLabel(string), self.row, 1)
+
+		self.addRowEvent()
 
 	@dispatch(QWidget)
 	def addRow(self, widget: QWidget):
-		self.addWidget(widget)
+		self.addWidget(widget, self.row, 0, 1, 0)
+		
+		self.addRowEvent()
+
+	@dispatch(str)
+	def addRow(self, string: str):
+		self.addWidget(QLabel(string), self.row, 0, 1, 0)
+		
+		self.addRowEvent()
 
 class SettingsDialog(QDialog):
 	def __init__(self, prefs, *args, title="Settings", parent=None, **kwargs):
 		super().__init__(parent=parent, *args, **kwargs)
 
-		self.setWindowTitle(title)
-		self.setLayout(QFormLayout())
-		self.setMaximumSize(0, 0)
-
 		self.prefs = prefs
 
+		self.setWindowTitle(title)
+		self.setLayout(QFormLayout())
+
 		self.create_widgets()
+
+		self.setFixedSize(self.sizeHint())
 
 	def create_widgets(self):
 		tabs = QTabWidget()
@@ -82,8 +100,9 @@ class SettingsDialog(QDialog):
 			if not QColor.isValid(color):
 				return
 
-			button.setStyleSheet(f"color: {color.name()};")
 			button.setText(color.name())
+			button.setStyleSheet(f"color: {color.name()};")
+
 			self.prefs.write_prefs(f"colors/{object_type}", color.name())
 
 		theme_tab = QWidget()
@@ -98,7 +117,8 @@ class SettingsDialog(QDialog):
 		dark_theme_toggle.setCheckState(state)
 		dark_theme_toggle.stateChanged.connect(dark_theme_toggle_changed)
 
-		theme_tab.layout().addRow("Dark theme: ", dark_theme_toggle)
+		color_pattern_widget = QWidget()
+		color_pattern_widget.setLayout(FormLayout())
 
 		for object_type, type_color in self.prefs.file["colors"].items():
 			"""
@@ -109,16 +129,19 @@ class SettingsDialog(QDialog):
 			"""
 
 			color_label = QLabel(object_type)
-
 			color_button = QPushButton(type_color)
-			color_button.setStyleSheet(
-			f"""
-			color: {type_color};
-			"""
+			color_button.setStyleSheet(f"color: {type_color};")
+
+			color_button.clicked.connect(
+				lambda ignore, 
+				button=color_button, 
+				object_type=object_type: 
+				get_type_color(button, object_type, self.prefs.file["colors"][object_type], parent=self)
 			)
 
-			color_button.clicked.connect(lambda ignore, button=color_button, object_type=object_type: get_type_color(button, object_type, self.prefs.file["colors"][object_type], parent=self))
+			color_pattern_widget.layout().addRow(f"{object_type.capitalize()} color: ", color_button)
 
-			theme_tab.layout().addRow(f"{object_type.capitalize()} color: ", color_button)
+		theme_tab.layout().addRow("Dark theme: ", dark_theme_toggle)
+		theme_tab.layout().addRow(ScrollArea(color_pattern_widget))
 
 		return theme_tab
