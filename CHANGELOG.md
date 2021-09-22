@@ -1,5 +1,8 @@
 # Change Log
 
+### v0.1.26 (22/09/2021)
+- If found exception when loading module cancel creation of tree and display the exception onto a label.
+
 ### v0.1.25 (20/09/2021)
 - Changed code block colors.
 - Now `inspect_object` do not inspect imported members (if module).

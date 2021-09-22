@@ -48,7 +48,7 @@ from GUI.settings_dialog import SettingsDialog
 
 import resources # Qt resources resources.qrc
 from inspect_object import inspect_object
-from extra import create_qaction, convert_to_code_block, get_module_from_path
+from extra import create_qaction, convert_to_code_block, get_module_from_path, change_widget_stylesheet
 
 class ExportTypes(Enum):
 	PREFS = "prefs"
@@ -58,18 +58,27 @@ class ExportTypes(Enum):
 
 class InspectModule(QObject):
 	finished = pyqtSignal()
+	expection_found = pyqtSignal()
 
 	def __init__(self, path):
 		super().__init__()
 		self.path = path
+		self.running = False
 
 	def run(self):
-		module = get_module_from_path(self.path)
+		self.running = True
+		module, error = get_module_from_path(self.path)
+
+		if error is not None: # Means exception
+			self.exception = error
+			self.expection_found.emit()
+			self.running = False
+			return
 
 		self.module_content = inspect_object(module)
 
 		self.finished.emit()
-
+		self.running = False
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -289,6 +298,7 @@ class MainWidget(QWidget):
 		self.widgets = {
 			"module_content_scrollarea": [], 
 			"load_file_button": [], 
+			"retry_button": [], 
 		}
 
 		self.THEME = PREFS.read_prefs_file("GUI/theme.prefs")
@@ -356,7 +366,7 @@ class MainWidget(QWidget):
 			if not os.path.isfile(self.prefs.file["current_module"]):
 				return # Ignore it because is not a valid path
 
-			self.create_inspect_module_thread(self.prefs.file["current_module"])				
+			self.create_inspect_module_thread(self.prefs.file["current_module"])			
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
@@ -374,6 +384,7 @@ class MainWidget(QWidget):
 		self.create_inspect_module_thread(path)
 
 	def create_inspect_module_thread(self, path):
+		print("create_inspect_module_thread")
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
@@ -382,7 +393,13 @@ class MainWidget(QWidget):
 		loading_label.setStyleSheet(f"font-size: 20px; font-family: {self.THEME['module_collapsible_font_family']};")
 
 		self.layout().addWidget(loading_label, 2, 0)
-		self.layout().setRowStretch(2, 10)
+		self.layout().setRowStretch(2, 100)
+
+		# Check if retry button exists
+		# if len(self.widgets["retry_button"]) > 1:
+		# 	self.widgets["retry_button"][-1].setParent(None)
+		# 	self.widgets["retry_button"] = []
+		# 	self.layout().setRowStretch(4, 0)
 
 		self.widgets["module_content_scrollarea"].append(loading_label)
 
@@ -395,8 +412,30 @@ class MainWidget(QWidget):
 
 		# Delete thread and inspect objects
 		self.worker.finished.connect(self.inspect_object_worker_finished)
-				
+		self.worker.expection_found.connect(self.inspect_object_worker_exception)
+
 		self.thread.start()	
+
+	def inspect_object_worker_exception(self):
+		self.thread.quit()
+		self.worker.deleteLater()
+		self.thread.deleteLater()
+
+		self.widgets["load_file_button"][-1].setEnabled(True)
+
+		exception_message = f"Couldn't load file, exception found: \n{self.worker.exception}"
+		change_widget_stylesheet(self.widgets["module_content_scrollarea"][-1], "font-size", "15px")
+		self.widgets["module_content_scrollarea"][-1].setText(exception_message)
+
+		# retry button
+		# retry_button = QPushButton("Retry")
+		# retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module"]) if not self.worker.running else None)
+
+		# self.widgets["retry_button"].append(retry_button)
+
+		# self.layout().addWidget(retry_button, 3, 0)
+		# self.layout().setRowStretch(2, 0)
+		# self.layout().setRowStretch(4, 100)
 
 	def inspect_object_worker_finished(self):
 		self.thread.quit()
