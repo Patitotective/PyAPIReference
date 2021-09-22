@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QFrame, QWidget, QLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow, QMenu, QAction
+from PyQt5.QtWidgets import QFrame, QWidget, QLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow, QMenu, QAction, QCheckBox, QHBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QCursor
 
@@ -19,7 +19,7 @@ class CollapsibleWidget(QWidget):
         color=None,
         parent: QWidget=None
     ):
-        super().__init__()
+        super().__init__(parent=parent)
         
         self.parent = parent
 
@@ -31,14 +31,12 @@ class CollapsibleWidget(QWidget):
         if color is None:
             color = self.THEME[self.current_theme]["font_color"]
         
-        self.title_frame = self.CollapseButton(title, color, self.is_collapsed, parent=self)
-        self.title_frame.clicked.connect(self.toggle_collapsed)
+        self.title_frame = CollapseButton(title, color, self.is_collapsed, parent=self)
+        self.title_frame.button.clicked.connect(self.toggle_collapsed)
 
         self.title_frame.setContextMenuPolicy(Qt.CustomContextMenu)
         self.title_frame.customContextMenuRequested.connect(self.context_menu)
     
-        self.setParent(parent)
-
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)    
@@ -110,34 +108,45 @@ class CollapsibleWidget(QWidget):
         self.content.setVisible(True)
         self.title_frame.update_arrow(self.is_collapsed)
 
-    class CollapseButton(QPushButton):
-        def __init__(self, title: str="", color: str=None, is_collapsed: bool=True, parent: QWidget=None):
-            super().__init__()
+class CollapseButton(QWidget):
+    def __init__(self, title: str="", color: str=None, is_collapsed: bool=True, parent: QWidget=None):
+        super().__init__(parent=parent)
 
-            self.setParent(parent)
-            self.setText(title)
-            self.update_arrow()
+        self.setLayout(QHBoxLayout())
 
-            self.setStyleSheet(f"text-align: left; padding: 3px 5px 3px 5px; color: {color};")
-            # self.setStyleSheet(
-            # f"""
-            # *{{
-            #     color: {color};
-            #     border: none;
-            #     background-color: {parent.THEME[parent.current_theme]["background_color"]};
-            # }}
-            # *:hover {{
-            #     background-color: {parent.THEME[parent.current_theme]["collapsible"]["background_color_hover"]};
-            # }}
-            # """
-            # )
+        self.button = QPushButton(title)
+        self.layout().addWidget(self.button)
+        self.update_arrow()
+
+        self.setStyleSheet(f"text-align: left; padding: 3px 5px 3px 5px; color: {color};")
+        # self.setStyleSheet(
+        # f"""
+        # *{{
+        #     color: {color};
+        #     border: none;
+        #     background-color: {parent.THEME[parent.current_theme]["background_color"]};
+        # }}
+        # *:hover {{
+        #     background-color: {parent.THEME[parent.current_theme]["collapsible"]["background_color_hover"]};
+        # }}
+        # """
+        # )
 
 
-        def update_arrow(self, is_collapsed: bool=True):
-        	if is_collapsed:
-	            self.setIcon(QIcon(HORIZONTAL_ARROW_PATH))
-	        elif not is_collapsed:
-	            self.setIcon(QIcon(VERTICAL_ARROW_PATH))
+    def update_arrow(self, is_collapsed: bool=True):
+        if is_collapsed:
+            self.button.setIcon(QIcon(HORIZONTAL_ARROW_PATH))
+        elif not is_collapsed:
+            self.button.setIcon(QIcon(VERTICAL_ARROW_PATH))
+
+class CheckBoxCollapseButton(CollapseButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.checkbox = QCheckBox(self.button)
+        #self.checkbox.setFixedWidth(self.checkbox.sizeHint().width() * 2)        
+        #self.layout().addWidget(self.checkbox)
+        #self.layout().addStretch()
 
 def get_widgets_from_layout(layout: QLayout, widget_type: QWidget=QWidget, exact_type: bool=False) -> iter:
     for indx in range(layout.count()):

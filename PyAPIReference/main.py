@@ -36,7 +36,7 @@ from PyQt5.QtWidgets import (
 	QMessageBox, 
 	QVBoxLayout, 
 	QMenu, 
-	)
+)
 
 from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream
@@ -50,7 +50,6 @@ import resources # Qt resources resources.qrc
 from inspect_object import inspect_object
 from extra import create_qaction, convert_to_code_block, get_module_from_path
 
-
 class ExportTypes(Enum):
 	PREFS = "prefs"
 	JSON = "json"
@@ -58,7 +57,6 @@ class ExportTypes(Enum):
 
 
 class InspectModule(QObject):
-	module_content = None
 	finished = pyqtSignal()
 
 	def __init__(self, path):
@@ -67,8 +65,9 @@ class InspectModule(QObject):
 
 	def run(self):
 		module = get_module_from_path(self.path)
+
 		self.module_content = inspect_object(module)
-		InspectModule.module_content = self.module_content
+
 		self.finished.emit()
 
 
@@ -315,7 +314,7 @@ class MainWidget(QWidget):
 	def init_prefs(self):
 		default_prefs = {
 			"current_module": "", # The path when you open a file to restore it 
-			"theme": "light", 
+			"theme": "dark", 
 			"state": {
 				"pos": (0, 0), 
 				"size": (0, 0), 
@@ -392,19 +391,21 @@ class MainWidget(QWidget):
 		self.worker.moveToThread(self.thread)
 
 		# Start: inspect object / Finish: create widget 
-		self.thread.started.connect(self.worker.run)
-		self.worker.finished.connect(lambda: self.widgets["load_file_button"][-1].setEnabled(True))
-		self.worker.finished.connect(self.inspect_module_thread_finished)
-		
+		self.thread.started.connect(self.worker.run)	
+
 		# Delete thread and inspect objects
-		self.worker.finished.connect(self.thread.quit)
-		self.worker.finished.connect(self.worker.deleteLater)
-		self.thread.finished.connect(self.thread.deleteLater)
-		
+		self.worker.finished.connect(self.inspect_object_worker_finished)
+				
 		self.thread.start()	
 
-	def inspect_module_thread_finished(self):
-		self.module_content = InspectModule.module_content
+	def inspect_object_worker_finished(self):
+		self.thread.quit()
+		self.worker.deleteLater()
+		self.thread.deleteLater()
+
+		self.widgets["load_file_button"][-1].setEnabled(True)
+		self.module_content = self.worker.module_content
+
 		self.add_module_content_widget()
 		
 	def add_module_content_widget(self):
@@ -494,13 +495,13 @@ class MainWidget(QWidget):
 						continue
 					
 					nested_property_color = self.find_object_type_color(nested_property_name)
-					nested_property_label = QLabel(f"{nested_property_name}: {convert_to_code_block(nested_property_value)}")
+					nested_property_label = QLabel(f"{nested_property_name}: {self.convert_to_code_block(nested_property_value)}")
 					nested_property_label.setStyleSheet(f"color: {nested_property_color};")
 
 					property_collapsible.addWidget(nested_property_label)
 		
 			elif isinstance(property_value, str):
-				property_label = QLabel(convert_to_code_block(property_value))
+				property_label = QLabel(self.convert_to_code_block(property_value))
 				property_label.setStyleSheet(f"color {color}")
 
 				property_collapsible.addWidget(property_label)
@@ -525,7 +526,7 @@ class MainWidget(QWidget):
 					continue
 
 				property_color = self.find_object_type_color(property_name)
-				property_label = QLabel(f"{property_name}: {convert_to_code_block(property_value)}")
+				property_label = QLabel(f"{property_name}: {self.convert_to_code_block(property_value)}")
 				property_label.setStyleSheet(f"color: {property_color};")
 
 				collapsible.addWidget(property_label)
@@ -548,8 +549,16 @@ class MainWidget(QWidget):
 				
 		return self.THEME[self.current_theme]["font_color"]
 
+	def convert_to_code_block(self, string):
+		background_color = self.THEME[self.current_theme]["code_block"]["background_color"]
+		font_color = self.THEME[self.current_theme]["code_block"]["font_color"]
+
+		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
+
 
 def init_app():
+	"""Init PyAPIReference application and main window.
+	"""
 	app = QApplication(sys.argv)
 	app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps) # https://github.com/5yutan5/PyQtDarkTheme#usage
 	main_window = MainWindow()

@@ -57,6 +57,15 @@ def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
 	def filter_member(member_name: str, member: object):
 		if isinstance(member, exclude_types):
 			return False
+ 
+ 		# If the object it's a module
+		if inspect.ismodule(object_):
+			# Get the module of the member (where it was defined or it belongs to)
+			# And check if the object name is the same as the member one.
+			# This will exclude all members that do not belong to the given module.
+			member_module = inspect.getmodule(member)
+			if member_module is not None:
+				return member_module.__name__ == object_.__name__
 
 		dunder_methods = PREFS.read_prefs_file("dunder_methods.prefs")
 		if type(object_).__name__ in dunder_methods:
@@ -64,13 +73,16 @@ def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
 		else:
 			dunder_methods_to_include = ()
 
-		if member_name.startswith("__") and member_name.endswith("__") and member_name not in dunder_methods_to_include:
+		if (member_name.startswith("__") and member_name.endswith("__") 
+			and member_name not in dunder_methods_to_include):
+			
 			return False
 
 		return True
 
 	result = inspect.getmembers(object_)
-	# filter_member(*x) means filter_member(x[0], x[1])
+
+	# filter_member(*x) is equivalent to filter_member(x[0], x[1])
 	result = filter(lambda x: filter_member(*x), result)
 
 	return result
@@ -79,8 +91,8 @@ def get_object_content(object_: object):
 	"""Given an object get attributes of all of it's members.
 	"""
 	result = {}
-	
-	for member_name, member in get_object_members(object_):
+
+	for member_name, member in get_object_members(object_):		
 		result[member_name] = get_object_properties(member)
 
 	return result

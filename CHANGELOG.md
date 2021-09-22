@@ -1,5 +1,12 @@
 # Change Log
 
+### v0.1.25 (20/09/2021)
+- Changed code block colors.
+- Now `inspect_object` do not inspect imported members (if module).
+- `InspectObject` worker now do not have `module_content` as class attribute, just as instance.
+- Changed default theme to `dark`.
+- Added `inspect_object_worker_finished` and moved all `finished.connect` to it.
+
 ### v0.1.24 (20/09/2021)
 - Now using [**PyQtDarkTheme**](https://github.com/5yutan5/PyQtDarkTheme) for both, light and dark theme.
 - Now `Fold all` action doesn't fold the collapsible widget itself.
@@ -45,7 +52,7 @@
 - Added **PyAPIReference** logo at the top of the window
 - Renamed some thread stuff.
 
-### v0.1.18 (17/09/2021)
+### v0.1.18 (17/09/2021)A
 - Changed `inspect_object` to run on seperate thread. Prevents GUI freezing.    
 Visual suggestion: Need to gray out button when disabled
 
