@@ -35,7 +35,9 @@ from PyQt5.QtWidgets import (
 	QFormLayout, 
 	QMessageBox, 
 	QVBoxLayout, 
-	QMenu, 
+	QMenu,
+	QDesktopWidget,
+	QStyle
 )
 
 from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase
@@ -257,6 +259,17 @@ class MainWindow(QMainWindow):
 	def restore_geometry(self):
 		pos, size = self.main_widget.prefs.file["state"]["pos"], self.main_widget.prefs.file["state"]["size"]
 		is_maximized = self.main_widget.prefs.file["state"]["is_maximized"]
+		
+		if pos == (0, 0):
+			win_rec = self.frameGeometry()
+			center = QDesktopWidget().availableGeometry().center()
+			win_rec.moveCenter(center)
+			width, height = QDesktopWidget().availableGeometry().width(), QDesktopWidget().availableGeometry().height()
+			win_rec_width, win_rec_height = width//5, height*1//3
+			self.resize(win_rec_width, win_rec_height)
+			self.move(width//2-win_rec_width//2, height//2-win_rec_height//2)
+
+			return
 
 		if is_maximized:
 			self.showMaximized()
@@ -268,7 +281,7 @@ class MainWindow(QMainWindow):
 	def save_geometry(self):
 		geometry = self.geometry()
 
-		pos = geometry.x(), geometry.y() 
+		pos = geometry.x(), geometry.y()
 		size = geometry.width(), geometry.height()
 
 		self.main_widget.prefs.write_prefs("state/pos", pos)
@@ -384,7 +397,6 @@ class MainWidget(QWidget):
 		self.create_inspect_module_thread(path)
 
 	def create_inspect_module_thread(self, path):
-		print("create_inspect_module_thread")
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
