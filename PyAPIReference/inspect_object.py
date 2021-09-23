@@ -143,7 +143,7 @@ def get_object_properties(object_: object):
 		if "return" in object_.__annotations__:
 			result["return_annotation"] = []
 	
-			if isinstance(object_.__annotations__["return"], tuple):
+			if isinstance(object_.__annotations__["return"], (tuple, list)):
 				for annotation in object_.__annotations__["return"]:
 					result["return_annotation"].append(str(annotation.__name__) if not annotation == inspect._empty else None)
 			else:
@@ -196,7 +196,7 @@ def get_callable_parameters(callable_: callable):
 		"kind": parameter.kind.description
 		}
 
-		if isinstance(parameter.annotation, tuple):
+		if isinstance(parameter.annotation, (tuple, list)):
 			for annotation in parameter.annotation:
 				result[parameter.name]["annotation"].append(str(annotation.__name__) if not annotation == inspect._empty else None)
 			continue
@@ -204,3 +204,6 @@ def get_callable_parameters(callable_: callable):
 		result[parameter.name]["annotation"] = str(parameter.annotation.__name__) if not parameter.annotation == inspect._empty else None
 
 	return result
+
+def foo(par: (str, int)) -> (dict, tuple):
+	pass
