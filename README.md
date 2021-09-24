@@ -6,7 +6,7 @@ _PyAPIReference is a GUI application to generate API References for Python files
 ### _WORK IN PROGRESS._
 
 ## Screenshots
-[![Main screen (dark theme)](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/main_dark.png?raw=true)](https://github.com/Patitotective/PyAPIReference)[![Settings dialog (light theme)](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/settings_light.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Main screen](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/main.png?raw=true)](https://github.com/Patitotective/PyAPIReference)[![Settings dialog](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/settings.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
 
 ## Test it from source code
 1. First you will need to clone this repository by pasting this command into your terminal:
@@ -49,4 +49,3 @@ About
 - Sharkface:
 	- Discord: Sharkface#9495.
 	- GitHub: https://github.com/devp4.
- sdas
