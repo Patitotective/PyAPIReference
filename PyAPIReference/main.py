@@ -20,6 +20,8 @@ import yaml
 from enum import Enum, auto
 
 import PREFS
+import markdown # Markdown to HTML converter
+import m2r2 # Markdown to ReStructuredText converter
 
 # PyQt5
 import qdarktheme # Dark theme
@@ -50,10 +52,16 @@ from inspect_object import inspect_object
 from extra import create_qaction, convert_to_code_block, get_module_from_path, change_widget_stylesheet, add_text_to_text_edit, get_widgets_from_layout
 
 
-class ExportTypes(Enum):
+class TreeExportTypes(Enum):
 	PREFS = "prefs"
 	JSON = "json"
 	YAML = "yaml"
+
+
+class MarkdownExportTypes(Enum):
+	MARKDOWN = "md"
+	HTML = "html"
+	RESTRUCTUREDTEXT = "rst"
 
 
 class InspectModule(QObject):
@@ -115,34 +123,62 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Load file", 
 			shortcut="Ctrl+O", 
-			callback=self.main_widget.load_file, 
+			callback=lambda: self.main_widget.load_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
 			parent=self)			
 
-		## Export menu ##
-		export_menu = file_menu.addMenu("Export tree...")
+		## Export tree menu ##
+		export_tree_menu = file_menu.addMenu("Export tree...")
 		
 		# Create a export action to export as PREFS
 		export_prefs_action = create_qaction(
-			menu=export_menu, 
+			menu=export_tree_menu, 
 			text="Export as PREFS", 
 			#shortcut="Ctrl+P", 
-			callback=lambda x: self.export_module_content(ExportTypes.PREFS), 
+			callback=lambda x: self.export_module_content(TreeExportTypes.PREFS), 
 			parent=self)
 		
 		# Create a export action to export as JSON
 		export_json_action = create_qaction(
-			menu=export_menu, 
+			menu=export_tree_menu, 
 			text="Export as JSON", 
 			#shortcut="Ctrl+J", 
-			callback=lambda x: self.export_module_content(ExportTypes.JSON), 
+			callback=lambda x: self.export_module_content(TreeExportTypes.JSON), 
 			parent=self)
 
 		# Create a export action to export as YAML
 		export_yaml_action = create_qaction(
-			menu=export_menu, 
+			menu=export_tree_menu, 
 			text="Export as YAML", 
 			#shortcut="Ctrl+Y", 
-			callback=lambda x: self.export_module_content(ExportTypes.YAML), 
+			callback=lambda x: self.export_module_content(TreeExportTypes.YAML), 
+			parent=self)
+
+
+		## Export markdown menu ##
+		export_markdown_menu = file_menu.addMenu("Export markdown...")
+		
+		# Create a export action to export as PREFS
+		export_markdown_action = create_qaction(
+			menu=export_markdown_menu, 
+			text="Export as Markdown", 
+			#shortcut="Ctrl+P", 
+			callback=lambda x: self.export_markdown(MarkdownExportTypes.MARKDOWN), 
+			parent=self)
+		
+		# Create a export action to export as JSON
+		export_html_action = create_qaction(
+			menu=export_markdown_menu, 
+			text="Export as HTML", 
+			#shortcut="Ctrl+J", 
+			callback=lambda x: self.export_markdown(MarkdownExportTypes.HTML), 
+			parent=self)
+
+		# Create a export action to export as YAML
+		export_restructuredtext_action = create_qaction(
+			menu=export_markdown_menu, 
+			text="Export as ReStructuredText", 
+			#shortcut="Ctrl+Y", 
+			callback=lambda x: self.export_markdown(MarkdownExportTypes.RESTRUCTUREDTEXT), 
 			parent=self)
 
 
@@ -153,6 +189,7 @@ class MainWindow(QMainWindow):
 			shortcut="Ctrl+Q", 
 			callback=self.close_app, 
 			parent=self)
+
 
 		## Edit menu ##
 		edit_menu = bar.addMenu('&Edit') # Add a menu called edit
@@ -176,29 +213,52 @@ class MainWindow(QMainWindow):
 			callback=lambda: QMessageBox.aboutQt(self), 
 			parent=self)
 
-	def export_module_content(self, file_type) -> None:
+	def export_module_content(self, export_type: TreeExportTypes) -> None:
 		"""Export the object tree as a file"""
 
 		if not self.main_widget.module_content:
 			# If user has not loaded a file, display export error
-			error_message = QMessageBox.warning(self, f"Export as {file_type.name}", "Nothing to save.")
+			error_message = QMessageBox.warning(self, f"Export as {export_type.name}", "Nothing to save.")
 			return
 		
-		default_filename = f"{tuple(self.main_widget.module_content)[0]}.{file_type.value}"
-		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {file_type.name}", default_filename, f"{file_type.name} Files (*.{file_type.value})")
+		default_filename = f"{tuple(self.main_widget.module_content)[0]}.{export_type.value}"
+		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {export_type.name}", default_filename, f"{export_type.name} Files (*.{export_type.value})")
 		
 		if path == '':
 			return
 
 		with open(path, "w") as file:
-			if file_type == ExportTypes.PREFS:
+			if export_type == TreeExportTypes.PREFS:
 				file.write(PREFS.convert_to_prefs(self.main_widget.module_content))
 			
-			elif file_type == ExportTypes.JSON:
+			elif export_type == TreeExportTypes.JSON:
 				json.dump(self.main_widget.module_content, file, indent=4)
 			
-			elif file_type == ExportTypes.YAML:
+			elif export_type == TreeExportTypes.YAML:
 				yaml.dump(self.main_widget.module_content, file)
+	
+	def export_markdown(self, export_type: MarkdownExportTypes):
+		if len(self.main_widget.widgets["markdown_text_edit"]) < 1:
+			QMessageBox.critical(self, "Cannot export markdown", "You haven't create any markdown to export.")
+			return
+
+		markdown_text = self.main_widget.widgets["markdown_text_edit"][-1].toPlainText()
+	
+		default_filename = f"{tuple(self.main_widget.module_content)[0]}.{export_type.value}"
+		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {export_type.name}", default_filename, f"{export_type.name} Files (*.{export_type.value})")
+		
+		if path == '':
+			return
+
+		with open(path, "w") as file:
+			if export_type == MarkdownExportTypes.MARKDOWN:
+				file.write(markdown_text)
+			
+			elif export_type == MarkdownExportTypes.HTML:
+				file.write(markdown.markdown(markdown_text))
+			
+			elif export_type == MarkdownExportTypes.RESTRUCTUREDTEXT:
+				file.write(m2r2.convert(markdown_text))
 	
 	def open_settings_dialog(self):
 		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
@@ -368,14 +428,18 @@ class MainWidget(QWidget):
 		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 		loading_label.setStyleSheet(f"font-size: 20px; font-family: {self.THEME['module_collapsible_font_family']};")
 
+		if len(self.widgets["module_content_scrollarea"]) > 0:
+			self.widgets["module_content_scrollarea"][-1].setParent(None)
+			self.widgets["module_content_scrollarea"].pop()
+
+		self.widgets["module_content_scrollarea"].append(loading_label)
+
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 100)
 		
 		if len(self.widgets["retry_button"]) > 0:
 			self.widgets["retry_button"][-1].setParent(None)
 			self.widgets["retry_button"].pop()
-
-		self.widgets["module_content_scrollarea"].append(loading_label)
 
 		self.thread = QThread()
 		self.worker = InspectModule(module)
@@ -391,9 +455,9 @@ class MainWidget(QWidget):
 		self.thread.start()
 
 	def inspect_object_worker_exception(self):
-		self.thread.quit()		
+		self.thread.quit()
+		self.worker.deleteLater()		
 		self.thread.deleteLater()
-		self.worker.deleteLater()
 
 		self.widgets["load_file_button"][-1].setEnabled(True)
 
@@ -500,37 +564,41 @@ class MainWidget(QWidget):
 		return markdown_tab
 
 	def convert_tree_to_markdown(self, tree: dict=None):
-		def content_to_markdown(content: dict) -> str:
-			markdown = ""
+		def content_to_markdown(content: dict, header: str="###") -> str:
+			markdown_text = ""
 
 			for member_name, member_props in content.items():
 				member_type = member_props["type"]
 				member_docstring = member_props["docstring"]
 
-				markdown += f"## {member_name} ({member_type})\n"
-				markdown += f"{member_docstring if member_docstring is not None else ''}".strip() + "\n\n"
+				if "value" in member_props: # Means it's a variable so the docstring will be a description of the variable type
+					member_docstring = None
+					markdown_text += f"{header} `{member_name} ({member_type}) = {member_props['value']}`\n"
+				else:
+					markdown_text += f"{header} {member_name} ({member_type})\n"
+	
+				markdown_text += f"{member_docstring if member_docstring is not None else f'{member_name} has no description.'}".strip() + "\n\n"
 
-			return markdown
+			return markdown_text
 
 		if tree is None:
 			tree = self.module_content
 
+		# object is the main object on the tree
 		module_name = tuple(tree)[0]
 		module_content = tree[module_name]
 
-		markdown = f"# {module_name}\n"
+		markdown_text = f"# {module_name}\n"
 
 		for property_name, property_val in module_content.items():
 			if isinstance(property_val, dict):
-				markdown += content_to_markdown(property_val)
+				markdown_text += content_to_markdown(property_val)
 
-			if property_name == "type":
-				continue
 			elif property_name == "docstring":
-				markdown += f"{property_val if property_val is not None else f'{module_name} has no docstring.'}".strip() + "\n\n"
+				markdown_text += f"{property_val if property_val is not None else f'{module_name} has no docstring.'}".strip() + "\n\n"
 				continue
 
-		return markdown.strip() + "\n" # This way it only lefts one line at the end
+		return markdown_text.strip() + "\n" # This way it only lefts one line at the end
 
 	def filter_tree(self, filter_dict: dict=None, dict_to_filter: dict=None):
 		"""Given a filter_dict and a dict_to_filter returns dict_to_filter if keys existed in filter_dict:

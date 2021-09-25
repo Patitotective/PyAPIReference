@@ -1,5 +1,9 @@
 # Change Log
 
+### v0.1.28 (25/09/2021)
+- Added export as markdown options.
+- Added discord link on `README.md`.
+
 ### v0.1.27 (25/09/2021)
 - Added **Markdown** tab where you can create a markdown file based on the tree (and the checkboxes), update it and edit the markdown.
 - When loading file default dir will be the last file dir, if no last file current dir.

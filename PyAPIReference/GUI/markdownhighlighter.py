@@ -191,6 +191,12 @@ class MarkdownHighlighter(QSyntaxHighlighter):
         self.MARKDOWN_KWS_FORMAT['Image'] = text_char_format
 
         text_char_format = QTextCharFormat()
+        text_char_format.setForeground(QBrush(QColor(theme['codespan']['color'])))
+        text_char_format.setFontWeight(QFont.Bold if theme['codespan']['font-weight']=='bold' else QFont.Normal)
+        text_char_format.setFontItalic(True if theme['codespan']['font-style']=='italic' else False)
+        self.MARKDOWN_KWS_FORMAT['CodeSpan'] = text_char_format
+
+        text_char_format = QTextCharFormat()
         text_char_format.setForeground(QBrush(QColor(theme['header']['color'])))
         text_char_format.setFontWeight(QFont.Bold if theme['header']['font-weight']=='bold' else QFont.Normal)
         text_char_format.setFontItalic(True if theme['header']['font-style']=='italic' else False)
@@ -219,12 +225,6 @@ class MarkdownHighlighter(QSyntaxHighlighter):
         text_char_format.setFontWeight(QFont.Bold if theme['blockquote']['font-weight']=='bold' else QFont.Normal)
         text_char_format.setFontItalic(True if theme['blockquote']['font-style']=='italic' else False)
         self.MARKDOWN_KWS_FORMAT['BlockQuote'] = text_char_format
-
-        text_char_format = QTextCharFormat()
-        text_char_format.setForeground(QBrush(QColor(theme['codespan']['color'])))
-        text_char_format.setFontWeight(QFont.Bold if theme['codespan']['font-weight']=='bold' else QFont.Normal)
-        text_char_format.setFontItalic(True if theme['codespan']['font-style']=='italic' else False)
-        self.MARKDOWN_KWS_FORMAT['CodeSpan'] = text_char_format
 
         text_char_format = QTextCharFormat()
         text_char_format.setForeground(QBrush(QColor(theme['codeblock']['color'])))

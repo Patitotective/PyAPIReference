@@ -3,3 +3,5 @@ PREFS
 qtwidgets
 multipledispatch
 pyqtdarktheme
+markdown
+m2r2

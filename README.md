@@ -3,6 +3,8 @@
 
 _PyAPIReference is a GUI application to generate API References for Python files._
 
+_Discord server: https://discord.gg/as85Q4GnR6._
+
 ### _WORK IN PROGRESS._
 
 ## Screenshots
