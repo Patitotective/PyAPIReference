@@ -25,32 +25,30 @@ import PREFS
 import qdarktheme # Dark theme
 
 from PyQt5.QtWidgets import (
-	QApplication, 
-	QMainWindow, 
-	QWidget, 
-	QLabel, 
-	QFileDialog, 
-	QPushButton, 
-	QGridLayout, 
-	QFormLayout, 
-	QMessageBox, 
-	QVBoxLayout, 
-	QMenu,
-	QDesktopWidget,
-	QStyle
+	QApplication, QMainWindow,  
+	QWidget, QLabel, 
+	QFileDialog, QPushButton, 
+	QGridLayout, QFormLayout, 
+	QMessageBox, QVBoxLayout, 
+	QMenu, QDesktopWidget, 
+	QTabWidget, QTextEdit, 
+	QShortcut
 )
 
-from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase
+from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QTextOption
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream
 
 # Dependencies
-from GUI.collapsible_widget import CollapsibleWidget
+from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
 from GUI.scrollarea import ScrollArea
 from GUI.settings_dialog import SettingsDialog
+from GUI.markdownhighlighter import MarkdownHighlighter
+from GUI.warning_dialog import WarningDialog
 
 import resources # Qt resources resources.qrc
 from inspect_object import inspect_object
-from extra import create_qaction, convert_to_code_block, get_module_from_path, change_widget_stylesheet
+from extra import create_qaction, convert_to_code_block, get_module_from_path, change_widget_stylesheet, add_text_to_text_edit, get_widgets_from_layout
+
 
 class ExportTypes(Enum):
 	PREFS = "prefs"
@@ -82,6 +80,7 @@ class InspectModule(QObject):
 		self.finished.emit()
 		self.running = False
 
+
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
 		super().__init__(parent=parent)
@@ -104,50 +103,6 @@ class MainWindow(QMainWindow):
 		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme))
 
 		self.setCentralWidget(self.main_widget)
-
-	def set_stylesheet(self):
-		THEME = self.main_widget.THEME
-		current_theme = self.main_widget.current_theme
-
-		self.setStyleSheet(f"""
-			QMainWindow, QWidget {{
-				background-color: {THEME[current_theme]['background_color']};
-				font-family: {THEME['font_family']};
-			}}
-			QWidget {{
-				color: {THEME[current_theme]['font_color']};
-			}}
-			
-			QPushButton {{
-				border: none;
-				padding: 2px 2px 2px 2px;
-				background-color: {THEME[current_theme]['button']['background_color']};
-			}}
-			QPushButton:hover {{
-				background-color: {THEME[current_theme]['button']['background_color_hover']};
-			}}
-			QPushButton:disabled {{
-				background-color: {THEME[current_theme]['button']['background_color_disabled']};
-			}}
-			
-			QMenuBar, QMenu {{
-				background-color: {THEME['menubar']['background_color']};
-				color: {THEME['menubar']['font_color']};
-			}}
-			QMenuBar:item {{
-				padding: 1px 4px;
-				background: transparent;
-				border-radius: 4px;
-			}}
-			QMenu:item {{
-				color: {THEME['menubar']['item']['menu_item_font_color']};
-			}}
-			QMenu::item:selected, QMenuBar::item:selected {{
-				background-color: {THEME['menubar']['item']['background_color_selected']};
-				color: {THEME['menubar']['item']['menu_item_font_color_selected']};
-			}}
-		"""
-		)
 
 	def create_menu_bar(self):
 		"""Create menu bar."""
@@ -260,14 +215,17 @@ class MainWindow(QMainWindow):
 		pos, size = self.main_widget.prefs.file["state"]["pos"], self.main_widget.prefs.file["state"]["size"]
 		is_maximized = self.main_widget.prefs.file["state"]["is_maximized"]
 		
-		if pos == (0, 0):
+		if pos == (-100, -100):
 			win_rec = self.frameGeometry()
+			
 			center = QDesktopWidget().availableGeometry().center()
 			win_rec.moveCenter(center)
+			
 			width, height = QDesktopWidget().availableGeometry().width(), QDesktopWidget().availableGeometry().height()
-			win_rec_width, win_rec_height = width//5, height*1//3
+			win_rec_width, win_rec_height = width // 5, height * 1 // 3
+			
 			self.resize(win_rec_width, win_rec_height)
-			self.move(width//2-win_rec_width//2, height//2-win_rec_height//2)
+			self.move(width // 2 - win_rec_width // 2, height // 2 - win_rec_height // 2)
 
 			return
 
@@ -309,9 +267,12 @@ class MainWidget(QWidget):
 		self.FONTS = ("UbuntuMono-B.ttf", "UbuntuMono-BI.ttf", "UbuntuMono-R.ttf", "UbuntuMono-RI.ttf")
 
 		self.widgets = {
+			"module_tabs": [], 
 			"module_content_scrollarea": [], 
 			"load_file_button": [], 
 			"retry_button": [], 
+			"markdown_tab": [], 
+			"markdown_text_edit": []
 		}
 
 		self.THEME = PREFS.read_prefs_file("GUI/theme.prefs")
@@ -339,7 +300,7 @@ class MainWidget(QWidget):
 			"current_module": "", # The path when you open a file to restore it 
 			"theme": "dark", 
 			"state": {
-				"pos": (0, 0), 
+				"pos": (-100, -100), 
 				"size": (0, 0), 
 				"is_maximized": False, 
 			},
@@ -375,17 +336,13 @@ class MainWidget(QWidget):
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
-		if not self.prefs.file["current_module"] == "":
-			if not os.path.isfile(self.prefs.file["current_module"]):
-				return # Ignore it because is not a valid path
-
-			self.create_inspect_module_thread(self.prefs.file["current_module"])			
+		self.load_last_module()
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
 			parent=self, 
 			caption="Select a file", 
-			directory=os.getcwd(), # Get current directory
+			directory=os.getcwd() if self.prefs.file["current_module"] == "" else self.prefs.file["current_module"], # Get current directory
 			filter="Python files (*.py)") # Filter Python files
 
 		# If filename equals empty string means no selected file
@@ -396,7 +353,14 @@ class MainWidget(QWidget):
 
 		self.create_inspect_module_thread(path)
 
-	def create_inspect_module_thread(self, path):
+	def load_last_module(self):
+		if not self.prefs.file["current_module"] == "":
+			if not os.path.isfile(self.prefs.file["current_module"]):
+				return # Ignore it because is not a valid path
+
+			self.create_inspect_module_thread(self.prefs.file["current_module"])		
+
+	def create_inspect_module_thread(self, module):
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
@@ -407,16 +371,14 @@ class MainWidget(QWidget):
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 100)
 
-		# Check if retry button exists
-		# if len(self.widgets["retry_button"]) > 1:
-		# 	self.widgets["retry_button"][-1].setParent(None)
-		# 	self.widgets["retry_button"] = []
-		# 	self.layout().setRowStretch(4, 0)
+		if len(self.widgets["retry_button"]) > 0:
+			self.widgets["retry_button"][-1].setParent(None)
+			self.widgets["retry_button"].pop()
 
 		self.widgets["module_content_scrollarea"].append(loading_label)
 
 		self.thread = QThread()
-		self.worker = InspectModule(path)
+		self.worker = InspectModule(module)
 		self.worker.moveToThread(self.thread)
 
 		# Start: inspect object / Finish: create widget 
@@ -426,12 +388,12 @@ class MainWidget(QWidget):
 		self.worker.finished.connect(self.inspect_object_worker_finished)
 		self.worker.expection_found.connect(self.inspect_object_worker_exception)
 
-		self.thread.start()	
+		self.thread.start()
 
 	def inspect_object_worker_exception(self):
-		self.thread.quit()
-		self.worker.deleteLater()
+		self.thread.quit()		
 		self.thread.deleteLater()
+		self.worker.deleteLater()
 
 		self.widgets["load_file_button"][-1].setEnabled(True)
 
@@ -439,41 +401,189 @@ class MainWidget(QWidget):
 		change_widget_stylesheet(self.widgets["module_content_scrollarea"][-1], "font-size", "15px")
 		self.widgets["module_content_scrollarea"][-1].setText(exception_message)
 
-		# retry button
-		# retry_button = QPushButton("Retry")
-		# retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module"]) if not self.worker.running else None)
+		retry_button = QPushButton("Retry")
+		retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module"]))
 
-		# self.widgets["retry_button"].append(retry_button)
+		self.widgets["retry_button"].append(retry_button)
 
-		# self.layout().addWidget(retry_button, 3, 0)
-		# self.layout().setRowStretch(2, 0)
-		# self.layout().setRowStretch(4, 100)
+		self.layout().addWidget(retry_button, 3, 0)
+		self.layout().setRowStretch(4, 100)
 
 	def inspect_object_worker_finished(self):
 		self.thread.quit()
 		self.worker.deleteLater()
 		self.thread.deleteLater()
 
+		self.layout().setRowStretch(4, 0)
+
 		self.widgets["load_file_button"][-1].setEnabled(True)
 		self.module_content = self.worker.module_content
 
-		self.add_module_content_widget()
+		self.create_module_tabs()
 		
-	def add_module_content_widget(self):
+	def create_module_tabs(self):
+		if len(self.widgets["module_tabs"]) > 0:	
+			self.widgets["module_tabs"][-1].setParent(None)
+			self.widgets["module_tabs"] = []
+		
 		if len(self.widgets["module_content_scrollarea"]) > 0:	
-			self.widgets["module_content_scrollarea"][0].setParent(None)
+			self.widgets["module_content_scrollarea"][-1].setParent(None)
 			self.widgets["module_content_scrollarea"] = []
-		
-		self.layout().addWidget(self.create_module_content_widget(), 2, 0, 1, 0)
+
+		module_tabs = QTabWidget()
+
+		module_tabs_shortcut = QShortcut(QKeySequence("Ctrl+Tab"), module_tabs)
+		module_tabs_shortcut.activated.connect(lambda: module_tabs.setCurrentIndex((module_tabs.currentIndex() + 1) % module_tabs.count()))
+
+
+		self.layout().addWidget(module_tabs, 2, 0, 1, 0)
 		self.layout().setRowStretch(2, 1)		
 		self.layout().setRowStretch(1, 0)
 
-	def create_module_content_widget(self):
+		module_tabs.addTab(self.create_module_content_tab(), "Tree")		
+		module_tabs.addTab(self.create_markdown_tab(), "Markdown")		
+
+		self.widgets["module_tabs"].append(module_tabs)
+
+	def create_markdown_tab(self):
+		def create_markdown_text_edit():
+			markdown_text = self.convert_tree_to_markdown(tree=self.filter_tree())
+
+			if len(self.widgets["markdown_text_edit"]) > 0:
+				# If markdown_text_edit was already created just update it.
+				self.widgets["markdown_text_edit"][-1].setText(markdown_text)
+				return
+
+			text_edit = QTextEdit()
+			text_edit.setPlainText(markdown_text)
+			text_edit.setWordWrapMode(QTextOption.NoWrap)
+
+			highlighter = MarkdownHighlighter(text_edit)
+
+			markdown_tab = self.widgets["markdown_tab"][-1]
+			self.widgets["markdown_text_edit"].append(text_edit)
+
+			markdown_tab.layout().addWidget(text_edit, 1, 0)
+			markdown_tab.layout().setRowStretch(1, 0)
+
+			return text_edit
+
+		def convert_to_markdown_button_clicked():
+			nonlocal convert_to_markdown_clicked
+
+			if not convert_to_markdown_clicked:
+				convert_to_markdown_clicked = True
+				convert_to_markdown_button.setText("Update Markdown")				
+				create_markdown_text_edit()
+				return
+
+			warning = WarningDialog("Overwrite text", "Do you want to overwrite current Markdown text?", parent=self).exec_() # Return 1 if yes, 0 if no
+
+			if not warning:
+				return
+
+			create_markdown_text_edit()
+
+		convert_to_markdown_clicked = False
+
+		markdown_tab = QWidget()
+		markdown_tab.setLayout(QGridLayout())
+
+		convert_to_markdown_button = QPushButton("Convert to Markdown")
+		convert_to_markdown_button.clicked.connect(convert_to_markdown_button_clicked)
+
+		markdown_tab.layout().addWidget(convert_to_markdown_button, 0, 0)
+		markdown_tab.layout().setRowStretch(1, 1)
+
+		self.widgets["markdown_tab"].append(markdown_tab)
+
+		return markdown_tab
+
+	def convert_tree_to_markdown(self, tree: dict=None):
+		def content_to_markdown(content: dict) -> str:
+			markdown = ""
+
+			for member_name, member_props in content.items():
+				member_type = member_props["type"]
+				member_docstring = member_props["docstring"]
+
+				markdown += f"## {member_name} ({member_type})\n"
+				markdown += f"{member_docstring if member_docstring is not None else ''}".strip() + "\n\n"
+
+			return markdown
+
+		if tree is None:
+			tree = self.module_content
+
+		module_name = tuple(tree)[0]
+		module_content = tree[module_name]
+
+		markdown = f"# {module_name}\n"
+
+		for property_name, property_val in module_content.items():
+			if isinstance(property_val, dict):
+				markdown += content_to_markdown(property_val)
+
+			if property_name == "type":
+				continue
+			elif property_name == "docstring":
+				markdown += f"{property_val if property_val is not None else f'{module_name} has no docstring.'}".strip() + "\n\n"
+				continue
+
+		return markdown.strip() + "\n" # This way it only lefts one line at the end
+
+	def filter_tree(self, filter_dict: dict=None, dict_to_filter: dict=None):
+		"""Given a filter_dict and a dict_to_filter returns dict_to_filter if keys existed in filter_dict:
+
+		Example:
+			print(self.filter_dict(filter_dict={"abc": True}, dict_to_filter={"abc": {"a": 0, "b": 1, "c": 2, "d": 3}, "123: {1: 0, 2: 1}}))
+
+			>>> {"abc": {"a": 0, "b": 1, "c": 2, "d": 3}
+		"""
+		if filter_dict is None:
+			module_content_scrollarea = self.widgets["module_content_scrollarea"][-1]
+			module_collapsible = list(get_widgets_from_layout(module_content_scrollarea.main_widget.layout()))[0]
+
+			filter_dict = module_collapsible.tree_to_dict()
+
+		#if not not not filter_dict: # Means empty
+			#return dict_to_filter
+
+		if dict_to_filter is None:
+			dict_to_filter = self.module_content
+
+		result = {}
+
+		for key, val in dict_to_filter.items():
+			if not key in filter_dict or filter_dict[key] == True:
+				result[key] = val
+				continue
+
+			if filter_dict[key] == False:
+				continue
+
+			elif isinstance(val, dict):
+				result[key] = self.filter_tree(filter_dict[key], val)		
+				continue
+
+		return result
+
+	def create_module_content_tab(self):
 		module_content_widget = QWidget()
 		module_content_widget.setLayout(QVBoxLayout())
-		module_content_widget.setStyleSheet(f"font-family: {self.THEME['module_collapsible_font_family']};")
+		font = QFont()
+		module_content_widget.setStyleSheet(
+		f"""
+		*{{
+			font-family: {self.THEME['module_collapsible_font_family']};
+		}}
+		QToolTip {{
+			font-family: {font.defaultFamily()};
+		}}
+		""")
 
-		module_collapsible = self.create_collapsible_object(self.module_content)
+		module_collapsible = self.create_collapsible_object(self.module_content, collapse_button=CollapseButton)
+		
 		module_collapsible.uncollapse()
 
 		module_content_widget.layout().addWidget(module_collapsible)
@@ -484,7 +594,7 @@ class MainWidget(QWidget):
 		self.widgets["module_content_scrollarea"].append(module_content_scrollarea)
 		return module_content_scrollarea
 
-	def create_collapsible_widget(self, title: str, color=None, parent=None) -> QWidget:
+	def create_collapsible_widget(self, title: str, color=None, collapse_button=CheckBoxCollapseButton, parent=None) -> QWidget:
 		if parent is None:
 			parent = self
 
@@ -493,30 +603,42 @@ class MainWidget(QWidget):
 			self.current_theme, 
 			title, 
 			color, 
+			collapse_button, 
 			parent)
 
 		return collapsible_widget
 
-	def create_collapsible_object(self, object_content: dict):
+	def create_collapsible_object(self, object_content: dict, collapse_button=CheckBoxCollapseButton):
 		"""Generates a collapsible widget for a given object_content generated by inspect_object
 		"""
 
-		def create_property_collapsible(property_content: dict):
+		def create_property_collapsible(
+			property_content: dict, 
+			properties_without_checkbox: (tuple)=("docstring", "inherits"), 
+			properties_disabled_by_default: (tuple)=("self"), 
+			):
+			
 			"""Given a dicionary with {property_name: property_value}, where property_value could be a dictionary or a list
 			return a collapsible widget.
-			"""			
+			"""
 			property_name = tuple(property_content)[0]
 			property_value = property_content[property_name]
 			
+			if not not not property_value: # Means empty
+				return
+
 			if "type" in property_value and isinstance(property_value, dict):
 				color = self.find_object_type_color(property_value["type"])
 			else:
 				color = self.find_object_type_color(property_name)
 
-			property_collapsible = self.create_collapsible_widget(property_name, color)
+			if property_name in properties_without_checkbox:
+				property_collapsible = self.create_collapsible_widget(property_name, color, collapse_button=CollapseButton)
+			else:
+				property_collapsible = self.create_collapsible_widget(property_name, color)
 
-			if not not not property_value: # Means empty
-				return
+			if property_name in properties_disabled_by_default:
+				property_collapsible.disable_checkbox()
 
 			if isinstance(property_value, (list, tuple)):
 				for nested_property_value in property_value:
@@ -529,13 +651,13 @@ class MainWidget(QWidget):
 			
 			elif isinstance(property_value, dict):
 				for nested_property_name, nested_property_value in property_value.items():
-					
-					multiple_line_string = "\n" in nested_property_value if isinstance(nested_property_value, str) else ""
 
 					if not not not nested_property_value: # Means empty
 						continue
+					
+					multiple_line_string = "\n" in nested_property_value if isinstance(nested_property_value, str) else ""
 
-					elif isinstance(nested_property_value, (list, tuple, dict)) or multiple_line_string:
+					if isinstance(nested_property_value, (list, tuple, dict)) or multiple_line_string:
 						nested_property_content = {nested_property_name: nested_property_value}
 						
 						nested_property_collapsible = create_property_collapsible(nested_property_content)
@@ -552,6 +674,8 @@ class MainWidget(QWidget):
 					property_collapsible.addWidget(nested_property_label)
 		
 			elif isinstance(property_value, str):
+				property_value = property_value.strip()
+
 				property_label = QLabel(self.convert_to_code_block(property_value))
 				property_label.setStyleSheet(f"color {color}")
 
@@ -560,7 +684,7 @@ class MainWidget(QWidget):
 			return property_collapsible
 
 		def add_object_properties_to_collapsible(object_properties: dict, collapsible: CollapsibleWidget):
-			"""Given an dictionary with the object_properties return a widget with properties positioned on labels.
+			"""Given a dictionary with the properties of an object an a collapsible, add widgest to the collapsible representing the properties.
 			"""
 			for property_name, property_value in object_properties.items():
 				multiple_line_string = "\n" in property_value if isinstance(property_value, str) else ""
@@ -587,7 +711,7 @@ class MainWidget(QWidget):
 
 		color = self.find_object_type_color(object_properties["type"])
 
-		collapsible_object = self.create_collapsible_widget(object_name, color)
+		collapsible_object = self.create_collapsible_widget(object_name, color, collapse_button=collapse_button)
 		add_object_properties_to_collapsible(object_content[object_name], collapsible_object)
 
 		return collapsible_object

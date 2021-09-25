@@ -88,11 +88,16 @@ class SettingsDialog(QDialog):
 		self.layout().addRow(tabs)
 		self.layout().addRow(apply_button)
 	
+	def create_inspect_module_tab(self):
+		inspect_module_tab = QWidget()
+		inspect_module_tab.setLayout(QVBoxLayout())
+
 	def create_theme_tab(self):
 		def dark_theme_toggle_changed(state: int):
-			if state == 0:
+			state = bool(state)
+			if not state:
 				self.prefs.write_prefs("theme", "light")
-			elif state == 2:
+			elif state:
 				self.prefs.write_prefs("theme", "dark")		
 
 		def get_type_color(button, object_type, default_color, title="Pick a color", parent=None):
@@ -146,3 +151,5 @@ class SettingsDialog(QDialog):
 		theme_tab.layout().addRow(ScrollArea(color_pattern_widget))
 
 		return theme_tab
+
+

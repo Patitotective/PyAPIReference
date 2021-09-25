@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QFrame, QWidget, QLayout, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow, QMenu, QAction, QCheckBox, QHBoxLayout
+from PyQt5.QtWidgets import QFrame, QWidget, QVBoxLayout, QLabel, QPushButton, QApplication, QMainWindow, QMenu, QAction, QCheckBox, QHBoxLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QCursor
 
@@ -8,15 +8,69 @@ if __name__ == "__main__":
 else:
     import GUI.collapsible_widget_resources
 
+if __name__ == "__main__":
+    raise RuntimeError("collapsible_widget.py requires get_widgets_from_layout from extra.py which is outside this folder, you can't run this script as main")
+else:
+    from extra import get_widgets_from_layout 
+
 VERTICAL_ARROW_PATH = ":/vertical_arrow_collapsible.png"
 HORIZONTAL_ARROW_PATH = ":/horizontal_arrow_collapsible.png"
+
+
+class CollapseButton(QWidget):
+    def __init__(self, title: str="", color: str=None, is_collapsed: bool=True, parent: QWidget=None):
+        super().__init__(parent=parent)
+
+        self.parent = parent
+
+        self.setLayout(QHBoxLayout())
+
+        self.button = QPushButton(title)
+        self.layout().addWidget(self.button)
+        self.update_arrow()
+
+        self.setStyleSheet(
+        f"""  
+        QPushButton {{
+            text-align: left; 
+            padding: 3px 5px 3px 5px; 
+            color: {color};
+        }}
+        """)
+
+    def update_arrow(self, is_collapsed: bool=True):
+        if is_collapsed:
+            self.button.setIcon(QIcon(HORIZONTAL_ARROW_PATH))
+        elif not is_collapsed:
+            self.button.setIcon(QIcon(VERTICAL_ARROW_PATH))
+
+
+class CheckBoxCollapseButton(CollapseButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.checkbox = QCheckBox()
+        self.checkbox.stateChanged.connect(self.checkbox_state_changed)
+        self.checkbox.setFixedSize(30, 30)
+        self.checkbox.setChecked(True)
+        self.checkbox.setToolTip("Include in Markdown?")
+
+        self.layout().addWidget(self.checkbox)
+
+    def checkbox_state_changed(self, state):
+        if state == 0: # Means not checked
+            self.parent.disable_all_checkboxes()
+        elif state == 2: # Means checked
+            pass
+
 
 class CollapsibleWidget(QWidget):
     def __init__(self, 
         THEME, 
         current_theme, 
         title: str=None, 
-        color=None,
+        color=None, 
+        collapse_button: QWidget=CollapseButton, 
         parent: QWidget=None
     ):
         super().__init__(parent=parent)
@@ -25,13 +79,14 @@ class CollapsibleWidget(QWidget):
 
         self.THEME = THEME
         self.current_theme = current_theme
+        self.title = title
 
         self.is_collapsed = True
 
         if color is None:
             color = self.THEME[self.current_theme]["font_color"]
         
-        self.title_frame = CollapseButton(title, color, self.is_collapsed, parent=self)
+        self.title_frame = collapse_button(title, color, self.is_collapsed, parent=self)
         self.title_frame.button.clicked.connect(self.toggle_collapsed)
 
         self.title_frame.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -57,12 +112,17 @@ class CollapsibleWidget(QWidget):
         
         unfold_all_action = QAction("Unfold all")
         unfold_all_action.triggered.connect(lambda ignore: self.unfold_all())
+
+        # print_tree_action = QAction("Print tree")
+        # print_tree_action.triggered.connect(lambda ignore: print(self.tree_to_dict()))
            
         menu.addAction(fold_action)
         menu.addAction(unfold_action)
            
         menu.addAction(fold_all_action)
         menu.addAction(unfold_all_action)
+
+        # menu.addAction(print_tree_action)
 
         menu.exec_(QCursor.pos())
 
@@ -108,53 +168,47 @@ class CollapsibleWidget(QWidget):
         self.content.setVisible(True)
         self.title_frame.update_arrow(self.is_collapsed)
 
-class CollapseButton(QWidget):
-    def __init__(self, title: str="", color: str=None, is_collapsed: bool=True, parent: QWidget=None):
-        super().__init__(parent=parent)
+    def disable_all_checkboxes(self):
+        """This function will disable all child collapsible objects checkboxes if CollapseButton == CheckBoxCollapseButton
+        """
 
-        self.setLayout(QHBoxLayout())
+        for widget in get_widgets_from_layout(self.content_layout):
+            if isinstance(widget, CollapsibleWidget):
+                if isinstance(widget.title_frame, CheckBoxCollapseButton):
+                    widget.title_frame.checkbox.setChecked(False)
 
-        self.button = QPushButton(title)
-        self.layout().addWidget(self.button)
-        self.update_arrow()
+    def disable_checkbox(self):
+        self.title_frame.checkbox.setChecked(False)
 
-        self.setStyleSheet(f"text-align: left; padding: 3px 5px 3px 5px; color: {color};")
-        # self.setStyleSheet(
-        # f"""
-        # *{{
-        #     color: {color};
-        #     border: none;
-        #     background-color: {parent.THEME[parent.current_theme]["background_color"]};
-        # }}
-        # *:hover {{
-        #     background-color: {parent.THEME[parent.current_theme]["collapsible"]["background_color_hover"]};
-        # }}
-        # """
-        # )
+    def enable_checkbox(self):
+        self.title_frame.checkbox.setChecked(True)
 
-
-    def update_arrow(self, is_collapsed: bool=True):
-        if is_collapsed:
-            self.button.setIcon(QIcon(HORIZONTAL_ARROW_PATH))
-        elif not is_collapsed:
-            self.button.setIcon(QIcon(VERTICAL_ARROW_PATH))
-
-class CheckBoxCollapseButton(CollapseButton):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.checkbox = QCheckBox(self.button)
-        #self.checkbox.setFixedWidth(self.checkbox.sizeHint().width() * 2)        
-        #self.layout().addWidget(self.checkbox)
-        #self.layout().addStretch()
-
-def get_widgets_from_layout(layout: QLayout, widget_type: QWidget=QWidget, exact_type: bool=False) -> iter:
-    for indx in range(layout.count()):
-        widget = layout.itemAt(indx).widget()
+    def tree_to_dict(self, collapsible_widget=None, include_title: bool=True):
+        """This will convert the tree of collapsible widgets into a dictionary.
+        """
+        if collapsible_widget is None:
+            collapsible_widget = self
         
-        if not isinstance(widget, widget_type) and not exact_type:
-            continue
-        elif not type(widget) is widget_type and exact_type:
-            continue
+        layout = collapsible_widget.content_layout
 
-        yield widget
+        content = {}
+
+        collapsible_widgets_with_checkbox_counter = 0
+        widgets = get_widgets_from_layout(layout) # widgets on collapsible widgets layout
+
+        for widget in widgets:
+            if isinstance(widget, CollapsibleWidget):
+                if isinstance(widget.title_frame, CheckBoxCollapseButton):
+                    collapsible_widgets_with_checkbox_counter += 1
+                    if not widget.title_frame.checkbox.checkState():
+                        content[widget.title] = False
+                        continue
+
+                    content[widget.title] = self.tree_to_dict(widget, include_title=False)
+
+        
+        if collapsible_widgets_with_checkbox_counter == 0 and isinstance(collapsible_widget.title_frame, CheckBoxCollapseButton):
+            content = bool(collapsible_widget.title_frame.checkbox.checkState())
+
+        return {self.title: content} if include_title else content
+

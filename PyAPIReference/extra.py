@@ -1,6 +1,6 @@
 import os
 from importlib.util import spec_from_file_location, module_from_spec
-from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout
 
 TAB = "&nbsp;" * 4 
 
@@ -67,7 +67,7 @@ def dict_to_stylesheet(stylesheet_dict: dict) -> str:
 
 	return result
 
-def change_widget_stylesheet(widget: QWidget, property_: str, value: str):
+def change_widget_stylesheet(widget: QWidget, property_: str, value: str) -> None:
 	stylesheet = widget.styleSheet()
 
 	stylesheet = stylesheet_to_dict(stylesheet)
@@ -75,5 +75,22 @@ def change_widget_stylesheet(widget: QWidget, property_: str, value: str):
 	stylesheet = dict_to_stylesheet(stylesheet)
 
 	widget.setStyleSheet(stylesheet)
+
+def add_text_to_text_edit(text_edit: QTextEdit, text: str) -> None:
+	current_text = text_edit.toPlainText()
+	new_text = current_text + text
+
+	text_edit.setPlainText(new_text)
+
+def get_widgets_from_layout(layout: QLayout, widget_type: QWidget=QWidget, exact_type: bool=False) -> iter:
+    for indx in range(layout.count()):
+        widget = layout.itemAt(indx).widget()
+        
+        if not isinstance(widget, widget_type) and not exact_type:
+            continue
+        elif not type(widget) is widget_type and exact_type:
+            continue
+
+        yield widget
 
 #print(get_module_from_path("trial.py"))
