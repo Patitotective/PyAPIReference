@@ -370,7 +370,7 @@ class MainWidget(QWidget):
 
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 100)
-
+		
 		if len(self.widgets["retry_button"]) > 0:
 			self.widgets["retry_button"][-1].setParent(None)
 			self.widgets["retry_button"].pop()

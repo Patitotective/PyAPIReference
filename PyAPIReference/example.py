@@ -7,6 +7,10 @@ from PyQt5 import *
 BLACK = "#000000"
 WHITE = "#ffffff"
 
+# EXAMPLE EXCEPTION (Uncomment to test retry)
+#sleep(3)
+#import discord
+
 class Person:
 	"""Class person that requires name, last name and age.
 	Allows you to display some info about it.
