@@ -406,12 +406,10 @@ class MainWidget(QWidget):
 
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 100)
-
-		# Check if retry button exists
-		# if len(self.widgets["retry_button"]) > 1:
-		# 	self.widgets["retry_button"][-1].setParent(None)
-		# 	self.widgets["retry_button"] = []
-		# 	self.layout().setRowStretch(4, 0)
+		
+		if len(self.widgets["retry_button"]) > 0:
+			self.widgets["retry_button"][-1].setParent(None)
+			self.widgets["retry_button"].pop()
 
 		self.widgets["module_content_scrollarea"].append(loading_label)
 
@@ -439,15 +437,13 @@ class MainWidget(QWidget):
 		change_widget_stylesheet(self.widgets["module_content_scrollarea"][-1], "font-size", "15px")
 		self.widgets["module_content_scrollarea"][-1].setText(exception_message)
 
-		# retry button
-		# retry_button = QPushButton("Retry")
-		# retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module"]) if not self.worker.running else None)
+		retry_button = QPushButton("Retry")
+		retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module"]))
 
-		# self.widgets["retry_button"].append(retry_button)
+		self.widgets["retry_button"].append(retry_button)
 
-		# self.layout().addWidget(retry_button, 3, 0)
-		# self.layout().setRowStretch(2, 0)
-		# self.layout().setRowStretch(4, 100)
+		self.layout().addWidget(retry_button, 3, 0)
+		self.layout().setRowStretch(4, 100)
 
 	def inspect_object_worker_finished(self):
 		self.thread.quit()
