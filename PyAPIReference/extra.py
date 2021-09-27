@@ -1,4 +1,5 @@
 import os
+import sys
 from importlib.util import spec_from_file_location, module_from_spec
 from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout
 
@@ -30,7 +31,12 @@ def get_module_from_path(path: str):
 	try:
 		spec.loader.exec_module(module)
 	except Exception as error:
-		return None, error
+		exception_info = {}
+		exception_info["message"] = error.args[0]
+		exception_info["file"] = path
+		exception_info["line"] = sys.exc_info()[2].tb_lineno
+		
+		return None, exception_info
 
 	return module, None
 

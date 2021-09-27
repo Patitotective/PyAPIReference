@@ -39,6 +39,7 @@ from PyQt5.QtWidgets import (
 
 from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QTextOption
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream
+from PyQt5.QtMultimedia import QMediaPlayer
 
 # Dependencies
 from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
@@ -409,6 +410,11 @@ class MainWidget(QWidget):
 		if path == '':
 			return
 
+		file_size = os.path.getsize(path)
+		
+		if file_size > 15000:
+			warning_message = QMessageBox.warning(self, f"Inspect Warning", "File size is large.\nInspection may take some time.")
+
 		self.prefs.write_prefs("current_module", path)
 
 		self.create_inspect_module_thread(path)
@@ -461,7 +467,7 @@ class MainWidget(QWidget):
 
 		self.widgets["load_file_button"][-1].setEnabled(True)
 
-		exception_message = f"Couldn't load file, exception found: \n{self.worker.exception}"
+		exception_message = f"Couldn't load file, Exception found\n\nException: {self.worker.exception['message']}\nFile: {self.worker.exception['file']}\nLine: {self.worker.exception['line']}"
 		change_widget_stylesheet(self.widgets["module_content_scrollarea"][-1], "font-size", "15px")
 		self.widgets["module_content_scrollarea"][-1].setText(exception_message)
 
