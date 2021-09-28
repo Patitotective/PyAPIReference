@@ -7,10 +7,6 @@ from PyQt5 import *
 BLACK = "#000000"
 WHITE = "#ffffff"
 
-# EXAMPLE EXCEPTION (Uncomment to test retry)
-#sleep(3)
-#import discord
-
 class Person:
 	"""Class person that requires name, last name and age.
 	Allows you to display some info about it.
@@ -55,10 +51,6 @@ class CollegeStudent(Student):
 
 def caesar_cipher(text: str, shift: int=5) -> str:
 	"""Simple caesar cipher function that encrypts a string with using caesar cipher.
-	
-	Parameters:
-		text (str): The text to be encrypted.
-		shift (int=5): Custom shift. 
 	"""
 	result = ""
 	for char in text:	      
@@ -69,6 +61,10 @@ def caesar_cipher(text: str, shift: int=5) -> str:
 		result += chr((ord(char) + shift - 97) % 26 + 97)
 	
 	return result
+
+def foo(param1, param2=None, param3: str="Hello world"):
+	"""foo function docstring"""
+	pass
 
 if __name__ == "__main__":
 	person = Person("William", "Polo", 15)

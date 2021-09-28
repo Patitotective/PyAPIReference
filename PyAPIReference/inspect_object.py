@@ -80,7 +80,10 @@ def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
 
 		return True
 
-	result = inspect.getmembers(object_)
+	# Instead of using inspect.getmembers to keep the members in the order they were defined
+	# We are going to use vars(object_)
+	# result = inspect.getmembers(object_)
+	result = tuple(vars(object_).items())
 
 	# filter_member(*x) is equivalent to filter_member(x[0], x[1])
 	result = filter(lambda x: filter_member(*x), result)

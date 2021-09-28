@@ -564,6 +564,35 @@ class MainWidget(QWidget):
 		return markdown_tab
 
 	def convert_tree_to_markdown(self, tree: dict=None):
+		def parameters_to_markdown(parameters: dict, header: str="\t-"):
+			markdown_text = "#### Parameters\n"
+			for parameter_name, parameter_props in parameters.items():
+				
+				parameter_text = f"`{parameter_name}"
+
+				if parameter_props["annotation"] is not None and parameter_props["default"] is not None:
+					parameter_text += f" ({parameter_props['annotation']}={parameter_props['default']})`"
+				elif parameter_props["annotation"] is not None and parameter_props["default"] is None:
+					parameter_text += f" ({parameter_props['annotation']})`"
+
+				elif parameter_props["default"] is not None:
+					parameter_text += f"={parameter_props['default']}`"
+				else:
+					parameter_text += "`"
+
+				markdown_text += f"{header} {parameter_text}\n"
+
+			return markdown_text
+
+		def class_to_markdown(class_dict: dict, header: str=""):
+			markdown_text = ""
+
+			for property_name, property_val in class_dict.items():
+				if property_name == "inherits" and len(property_val) > 0:
+					markdown_text += f"Inherits: `{', '.join(property_val)}`\n"
+
+			return markdown_text.strip() + "\n"
+
 		def content_to_markdown(content: dict, header: str="###") -> str:
 			markdown_text = ""
 
@@ -575,9 +604,15 @@ class MainWidget(QWidget):
 					member_docstring = None
 					markdown_text += f"{header} `{member_name} ({member_type}) = {member_props['value']}`\n"
 				else:
-					markdown_text += f"{header} {member_name} ({member_type})\n"
-	
+					markdown_text += f"{header} `{member_name} ({member_type})`\n"
+				
 				markdown_text += f"{member_docstring if member_docstring is not None else f'{member_name} has no description.'}".strip() + "\n\n"
+
+				if "parameters" in member_props:
+					markdown_text += parameters_to_markdown(member_props["parameters"]) + "\n"
+
+				if member_type == "class":
+					markdown_text += class_to_markdown(member_props)
 
 			return markdown_text
 

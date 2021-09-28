@@ -48,6 +48,7 @@ About
 - Patitotective:
 	- Discord: patitotective#0127.
 	- GitHub: https://github.com/Patitotective.
+	- Email: [cristobalriaga@gmail.com](mailto:cristobalriaga@gmail.com).
 - Sharkface:
 	- Discord: Sharkface#9495.
 	- GitHub: https://github.com/devp4.

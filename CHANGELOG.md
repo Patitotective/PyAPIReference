@@ -1,5 +1,10 @@
 # Change Log
 
+### v0.1.29 (27/09/2021)
+- Added `docs` folder with **PyAPIReference**'s website.
+- Now on `inspect_object.py` it doesn't get the members with `inspect.getmembers(object_)`, instead it `tuple(vars(object_).items())` which will keep the members in the order you defined them.
+- When converting function to markdown it now includes it's parameters.
+
 ### v0.1.28 (25/09/2021)
 - Added export as markdown options.
 - Added discord link on `README.md`.
