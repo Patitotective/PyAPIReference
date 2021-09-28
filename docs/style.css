@@ -1,7 +1,7 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #202124;
+    background-color: #171719;
 }
 
 a {
@@ -20,12 +20,32 @@ a:hover {
     align-items: center;        
 }
 
-.description {
+.description, .license, .about {
     font-family: 'Lexend Deca', sans-serif;
     
     color: white;
     text-align: left;
 }
+
+.license {
+    margin: 20px 0px 0px 20px;
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.about {
+    font-size: 20px;
+    margin-left: 20px;
+}
+
+.about .user-li {
+    padding-top: 7px;
+}
+
+.about li {
+    padding-top: 2px;
+}
+
 
 .logo {
     margin: 40px auto 80px;
@@ -56,6 +76,7 @@ a:hover {
 .github-link:hover {
     color: black;
     background-color: #fafafa;
+    text-decoration: none;    
 }
 
 .github-link .gh-icon {
@@ -106,14 +127,4 @@ footer {
 footer .container {
     font-size: 14px;
     font-weight: bold;
-}
-
-.license {
-    margin: 20px 0px 0px 20px;
-    font-family: 'Lexend Deca', sans-serif;
-    font-size: 25px;
-    font-weight: bold;
-
-    color: white;
-    text-align: left;    
 }
