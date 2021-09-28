@@ -207,6 +207,3 @@ def get_callable_parameters(callable_: callable):
 		result[parameter.name]["annotation"] = str(parameter.annotation.__name__) if not parameter.annotation == inspect._empty else None
 
 	return result
-
-def foo(par: (str, int)) -> (dict, tuple):
-	pass
