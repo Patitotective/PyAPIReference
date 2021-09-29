@@ -1,74 +1,251 @@
-<!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PyAPIReference, generate API References for Python modules.">
-    <meta name="author" content="Cristobal Riaga">
-    <link rel="shortcut icon" type="image/png" href="Images/icon.png"/>
-
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PyAPIReference</title>
-    <link rel="stylesheet" href="style.css">
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-          integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300&display=swap" rel="stylesheet">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet">        
+    <meta
+      name="description"
+      content="PyAPIReference, generate API References for Python modules."
+    />
+    <meta name="author" content="Cristobal Riaga" />
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="shortcut icon" type="image/png" href="Images/icon.png" />
+    <script
+      src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+      defer
+    ></script>
 
     <script
-        src="https://code.jquery.com/jquery-3.3.1.js"
-        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-        crossorigin="anonymous">
-    </script>
-</head>
+      src="https://code.jquery.com/jquery-3.3.1.js"
+      integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+      crossorigin="anonymous"
+    ></script>
 
-<body>
-<!--     <div class="header" id="myHeader" style="display:flex; flex-direction: row; align-content: center; justify-content: center;">
-        <h1>PyAPIReference</h1>
-        <div class="social-grid">
-            <a class="github-link" href="https://github.com/Patitotective/PyAPIReference" target="_blank" rel="noopener noreferrer">
-                <i class="fab fa-github gh-icon"></i> 
-                <span>Github</span>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <!--  aos-->
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  </head>
+  <body>
+    <div id="navbar"></div>
+
+    <section class="bg-primary pt-12 pb-10">
+      <div
+        class="
+          container
+          mx-auto
+          flex
+          px-5
+          py-24
+          items-center
+          justify-center
+          flex-col
+        "
+      >
+        <div class="text-center lg:w-2/3 w-full">
+          <h1
+            class="
+              title-font
+              lg:text-8xl
+              text-4xl
+              mb-4
+              font-extrabold
+              text-gray-100
+            "
+          >
+            PyAPIReference
+          </h1>
+          <h1 class="lg:text-lg text-md mb-8 text-gray-300">
+            PyAPIReference is a GUI application to generate API References for
+            Python modules.
+            <br />
+            We are still working on PyAPIReference. We haven't released it yet.
+            You can join our
+            <a
+              href="https://discord.gg/as85Q4GnR6"
+              class="text-blue-400 hover:text-blue-500"
+              target="_blank"
+              >Discord server</a
+            >
+            to keep updated.
+          </h1>
+          <div class="flex justify-center">
+            <a
+              href="#scroll"
+              class="
+                bg-blue-400
+                border-2 border-black
+                text-white
+                block
+                rounded-md
+                font-bold
+                py-4
+                px-12
+                mr-2
+                flex
+                items-center
+                hover:bg-blue-500
+                transition
+                ease-in-out
+                duration-400
+                animate__heartBeat
+              "
+            >
+              Show me
             </a>
+          </div>
         </div>
-    </div>  -->
-    <div class="content">   
-        <img class="logo" src="Images/logo.png"  alt="PyAPIReference logo"></img>
-        <div class="main">
-            <div style="text-align: center;">
-                <h2 class="description">
-                    <b>PyAPIReference</b> is a GUI application to generate API References for Python modules.<br><hr>
-                    We are still working on PyAPIReference. We haven't released it yet.<br>
-                    You can join our <a style="color: #0081db;" href="https://discord.gg/as85Q4GnR6"><b>Discord server</b></a> to keep updated.
-                </h2>   
-            </div>
-            <div class="social-grid">
-                <a class="github-link" href="https://github.com/Patitotective/PyAPIReference" target="_blank" rel="noopener noreferrer">
-                    <i class="fab fa-github gh-icon"></i> 
-                    <span>Github</span>
-                </a>
-            </div>
-        </div>
-        <div class="screenshots">
-            <div class="row">
-                <div class="column"><img src=""></div>            
-                <div class="column"><img src="Images/main.png"></div>
-                <div class="column"><img src="Images/settings.png"></div>
-                <div class="column"><img src=""></div>                        
-            </div>         
-        </div>
-    </div>
-    <div id="footer"></div>
-    
-    <script type="text/javascript" src="app.js"></script>
-</body>
+      </div>
+    </section>
 
+    <section class="bg-dark" id="scroll">
+      <div
+        class="grid grid-cols-1 p-5 lg:grid-cols-2 lg:p-40"
+        data-aos="fade-up"
+      >
+        <div>
+          <div
+            class="mx-auto flex px-10 py-8 items-center justify-center flex-col"
+          >
+            <img
+              id="anim"
+              class="w-full mb-10 object-cover object-center rounded"
+              alt="hero"
+              src="Images/main.png"
+            />
+          </div>
+        </div>
+        <!-- ... -->
+        <div>
+          <div
+            class="mx-auto flex px-10 py-8 items-center justify-center flex-col"
+          >
+            <img
+              id="anim2"
+              class="w-full mb-10 object-cover object-center rounded"
+              alt="hero"
+              src="Images/settings.png"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-primary">
+      <div class="container px-5 py-24 mx-auto">
+        <div
+          class="flex flex-col text-center w-full mb-20"
+          data-aos="fade-down"
+        >
+          <h1 class="text-4xl font-extrabold mb-4 text-gray-200 lg:text-5xl">
+            Behind PyAPIReference
+          </h1>
+          <p class="lg:w-2/3 mx-auto leading-relaxed text-gray-300">
+            Meet our small team who is currently developing PyAPIReference.
+          </p>
+        </div>
+        <div
+          class="
+            text-gray-600
+            flex flex-wrap
+            -m-4
+            flex
+            justify-center
+            items-center
+          "
+        >
+          <div class="p-4 lg:w-1/4" data-aos="fade-up">
+            <a href="https://github.com/Patitotective">            
+              <div
+                class="
+                  h-full
+                  flex flex-col
+                  items-center
+                  text-center
+                  bg-gray-800
+                  rounded-lg
+                  transition
+                  duration-300
+                  ease
+                  hover:bg-gray-700
+                "
+              >
+                <img
+                  alt="team"
+                  class="
+                    flex-shrink-0
+                    rounded-t-lg
+                    w-full
+                    h-56
+                    object-cover object-center
+                    mb-4
+                  "
+                  src="https://avatars.githubusercontent.com/u/79225325?v=4"
+                />
+                <div class="w-full">
+                  <h2 class="title-font font-medium text-lg text-white">
+                    Patitotective
+                  </h2>
+                  <h3 class="mb-3 text-gray-400">Developer</h3>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <div class="p-4 lg:w-1/4 md:w-1/2" data-aos="fade-up">
+            <a href="https://github.com/devp4">
+              <div
+                class="
+                  h-full
+                  flex flex-col
+                  items-center
+                  text-center
+                  bg-gray-800
+                  rounded-lg
+                  transition
+                  duration-300
+                  ease
+                  hover:bg-gray-700
+                "
+              >
+                <img
+                  alt="team"
+                  class="
+                    flex-shrink-0
+                    rounded-t-lg
+                    w-full
+                    h-56
+                    object-cover object-center
+                    mb-4
+                  "
+                  src="https://avatars.githubusercontent.com/u/76539310?v=4"
+                />
+                <div class="w-full">
+                  <h2 class="title-font font-medium text-lg text-white">
+                    Sharkface
+                  </h2>
+                  <h3 class="mb-3 text-gray-400">Developer</h3>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="footer"></div>
+
+    <script type="text/javascript" src="./app.js"></script>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+      AOS.init();
+    </script>
+  </body>
 </html>

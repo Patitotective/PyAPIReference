@@ -1,130 +1,193 @@
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #171719;
+html {
+  scroll-behavior: smooth;
 }
 
-a {
-    text-decoration: none;
-    color: #007bff;    
+/* a {
+  text-decoration: none;
+  color: #007bff;
 }
 
 a:hover {
-    text-decoration: underline;        
+  text-decoration: underline;
 }
 
 .main {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;        
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
-.description, .license, .about {
-    font-family: 'Lexend Deca', sans-serif;
-    
-    color: white;
-    text-align: left;
+.description,
+.license,
+.about {
+  font-family: "Lexend Deca", sans-serif;
+
+  color: white;
+  text-align: left;
 }
 
 .license {
-    margin: 20px 0px 0px 20px;
-    font-size: 25px;
-    font-weight: bold;
+  margin: 20px 0px 0px 20px;
+  font-size: 25px;
+  font-weight: bold;
 }
 
 .about {
-    font-size: 20px;
-    margin-left: 20px;
+  font-size: 20px;
+  margin-left: 20px;
 }
 
 .about .user-li {
-    padding-top: 7px;
+  padding-top: 7px;
 }
 
 .about li {
-    padding-top: 2px;
+  padding-top: 2px;
 }
 
-
 .logo {
-    margin: 40px auto 80px;
-    display: block;
+  margin: 40px auto 80px;
+  display: block;
 }
 
 .social-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
 .github-link {
-    text-decoration: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1em;
-    padding: .5em;
-    background-color: #333333;
-    color: white;
-    border-radius: 15px;
-    transition: .25s background-color, .25s color;
-    height: 10%;
-    margin: 80px 0px 250px 0px;
-    font-family: Arial;
+  text-decoration: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em;
+  background-color: #333333;
+  color: white;
+  border-radius: 15px;
+  transition: 0.25s background-color, 0.25s color;
+  height: 10%;
+  margin: 80px 0px 250px 0px;
+  font-family: Arial;
 }
 
 .github-link:hover {
-    color: black;
-    background-color: #fafafa;
-    text-decoration: none;    
+  color: black;
+  background-color: #fafafa;
+  text-decoration: none;
 }
 
 .github-link .gh-icon {
-    font-size: 1.5em;
+  font-size: 1.5em;
 }
 
 .screenshots {
-    text-align: center;
+  text-align: center;
 }
 
-.screenshots img{
-    width: 50%,
+.screenshots img {
+  width: 50%;
 }
 
 .row {
-    display: flex;
+  display: flex;
 }
 
 .column {
-    flex: 33.33%;
-    padding: 5px;
+  flex: 33.33%;
+  padding: 5px;
 }
 
 .header {
-    padding: 1px 0px 1px 0px;
-    background: #ffffff;
+  padding: 1px 0px 1px 0px;
+  background: #ffffff;
 }
 
 .header h1 {
-    color: #000000;
-    font-family: 'Ubuntu', sans-serif;
-    user-select: none;
-    text-align: center;
-    font-size: 30px;
-    padding: 0px 0px 0px 0px;
-    margin: 5px 0px 5px 0px;
+  color: #000000;
+  font-family: "Ubuntu", sans-serif;
+  user-select: none;
+  text-align: center;
+  font-size: 30px;
+  padding: 0px 0px 0px 0px;
+  margin: 5px 0px 5px 0px;
 }
 
 footer {
-    padding: 30px 0px 30px 15px;
-    margin-top: 50px;
-    color: #99979c;
-    background-color: #dbdbdb;
+  padding: 30px 0px 30px 15px;
+  margin-top: 50px;
+  color: #99979c;
+  background-color: #dbdbdb;
 
-    font-family: 'Ubuntu', sans-serif;    
+  font-family: "Ubuntu", sans-serif;
 }
 
 footer .container {
-    font-size: 14px;
-    font-weight: bold;
+  font-size: 14px;
+  font-weight: bold;
+} */
+
+.bg-primary {
+  background: #202124 !important;
+}
+.bg-secondary {
+  background: #8ab4f7 !important;
+}
+
+.bg-dark {
+  background: #242629 !important;
+}
+
+#anim {
+  -webkit-animation: action 1s infinite alternate;
+  animation: action 1s infinite alternate;
+}
+#anim2 {
+  -webkit-animation: action 1s infinite alternate;
+  animation: action2 1s infinite alternate;
+}
+
+@-webkit-keyframes action {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes action {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+@-webkit-keyframes action2 {
+  0% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes action2 {
+  0% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.about {
+  padding-top: 100px;
+  padding-bottom: 100px;
+}
+
+.mit {
+  padding-top: 100px !important;
+  padding-bottom: 100px !important;
 }

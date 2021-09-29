@@ -1,39 +1,83 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <link rel="stylesheet" href="style.css">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="style.css" />
 
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-          integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300&display=swap" rel="stylesheet">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet">        
-
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="shortcut icon" type="image/png" href="Images/icon.png" />
     <script
-        src="https://code.jquery.com/jquery-3.3.1.js"
-        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-        crossorigin="anonymous">
-    </script>    
-</head>
-<body>
-    <footer>
-        <div class="container">
-            <p>
-                <a href="/PyAPIReference">Home</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                <a href="/PyAPIReference/about">About</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                <a href="mailto:cristobalriaga@gmail.com">Contact</a>&nbsp;&nbsp;&nbsp;&nbsp;
-                <a href="https://github.com/Patitotective/PyAPIReference">Source code</a>
-            </p>
-            <a href="/PyAPIReference/LICENSE">&#169; MIT License - Copyright (c) 2021 Cristobal Riaga</a>.
-        </div>
-    </footer>
-</body>
-</html>
+      src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+      defer
+    ></script>
+  </head>
+  <body>
+    <footer class="sm:content-center">
+      <div class="bg-primary pt-20 pb-20">
+        <div
+          class="
+            container
+            text-center
+            lg:px-5 lg:py-6
+            mx-auto
+            flex
+            items-center
+            sm:flex-row
+            flex-col
+          "
+        >
+          <a
+            href="/"
+            class="
+              flex
+              title-font
+              font-medium
+              items-center
+              md:justify-start
+              justify-center
+              text-gray-900
+            "
+          >
+            <img src="./Images/logo.png" alt="" class="h-24" />
+          </a>
+          <p class="text-sm text-gray-200 font-bold sm:ml-6 sm:mt-0 mt-4">
+            PyAPIReference
+          </p>
 
+          <a
+            href="./LICENSE.html"
+            class="
+              text-sm text-gray-300
+              font-bold
+              inline-flex
+              sm:ml-auto sm:mt-0
+              mt-4
+              justify-center
+              sm:justify-start
+              hover:text-blue-400
+            "
+          >
+            <span
+              class="
+                text-sm text-gray-300
+                hover:text-blue-400
+                font-bold
+                inline-flex
+                sm:ml-auto sm:mt-0
+                mt-4
+                justify-center
+                sm:justify-start
+              "
+            >
+              © MIT License - Copyright (c) 2021 Cristobal Riaga.
+            </span>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
