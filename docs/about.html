@@ -1,63 +1,184 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>About</title>
-    <meta name="description" content="About PyAPIReference">
-    <meta name="author" content="Cristobal Riaga">
-    <link rel="stylesheet" href="style.css">
-    <link rel="shortcut icon" type="image/png" href="Images/icon.png"/>
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-          integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300&display=swap" rel="stylesheet">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap" rel="stylesheet"> </head>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>About - PyAPIReference</title>
+    <meta name="description" content="About PyAPIReference" />
+    <meta name="author" content="Cristobal Riaga" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="shortcut icon" type="image/png" href="Images/icon.png" />
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="shortcut icon" type="image/png" href="Images/icon.png" />
     <script
-        src="https://code.jquery.com/jquery-3.3.1.js"
-        integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-        crossorigin="anonymous">
-    </script>
-</head>
-<body>
-	<div class="about">
-		<h2>About</h2>
-		<b>PyAPIReference</b> uses <i>PyQt5 5.15.4</i> framework, see the list of <a href="https://github.com/Patitotective/PyAPIReference/blob/main/PyAPIReference/requirements.txt">libraries used</a>.<br>
-		If you want to contribute make sure to join the <a href="https://discord.gg/as85Q4GnR6">Discord server</a> and see the channel <b>#Contribute</b>.
-		<ul>
-			<li>
-				Changelog: <a href="https://github.com/Patitotective/PyAPIReference/blob/main/CHANGELOG.md">https://github.com/Patitotective/PyAPIReference/blob/main/CHANGELOG.md</a>.
-			</li>
-			<li>
-				GitHub/Source code: <a href="https://github.com/Patitotective/PyAPIReference">https://github.com/Patitotective/PyAPIReference</a>.
-			</li>
-			<li>
-				Discord server: <a href="https://discord.gg/as85Q4GnR6">https://discord.gg/as85Q4GnR6</a>
-			</li>
-			<li class="user-li">
-				Patitotective:<ul>
-				<li>Discord: patitotective#0127.</li>
-				<li>GitHub: <a href="https://github.com/Patitotective">https://github.com/Patitotective</a>.</li>
-				<li>Email: <a href="mailto:cristobalriaga@gmail.com">cristobalriaga@gmail.com</a>.</li>
-				</ul>
-			</li>
-			<li class="user-li">
-				Sharkface:<ul>
-				<li>Discord: Sharkface#9495.</li>
-				<li>GitHub: <a href="https://github.com/devp4">https://github.com/devp4</a>.</li>
-				</ul>
-			</li>
-		</ul>
-		If you have any doubt or suggestion, make sure to contact me via Discord <b>patitotective#0127</b> either Email <a href="mailto:cristobalriaga@gmail.com" style="font-weight: bold;">cristobalriaga@gmail.com</a>.
-	</div>
-    
+      src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
+      defer
+    ></script>
+
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.js"
+      integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  </head>
+  <body>
+    <div id="navbar"></div>
+
+    <section class="bg-primary pt-12 pb-10">
+      <div
+        class="
+          container
+          mx-auto
+          flex
+          px-5
+          py-24
+          items-center
+          justify-center
+          flex-col
+        "
+      >
+        <div class="text-center lg:w-2/3 w-full">
+          <h1
+            class="
+              title-font
+              lg:text-8xl
+              text-4xl
+              mb-4
+              font-extrabold
+              text-gray-100
+            "
+          >
+            About us
+          </h1>
+          <h1 class="lg:text-lg text-md mb-8 text-gray-300">
+            PyAPIReference is a GUI application to generate API References for
+            Python modules.
+            <br />
+            PyAPIReference uses PyQt5 5.15.4 framework, see the list of
+            <a
+              href="https://github.com/Patitotective/PyAPIReference/blob/main/PyAPIReference/requirements.txt"
+              class="text-blue-400 hover:text-blue-500"
+            >
+              libraries used.
+            </a>
+          </h1>
+          <div class="flex justify-center">
+            <a
+              href="https://github.com/Patitotective/PyAPIReference"
+              target="_blank"
+              class="
+                bg-blue-400
+                border-2 border-black
+                text-white
+                block
+                rounded-md
+                font-bold
+                py-4
+                px-12
+                mr-2
+                flex
+                items-center
+                hover:bg-blue-500
+                transition
+                ease-in-out
+                duration-400
+                animate__heartBeat
+              "
+            >
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="about bg-dark">
+      <div class="flex justify-center py-5">
+        <div class="container max-w-3xl p-4">
+          <h1 class="py-5 text-3xl font-bold text-gray-200">More about us.</h1>
+          <div class="post py-5" data-aos="fade-up">
+            <a
+              href="https://github.com/Patitotective/PyAPIReference/blob/main/CHANGELOG.md"
+              ><h2 class="underline hover:text-blue-400 text-blue-500">
+                Changelogs.
+              </h2></a
+            >
+            <p class="text-gray-200">
+              All our changes will be logged on our GitHub page.
+            </p>
+          </div>
+          <div class="post py-5" data-aos="fade-up">
+            <a href="https://github.com/Patitotective/PyAPIReference"
+              ><h2 class="underline hover:text-blue-400 text-blue-500">
+                GitHub Code
+              </h2></a
+            >
+            <p class="text-gray-200">
+              If you want to contribute make sure to join the Discord server and
+              see the channel <span class="font-extrabold"> #Contribute.</span>
+            </p>
+          </div>
+          <div class="post py-5" data-aos="fade-up">
+            <a href="https://discord.gg/as85Q4GnR6"
+              ><h2 class="underline hover:text-blue-400 text-blue-500">
+                Join Discord Server
+              </h2></a
+            >
+            <p class="text-gray-200">
+              If you have any questions, please join our Discord server and
+              report any problems or concerns.
+            </p>
+          </div>
+          <div class="post py-5" data-aos="fade-up">
+            <a href="https://github.com/Patitotective"
+              ><h2 class="underline hover:text-blue-400 text-blue-500">
+                Patitotective
+              </h2></a
+            >
+            <p class="text-gray-200">
+              Developer at PyAPIReference. <br />
+              Discord: patitotective#0127.
+            </p>
+          </div>
+          <div class="post py-5" data-aos="fade-up">
+            <a href="https://github.com/devp4"
+              ><h2 class="underline hover:text-blue-400 text-blue-500">
+                Sharkface
+              </h2></a
+            >
+            <p class="text-gray-200">
+              Developer at PyApiReference <br />
+              Discord: Sharkface#9495.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="text-gray-300 text-center text-2xl pt-10" data-aos="fade-up">
+        If you have any doubt or suggestion, make sure to contact me via discord
+        <b>patitotective#0127</b> either email
+        <a
+          href="mailto:cristobalriaga@gmail.com"
+          class="font-bold text-blue-200 hover:text-blue-400"
+          >cristobalriaga@gmail.com</a
+        >.
+      </h2>
+    </div>
+
     <div id="footer"></div>
     <script type="text/javascript" src="app.js"></script>
-</body>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+      AOS.init();
+    </script>
+  </body>
 </html>
