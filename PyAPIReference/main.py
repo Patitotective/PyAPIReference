@@ -262,7 +262,7 @@ class MainWindow(QMainWindow):
 
 	def close_app(self):
 		self.save_geometry()
-		self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree())
+		self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree()) # Save the state of the tree to restore it later
 
 		# Close window and exit program to close all dialogs open.
 		self.close()
@@ -356,8 +356,8 @@ class MainWidget(QWidget):
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
-		self.load_last_module()
-		# self.restore_tree()
+		# self.load_last_module()
+		self.restore_tree()
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
@@ -528,7 +528,7 @@ class MainWidget(QWidget):
 		markdown_tab.setLayout(QGridLayout())
 
 		convert_to_markdown_button = ButtonWithExtraOptions("Convert to Markdown", parent=self, 
-			actions=[("Export", self.export_markdown(MarkdownExportTypes.MARKDOWN))]
+			actions=[("Export", lambda: self.export_markdown(MarkdownExportTypes.MARKDOWN))]
 		)
 		
 		convert_to_markdown_button.main_button.clicked.connect(convert_to_markdown_button_clicked)
@@ -625,11 +625,11 @@ class MainWidget(QWidget):
 		return markdown_text.strip() + "\n" # This way it only lefts one line at the end
 
 	def restore_tree(self, tree=None):
-		if not self.prefs.file["current_module"] == {}:
-			return
-
 		if tree is None:
 			tree = self.prefs.file["current_module"]
+
+		if tree == {}:
+			return
 
 		self.module_content = tree
 		self.create_module_tabs()
@@ -638,6 +638,9 @@ class MainWidget(QWidget):
 		"""Get the tree, add collapsed and checked key to restore it later. 
 		"""
 		if collapsible_tree is None:
+			if len(self.widgets["module_content_scrollarea"]) < 1:
+				return {}
+
 			module_content_scrollarea = self.widgets["module_content_scrollarea"][-1]
 			module_collapsible = list(get_widgets_from_layout(module_content_scrollarea.main_widget.layout()))[0]
 
@@ -662,7 +665,7 @@ class MainWidget(QWidget):
 
 		return result
 
-	def filter_tree(self, tree: dict=None, collapsible_tree: dict=None):
+	def filter_tree(self, tree: dict=None, collapsible_tree: dict=None, properties_to_ignore: tuple=("collapsed", "checked")):
 		"""With using the collapsible_tree and the tree, filter the tree with the checked checkbox on the collapsible_tree
 		"""
 		if collapsible_tree is None:
@@ -678,20 +681,23 @@ class MainWidget(QWidget):
 
 		result = {}
 
-		for key, val in tree.items():
-			# If the key is not in the filter means is not a collapsible widget (content, docstring, parameters, etc.) so it's a property (type, docstring, etc)
-			# Or if checked is not on the filter means it cannot be disabled
-			# Or if checked is in the filter and it's true (so if it's false do not include it)
-			if not key in collapsible_tree or not "checked" in collapsible_tree[key] or ("checked" in collapsible_tree[key] and collapsible_tree[key]["checked"] == True):
-				
-				if isinstance(val, dict) and key in collapsible_tree:
-					result[key] = self.filter_tree(val, collapsible_tree[key])	
-					continue
-					
-				result[key] = val
+		for property_name, property_val in tree.items():
+			if property_name in properties_to_ignore:
 				continue
 
-			elif "checked" in collapsible_tree[key] and collapsible_tree[key]["checked"] == False:
+			# If the property_name is not in the filter means is not a collapsible widget (content, docstring, parameters, etc.) so it's a property (type, docstring, etc)
+			# Or if checked is not on the filter means it cannot be disabled
+			# Or if checked is in the filter and it's true (so if it's false do not include it)
+			if not property_name in collapsible_tree or not "checked" in collapsible_tree[property_name] or ("checked" in collapsible_tree[property_name] and collapsible_tree[property_name]["checked"] == True):
+				
+				if isinstance(property_val, dict) and property_name in collapsible_tree:
+					result[property_name] = self.filter_tree(property_val, collapsible_tree[property_name])	
+					continue
+					
+				result[property_name] = property_val
+				continue
+
+			elif "checked" in collapsible_tree[property_name] and collapsible_tree[property_name]["checked"] == False:
 				continue
 
 		return result
@@ -742,6 +748,7 @@ class MainWidget(QWidget):
 
 		def create_property_collapsible(
 			property_content: dict, 
+			properties_to_ignore: tuple=("collapsed, checked"), 
 			properties_without_checkbox: tuple=("docstring", "inherits"), 
 			properties_disabled_by_default: tuple=("self"), 
 			):
@@ -780,6 +787,9 @@ class MainWidget(QWidget):
 			elif isinstance(property_value, dict):
 				for nested_property_name, nested_property_value in property_value.items():
 
+					if nested_property_name in properties_to_ignore:
+						continue
+
 					if not not not nested_property_value: # Means empty
 						continue
 					
@@ -810,7 +820,7 @@ class MainWidget(QWidget):
 				property_collapsible.addWidget(property_label)
 
 			if "collapsed" in property_value:
-				if property_value["collapsed"]: property_collapsible.collapse()
+				property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
 			if "checked" in property_value:
 				property_collapsible.enable_checkbox() if property_value["checked"] else property_collapsible.disable_checkbox()
 
@@ -820,6 +830,7 @@ class MainWidget(QWidget):
 			"""Given a dictionary with the properties of an object an a collapsible, add widgest to the collapsible representing the properties.
 			"""
 			for property_name, property_value in object_properties.items():
+
 				if property_name in properties_to_ignore:
 					continue
 
@@ -832,7 +843,12 @@ class MainWidget(QWidget):
 					
 					if property_collapsible is None:
 						continue
-					
+
+					if "collapsed" in property_value:
+						property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
+					if "checked" in property_value:
+						property_collapsible.enable_checkbox() if property_value["checked"] else property_collapsible.disable_checkbox()
+
 					collapsible.addWidget(property_collapsible)
 					continue
 
