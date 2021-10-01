@@ -75,7 +75,7 @@ class MarkdownHighlighter(QSyntaxHighlighter):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
-        parent.setTabStopWidth(parent.fontMetrics().width(' ') * 6)
+        parent.setTabStopWidth(parent.fontMetrics().width(' ') * 4)
 
         self.defaultTheme =  {
             "background-color":"#3e3d32", 

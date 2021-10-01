@@ -7,7 +7,7 @@
    viewBox="0 0 210 297"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1 (1:1.1+202105261517+ce6663b3b7)"
+   inkscape:version="1.1.1 (1:1.1+202109281949+c3084ef5ed)"
    sodipodi:docname="PyAPIReference_GUI.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,8 +24,8 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.4142136"
-     inkscape:cx="702.15703"
-     inkscape:cy="100.76272"
+     inkscape:cx="702.15702"
+     inkscape:cy="100.76271"
      inkscape:window-width="1920"
      inkscape:window-height="950"
      inkscape:window-x="0"
@@ -221,10 +221,10 @@
        inkscape:export-ydpi="254.00002"><tspan
          x="236.91425"
          y="29.198992"
-         id="tspan2150">Generate API References for Python modules easily with </tspan><tspan
+         id="tspan1187">Generate API References for Python modules easily with </tspan><tspan
          x="236.91425"
          y="33.167743"
-         id="tspan2152">a beautiful and intuitive GUI app.</tspan></text>
+         id="tspan1189">a beautiful and intuitive GUI app.</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.43958px;line-height:1.25;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';text-align:center;word-spacing:0px;text-anchor:middle;fill:#ffffff;stroke-width:0.264583"

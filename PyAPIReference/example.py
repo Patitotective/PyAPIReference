@@ -35,6 +35,34 @@ class Student(Person):
 	def display_info(self):
 		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\nI'm a student of grade {self.grade} in {self.institution}\n")
 
+
+class Teacher(Person):
+	"""Class Teacher that inherits from Person and requires instituiton and classes (besides Person ones).
+	Alloes you to display some info about it.
+	"""
+	def __init__(self, institution: str, classes: tuple, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+		self.institution = institution
+		self.classes = classes
+
+	def display_info(self):
+		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\nI'm a teacher of {''.join(self.classes)} in {self.institution}\n")
+
+
+class SchoolTeacher(Teacher):
+	"""Class SchoolTeacher that inherits from Teacher and requires grades.
+	Allows you to display some info about it."""
+
+	def __init__(self, grades: tuple, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+		self.grades = grades
+
+	def display_info(self):
+		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\nI'm a teacher of {''.join(self.classes)} in {''.join(self.grades)} at {self.institution}\n")
+
+
 class CollegeStudent(Student):
 	"""Class CollegeStudent that inherits from Student and requires career and semester (besides the Student ones).
 	Allows you to display some info about it.
@@ -47,6 +75,13 @@ class CollegeStudent(Student):
 
 	def display_info(self):
 		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\nI'm a college student of {self.career}, I'm on {self.semester} semester\n")
+
+
+
+class Me(Teacher, CollegeStudent):
+	"""I'm a teacher on a school but a student in a college."""
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 
 
 def caesar_cipher(text: str, shift: int=5) -> str:
@@ -64,6 +99,9 @@ def caesar_cipher(text: str, shift: int=5) -> str:
 
 def foo(param1, param2=None, param3: str="Hello world"):
 	"""foo function docstring"""
+	pass
+
+def emtpy():
 	pass
 
 if __name__ == "__main__":

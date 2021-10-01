@@ -53,7 +53,7 @@ class CheckBoxCollapseButton(CollapseButton):
         self.checkbox.stateChanged.connect(self.checkbox_state_changed)
         self.checkbox.setFixedSize(30, 30)
         self.checkbox.setChecked(True)
-        self.checkbox.setToolTip("Include in Markdown?")
+        self.checkbox.setToolTip(f"Include {self.parent.title} in Markdown?")
 
         self.layout().addWidget(self.checkbox)
 
@@ -189,26 +189,20 @@ class CollapsibleWidget(QWidget):
         if collapsible_widget is None:
             collapsible_widget = self
         
+        if not isinstance(collapsible_widget, CollapsibleWidget):
+            return
+
         layout = collapsible_widget.content_layout
 
-        content = {}
+        content = {"collapsed": collapsible_widget.is_collapsed}
+        if isinstance(collapsible_widget.title_frame, CheckBoxCollapseButton):
+            content["checked"] = bool(collapsible_widget.title_frame.checkbox.checkState())
 
         collapsible_widgets_with_checkbox_counter = 0
         widgets = get_widgets_from_layout(layout) # widgets on collapsible widgets layout
 
         for widget in widgets:
             if isinstance(widget, CollapsibleWidget):
-                if isinstance(widget.title_frame, CheckBoxCollapseButton):
-                    collapsible_widgets_with_checkbox_counter += 1
-                    if not widget.title_frame.checkbox.checkState():
-                        content[widget.title] = False
-                        continue
-
-                    content[widget.title] = self.tree_to_dict(widget, include_title=False)
-
-        
-        if collapsible_widgets_with_checkbox_counter == 0 and isinstance(collapsible_widget.title_frame, CheckBoxCollapseButton):
-            content = bool(collapsible_widget.title_frame.checkbox.checkState())
+                content[widget.title] = self.tree_to_dict(widget, include_title=False)
 
         return {self.title: content} if include_title else content
-

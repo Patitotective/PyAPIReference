@@ -1,5 +1,9 @@
 # Change Log
 
+### v0.1.30 (30/09/2021)
+- Now it restores the last tree (checked and collapsed widgets) if you uncomment line `360` and comment the line before. Why? because it takes some time and seems like it weren't working.
+- Created a button with extra options.
+
 ### v0.1.29 (27/09/2021)
 - Added `docs` folder with **PyAPIReference**'s website.
 - Now on `inspect_object.py` it doesn't get the members with `inspect.getmembers(object_)`, instead it `tuple(vars(object_).items())` which will keep the members in the order you defined them.
