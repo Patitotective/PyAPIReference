@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox, QTabWidget, QFormLayout, QColorDialog, QGridLayout
+from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox, QTabWidget, QFormLayout, QColorDialog, QGridLayout, QCheckBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 
@@ -153,3 +153,61 @@ class SettingsDialog(QDialog):
 		return theme_tab
 
 
+class FilterDialog(QDialog):
+	filters = []
+	def __init__(self, title="Filter", parent=None):
+		super().__init__(parent=parent)
+
+		self.objects = ["class", "function"]
+
+		self.setWindowTitle(title)
+		
+		self.setLayout(QFormLayout())
+		self.create_widgets()
+
+		self.setFixedSize(200, 275)
+	
+	def create_widgets(self):
+		tab = QTabWidget()
+		
+		tab_widget = QWidget()
+		tab_widget.setLayout(FormLayout(stretch=False))
+
+		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
+		apply_button.clicked.connect(lambda: self.done(1))
+
+		options = QWidget()
+		options.setLayout(FormLayout())
+		checkboxes = []
+		class_checkbox = QCheckBox()
+		if "class" not in FilterDialog.filters:
+			class_checkbox.setChecked(True)
+		else:
+			class_checkbox.setChecked(False)
+		class_checkbox.stateChanged.connect(lambda: self.checkbox_clicked("class"))
+
+		function_checkbox = QCheckBox()
+		if "function" not in FilterDialog.filters:
+			function_checkbox.setChecked(True)
+		else:
+			function_checkbox.setChecked(False)
+		function_checkbox.stateChanged.connect(lambda: self.checkbox_clicked("function"))
+
+		checkboxes.extend([class_checkbox, function_checkbox])
+
+		for i, fil in enumerate(self.objects):
+			options.layout().addRow(fil.capitalize() + ":", checkboxes[i])
+
+		tab_widget.layout().addRow(options)
+		tab.addTab(tab_widget, "Filters")
+
+		self.layout().addRow(tab)
+		self.layout().addRow(apply_button)
+
+	@classmethod
+	def checkbox_clicked(cls, obj):
+		if obj in cls.filters:
+			cls.filters.pop(cls.filters.index(obj))
+		else:
+			cls.filters.append(obj)
+		

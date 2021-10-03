@@ -44,7 +44,7 @@ from PyQt5.QtMultimedia import QMediaPlayer
 # Dependencies
 from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
 from GUI.scrollarea import ScrollArea
-from GUI.settings_dialog import SettingsDialog
+from GUI.settings_dialog import SettingsDialog, FilterDialog
 from GUI.markdownhighlighter import MarkdownHighlighter
 from GUI.warning_dialog import WarningDialog
 from GUI.button_with_extra_options import ButtonWithExtraOptions
@@ -345,7 +345,7 @@ class MainWidget(QWidget):
 		logo.setAlignment(Qt.AlignCenter)
 
 		load_file_button = ButtonWithExtraOptions("Load file", parent=self, 
-			actions=[("Reload file", self.load_last_module)]
+			actions=[("Reload file", self.load_last_module), ("Filter", self.create_filter)]
 		)
 		
 		load_file_button.main_button.clicked.connect(self.load_file)
@@ -356,8 +356,8 @@ class MainWidget(QWidget):
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
-		# self.load_last_module()
-		self.restore_tree()
+		self.load_last_module()
+		#self.restore_tree()
 
 	def load_file(self):
 		path, file_filter = QFileDialog.getOpenFileName(
@@ -935,6 +935,11 @@ class MainWidget(QWidget):
 			elif export_type == MarkdownExportTypes.RESTRUCTUREDTEXT:
 				file.write(m2r2.convert(markdown_text))
 	
+	def create_filter(self):
+		filter_dialog = FilterDialog(parent=self)
+		response = filter_dialog.exec_()
+		if self.prefs.file["current_module_path"] != "":
+			self.create_inspect_module_thread(self.prefs.file["current_module_path"])
 
 
 def init_app():

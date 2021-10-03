@@ -1,6 +1,7 @@
 import inspect
 import PREFS
 from types import ModuleType
+from GUI.settings_dialog import FilterDialog
 
 def prefs(func: callable):
     """This decorator will pass the result of the given func to PREFS.convert_to_prefs, 
@@ -50,14 +51,13 @@ def inspect_object(object_: object):
 	"""
 	object_name = object_.__name__
 	result = {object_name: get_object_properties(object_)}	
-
 	return result
 
 def get_object_members(object_: object, exclude_types: tuple=(ModuleType)):
 	def filter_member(member_name: str, member: object):
 		if isinstance(member, exclude_types):
 			return False
- 
+
  		# If the object it's a module
 		if inspect.ismodule(object_):
 			# Get the module of the member (where it was defined or it belongs to)
@@ -95,7 +95,9 @@ def get_object_content(object_: object):
 	"""
 	result = {}
 
-	for member_name, member in get_object_members(object_):		
+	for member_name, member in get_object_members(object_):
+		if check_filter(member):
+			continue
 		result[member_name] = get_object_properties(member)
 
 	return result
@@ -133,7 +135,7 @@ def get_object_properties(object_: object):
 	result = {"type": object_type, "docstring": object_.__doc__}
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
-		
+
 		if inspect.isclass(object_):
 			result["inherits"] = [i.__name__ for i in inspect.getmro(object_)[1:-1]]
 		
@@ -156,6 +158,15 @@ def get_object_properties(object_: object):
 		result["value"] = str(object_)
 	
 	return result
+
+def check_filter(object_):
+	if inspect.isclass(object_):
+		if "class" in FilterDialog.filters:
+			return True
+
+	if inspect.isfunction(object_):
+		if "function" in FilterDialog.filters:
+			return True
 
 def get_callable_parameters(callable_: callable):
 	"""Given a callable object (functions, lambda or methods) get all it's parameters, 
