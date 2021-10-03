@@ -1,5 +1,9 @@
 # Change Log
 
+### v0.1.31 (03/10/2021)
+- User can filter objects to remove/show on tree.
+- Need to add more options
+
 ### v0.1.30 (30/09/2021)
 - Now it restores the last tree (checked and collapsed widgets) if you uncomment line `360` and comment the line before. Why? because it takes some time and seems like it weren't working.
 - Created a button with extra options.
