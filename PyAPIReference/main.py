@@ -1,13 +1,5 @@
 """PyAPIReference is a GUI application to generate Python Api References.
-
-About:
-	GitHub: https://github.com/Patitotective/PyAPIReference
-	Patitotective:
-		Discord: patitotective#0127
-		GitHub: https://github.com/Patitotective
-	Sharkface:
-		Discord: Sharkface#9495
-		GitHub: https://github.com/devp4
+https://patitotective.github.io/PyAPIReference/
 """
 
 # Libraries
@@ -55,15 +47,15 @@ from extra import create_qaction, convert_to_code_block, get_module_from_path, c
 
 
 class TreeExportTypes(Enum):
-	PREFS = "prefs"
-	JSON = "json"
-	YAML = "yaml"
+	PREFS = ("PREFS", "prefs")
+	JSON = ("JSON", "json")
+	YAML = ("YAML", "yaml")
 
 
 class MarkdownExportTypes(Enum):
-	MARKDOWN = "md"
-	HTML = "html"
-	ReStructuredText = "rst"
+	MARKDOWN = ("Markdown", "md")
+	HTML = ("HTML", "html")
+	RESTRUCTUREDTEXT = ("ReStructuredText", "rst")
 
 
 class InspectModule(QObject):
@@ -125,7 +117,7 @@ class MainWindow(QMainWindow):
 			menu=file_menu, 
 			text="Load file", 
 			shortcut="Ctrl+O", 
-			callback=lambda: self.main_widget.load_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
+			callback=lambda: self.main_widget.load_module_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
 			parent=self)			
 
 		## Export tree menu ##
@@ -344,11 +336,14 @@ class MainWidget(QWidget):
 		logo.setStyleSheet("margin-bottom: 10px;")
 		logo.setAlignment(Qt.AlignCenter)
 
-		load_file_button = ButtonWithExtraOptions("Load file", parent=self, 
-			actions=[("Reload file", self.load_last_module)]
+		load_file_button = ButtonWithExtraOptions("Load module", parent=self, 
+			actions=[
+			("Reload module", self.load_last_module), 
+			("Unload module", self.unload_file)
+			]
 		)
 		
-		load_file_button.main_button.clicked.connect(self.load_file)
+		load_file_button.main_button.clicked.connect(self.load_module_file)
 
 		self.widgets["load_file_button"].append(load_file_button)
 
@@ -359,14 +354,58 @@ class MainWidget(QWidget):
 		# self.load_last_module()
 		self.restore_tree()
 
-	def load_file(self):
-		path, file_filter = QFileDialog.getOpenFileName(
-			parent=self, 
-			caption="Select a file", 
-			directory=os.getcwd() if self.prefs.file["current_module_path"] == "" else self.prefs.file["current_module_path"], # Get current directory
-			filter="Python files (*.py)") # Filter Python files
+	def load_file(self, file_filter, caption="Select a file", directory=None):
+		if directory is None:
+			directory = self.prefs.file["current_module_path"]
 
-		# If filename equals empty string means no selected file
+		path, _ = QFileDialog.getOpenFileName(
+			parent=self, 
+			caption=caption, 
+			directory=directory, # Get current directory
+			filter=file_filter) # Filter Python files
+
+		return path
+
+	def unload_file(self):
+		if not self.prefs.file["current_markdown"] == "":
+			warning = WarningDialog(
+				"Lose Markdown", 
+				"If you unload this module, this module's Markdown will get lost.\nExport it if you want to preserve it.", 
+				no_btn_text="Cancel", 
+				yes_btn_text="Continue", 
+				parent=self).exec_()
+			
+			if not warning:
+				return
+
+		if len(self.widgets["module_tabs"]) > 0:
+			self.widgets["module_tabs"][-1].setParent(None)
+			self.widgets["module_tabs"] = []
+
+		if len(self.widgets["module_content_scrollarea"]) > 0:	
+			self.widgets["module_content_scrollarea"][-1].setParent(None)
+			self.widgets["module_content_scrollarea"] = []
+		
+		self.prefs.write_prefs("current_markdown", "")
+		self.prefs.write_prefs("current_module_path", "")
+		self.prefs.write_prefs("current_module", {})
+
+	def load_module_file(self):
+		if not self.prefs.file["current_markdown"] == "":
+			warning = WarningDialog(
+				"Lose Markdown", 
+				"If you load another file this file's Markdown will get lost.\nExport it if you want to preserve it.", 
+				no_btn_text="Cancel", 
+				yes_btn_text="Continue", 
+				parent=self).exec_()
+			
+			if not warning:
+				return
+
+			self.prefs.write_prefs("current_markdown", "")
+
+		path = self.load_file("Python files (*.py)")
+		
 		if path == '':
 			return
 
@@ -455,6 +494,7 @@ class MainWidget(QWidget):
 		if len(self.widgets["module_tabs"]) > 0:	
 			self.widgets["module_tabs"][-1].setParent(None)
 			self.widgets["module_tabs"] = []
+			self.widgets["markdown_text_edit"] = []
 		
 		if len(self.widgets["module_content_scrollarea"]) > 0:	
 			self.widgets["module_content_scrollarea"][-1].setParent(None)
@@ -511,12 +551,23 @@ class MainWidget(QWidget):
 				create_markdown_text_edit(text)
 				return
 
-			warning = WarningDialog("Overwrite text", "Do you want to overwrite current Markdown text?", parent=self).exec_() # Return 1 if yes, 0 if no
+			warning = WarningDialog("Overwrite Markdown", "Do you want to overwrite current Markdown text?", parent=self).exec_() # Return 1 if yes, 0 if no
 
 			if not warning:
 				return
 
 			create_markdown_text_edit()
+
+		def load_markdown_file():
+			path = self.load_file("Markdown files (*.md)", directory="") # If directory not empty, filter doesn't work
+			
+			if path == "":
+				return
+
+			with open(path, "r") as file:
+				content = file.read()
+
+			convert_to_markdown_clicked(text=content)
 
 		if len(self.widgets["markdown_text_edit"]) > 0:
 			self.widgets["markdown_text_edit"][-1].setParent(None)
@@ -528,7 +579,10 @@ class MainWidget(QWidget):
 		markdown_tab.setLayout(QGridLayout())
 
 		convert_to_markdown_button = ButtonWithExtraOptions("Convert to Markdown", parent=self, 
-			actions=[("Export", lambda: self.export_markdown(MarkdownExportTypes.MARKDOWN))]
+			actions=[
+				("Export", lambda: self.export_markdown(MarkdownExportTypes.MARKDOWN)), 
+				("Load Markdown file", load_markdown_file)
+			]
 		)
 		
 		convert_to_markdown_button.main_button.clicked.connect(convert_to_markdown_button_clicked)
@@ -539,12 +593,12 @@ class MainWidget(QWidget):
 		self.widgets["markdown_tab"].append(markdown_tab)
 
 		if not self.prefs.file["current_markdown"] == "":
-			convert_to_markdown_button_clicked(self.prefs.file["current_markdown"])
+			convert_to_markdown_button_clicked(text=self.prefs.file["current_markdown"])
 
 		return markdown_tab
 
 	def convert_tree_to_markdown(self, tree: dict=None):
-		def parameters_to_markdown(parameters: dict, header: str="\t-"):
+		def parameters_to_markdown(parameters: dict, header: str="- "):
 			empty = True
 			markdown_text = "#### Parameters\n"
 			
@@ -563,7 +617,7 @@ class MainWidget(QWidget):
 				else:
 					parameter_text += "`"
 
-				markdown_text += f"{header} {parameter_text}\n"
+				markdown_text += f"{header}{parameter_text}\n"
 
 			return markdown_text if not empty else None
 
@@ -896,8 +950,8 @@ class MainWidget(QWidget):
 			error_message = QMessageBox.warning(self, f"Export as {export_type.name}", "Nothing to save.")
 			return
 		
-		default_filename = f"{tuple(self.module_content)[0]}.{export_type.value}"
-		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {export_type.name}", default_filename, f"{export_type.name} Files (*.{export_type.value})")
+		default_filename = f"{tuple(self.module_content)[0]}.{export_type.value[1]}"
+		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {export_type.value[0]}", default_filename, f"{export_type.value[0]} Files (*.{export_type.value[1]})")
 		
 		if path == '':
 			return
@@ -919,8 +973,8 @@ class MainWidget(QWidget):
 
 		markdown_text = self.widgets["markdown_text_edit"][-1].toPlainText()
 	
-		default_filename = f"{tuple(self.module_content)[0]}.{export_type.value}"
-		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {export_type.name}", default_filename, f"{export_type.name} Files (*.{export_type.value})")
+		default_filename = f"{tuple(self.module_content)[0]}.{export_type.value[1]}"
+		path, file_filter = QFileDialog.getSaveFileName(self, f"Export as {export_type.value[0]}", default_filename, f"{export_type.value[0]} Files (*.{export_type.value[1]})")
 		
 		if path == '':
 			return
