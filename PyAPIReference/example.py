@@ -12,10 +12,13 @@ class Person:
 	Allows you to display some info about it.
 	"""
 	human = True
+
 	def __init__(self, name: str, last_name: str, age: str):
 		self.name = name
 		self.last_name = last_name
 		self.age = age
+
+	pineapple = False
 
 	def display_info(self):
 		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\n")

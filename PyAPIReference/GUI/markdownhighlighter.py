@@ -26,6 +26,7 @@ Highlight Markdown text
 
 import sys
 import re
+import PREFS
 from PyQt5.QtGui import QBrush, QSyntaxHighlighter, QTextCharFormat, QColor, QPalette, QFont, QTextCursor, QTextLayout
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTextEdit, QMainWindow, QApplication
@@ -72,77 +73,14 @@ class MarkdownHighlighter(QSyntaxHighlighter):
         'Html': re.compile(u'<.+?>') # This is an html tag
     }
 
-    def __init__(self, parent):
+    def __init__(self, parent, current_theme="dark"):
         super().__init__(parent)
         self.parent = parent
         parent.setTabStopWidth(parent.fontMetrics().width(' ') * 4)
 
-        self.defaultTheme =  {
-            "background-color":"#3e3d32", 
-            "color":"#ffffff", 
-            "bold": {
-                "color":"#ffffff", 
-                "font-weight":"bold", 
-                "font-style":"normal"
-            }, 
-            "emphasis": {
-                "color":"#ffffff", 
-                "font-weight":"normal", 
-                "font-style":"italic"
-            }, 
-            "link": {
-                "color":"#66d9ef", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }, 
-            "image": {
-                "color":"#cb4b16", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }, 
-            "header": {
-                "color":"#fd971f", 
-                "font-weight":"bold", 
-                "font-style":"normal"
-            }, 
-            "unorderedlist": {
-                "color":"#fd971f", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }, 
-            "orderedlist": {
-                "color":"#ae81ff", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }, 
-            "blockquote": {
-                "color":"#dc322f", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }, 
-            "codespan": {
-                "color":"#dc322f", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }, 
-            "codeblock": {
-                "color":"#cfcfc2", 
-                "font-weight":"normal", 
-                "font-style":"normal", 
-                #"background-color": "#3b3c37", 
-            }, 
-            "line": {
-                "color":"#fd971f", 
-                "font-weight":"bold", 
-                "font-style":"normal"
-            }, 
-            "html": {
-                "color":"#f92672", 
-                "font-weight":"normal", 
-                "font-style":"normal"
-            }
-        }
-        
+
+        self.defaultTheme = PREFS.read_prefs_file("GUI/theme.prefs")[current_theme]["markdown_highlighter"]
+
         self.setTheme(self.defaultTheme)
 
     def setTheme(self, theme):

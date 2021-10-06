@@ -5,13 +5,11 @@ from PyQt5.QtGui import QCursor, QFont, QFontMetrics
 
 from typing import List, Tuple, Callable
 
-def get_text_size(text: str):
-	font = QFont()
-	font = QFont(font.defaultFamily())
-	font_metrics = QFontMetrics(font)
-
-	return QSize(font_metrics.width(text), font_metrics.height())
-
+if __name__ == "__main__":
+    raise RuntimeError("button_with_extra_options.py requires get_text_size from extra.py which is outside this folder, you can't run this script as main")
+else:
+    import GUI.collapsible_widget_resources
+    from extra import get_text_size 
 
 class MainWindow(QMainWindow):
 	def __init__(self, *args, **kwargs):
@@ -28,7 +26,7 @@ class MainWindow(QMainWindow):
 		self.show()
 
 class ButtonWithExtraOptions(QWidget):
-	def __init__(self, text, actions: List[Tuple[str, Callable]]=[("Example", lambda: print("example"))], extra_button_text: str="+", parent=None):
+	def __init__(self, text, actions: List[Tuple[str, Callable]]=[("Example", lambda: print("example")), ("Example 1", lambda: print("example 1")), ("Example 2", lambda: print("example 2"))], extra_button_text: str="+", parent=None):
 		super().__init__(parent=parent)
 
 		self.actions = actions
@@ -50,10 +48,7 @@ class ButtonWithExtraOptions(QWidget):
 		menu = QMenu(self.parent)
 
 		for action_name, action_callback in self.actions:
-			action = QAction(action_name)
-			action.triggered.connect(action_callback)
-
-			menu.addAction(action)
+			menu.addAction(action_name, action_callback)
 
 		menu.exec_(QCursor.pos())
 

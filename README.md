@@ -9,7 +9,7 @@ _Discord server: https://discord.gg/as85Q4GnR6._
 ### _WORK IN PROGRESS._
 
 ## Screenshots
-[![Main screen](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/main.png?raw=true)](https://github.com/Patitotective/PyAPIReference)[![Settings dialog](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/settings.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Main screen](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/main.png?raw=true)](https://github.com/Patitotective/PyAPIReference)[![Settings dialog](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
 
 ## Test it from source code
 1. First you will need to clone this repository by pasting this command into your terminal:

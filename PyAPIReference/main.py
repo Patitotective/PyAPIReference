@@ -6,9 +6,13 @@ https://patitotective.github.io/PyAPIReference/
 import inspect
 import sys
 import os
+import types
 import time
+import traceback
+import grip
 import json
 import yaml
+import webbrowser
 from enum import Enum, auto
 
 import PREFS
@@ -40,10 +44,19 @@ from GUI.settings_dialog import SettingsDialog
 from GUI.markdownhighlighter import MarkdownHighlighter
 from GUI.warning_dialog import WarningDialog
 from GUI.button_with_extra_options import ButtonWithExtraOptions
+from GUI.filter_dialog import FilterDialog
 
 import resources # Qt resources resources.qrc
 from inspect_object import inspect_object
-from extra import create_qaction, convert_to_code_block, get_module_from_path, change_widget_stylesheet, add_text_to_text_edit, get_widgets_from_layout
+from extra import (
+	create_qaction, convert_to_code_block, 
+	get_module_from_path, change_widget_stylesheet, 
+	add_text_to_text_edit, get_widgets_from_layout, 
+	HTML_TAB)
+
+from tree_to_markdown import convert_tree_to_markdown
+
+THEME = PREFS.read_prefs_file("GUI/theme.prefs")
 
 
 class TreeExportTypes(Enum):
@@ -62,26 +75,80 @@ class InspectModule(QObject):
 	finished = pyqtSignal()
 	expection_found = pyqtSignal()
 
-	def __init__(self, path):
+	def __init__(self, path, prefs):
 		super().__init__()
 		self.path = path
+		self.prefs = prefs
 		self.running = False
+
+	def get_filter(self):
+		exclude_types = []
+		kwargs = {}
+
+		for filter_name, (filter_type, filter_checked) in self.prefs.file["filter"].items():
+			if filter_type[0] == "#":
+				kwargs[filter_type[1:]] = filter_checked
+				continue
+
+			if not filter_checked:
+				exclude_types.append(eval(filter_type))
+
+		return tuple(exclude_types), kwargs
 
 	def run(self):
 		self.running = True
 		module, error = get_module_from_path(self.path)
 
-		if error is not None: # Means exception
-			self.exception = error
+		if module is None: # Means exception
+			error = error.replace('\n', '<br>').replace('    ', HTML_TAB)		
+
+			self.exception_message = f"Couldn't load file. Exception found: <br>{self.convert_to_code_block(error)}" 
 			self.expection_found.emit()
 			self.running = False
-			return
+		else:
+			try:
+				exclude_types, kwargs = self.get_filter()
 
-		self.module_content = inspect_object(module)
+				kwargs["recursion_limit"] = self.prefs.file["inspect"]["recursion_limit"]["value"]
 
-		self.finished.emit()
-		self.running = False
+				self.module_content = inspect_object(module, exclude_types=exclude_types, **kwargs)
+			except BaseException as error:
+				error = traceback.format_exc().replace('\n', '<br>').replace('\t', HTML_TAB)
 
+				self.exception_message = f"""An unexpected error ocurred: <br>
+				{self.convert_to_code_block(error)}<br>
+				"""
+
+				if isinstance(error, RecursionError): self.exception_message += "Try changing the <b>Recursion limit</b> on settings.<br>"
+				self.exception_message += "If you think it is and issue, please report it at <a style='color: {THEME[self.prefs.file['theme']]['link_color']};' href='https://github.com/Patitotective/PyAPIReference/issues'>GitHub issues</a>."
+
+				self.expection_found.emit()
+				self.running = False
+			else:
+				self.finished.emit()
+				self.running = False
+
+	def convert_to_code_block(self, string):
+		background_color = THEME[self.prefs.file['theme']]["code_block"]["background_color"]
+		font_color = THEME[self.prefs.file['theme']]["code_block"]["font_color"]
+
+		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
+
+class PreviewMarkdownInBrowser(QObject):
+	def __init__(self, *args, **kwargs):
+		super().__init__()
+
+		self.args = args
+		self.kwargs = kwargs
+		self.app = None
+		self.hyperlink = None
+
+	def run(self):
+		self.app = grip.create_app(*self.args, **self.kwargs)
+		
+		self.hyperlink = f"{self.app.config['HOST']}:{self.app.config['PORT']}"
+
+		self.app.run(open_browser=True)
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -115,7 +182,7 @@ class MainWindow(QMainWindow):
 
 		load_file_action = create_qaction(
 			menu=file_menu, 
-			text="Load file", 
+			text="Load module", 
 			shortcut="Ctrl+O", 
 			callback=lambda: self.main_widget.load_module_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
 			parent=self)			
@@ -187,6 +254,14 @@ class MainWindow(QMainWindow):
 		## Edit menu ##
 		edit_menu = bar.addMenu('&Edit') # Add a menu called edit
 
+		# Filer tree action
+		filter_tree_action = create_qaction(
+			menu=edit_menu, 
+			text="&Filter tree", 
+			shortcut="Ctrl+F", 
+			callback=self.main_widget.create_filter_dialog, 
+			parent=self)
+
 		# Create a settings action that will open the settings dialog
 		settings_action = create_qaction( 
 			menu=edit_menu, 
@@ -211,6 +286,7 @@ class MainWindow(QMainWindow):
 		answer = settings_dialog.exec_()
 
 		if answer == 1: # Means apply
+			self.main_widget.prefs.write_prefs("current_module", {})
 			self.reset_app()
 
 	def reset_app(self):
@@ -228,7 +304,7 @@ class MainWindow(QMainWindow):
 			win_rec.moveCenter(center)
 			
 			width, height = QDesktopWidget().availableGeometry().width(), QDesktopWidget().availableGeometry().height()
-			win_rec_width, win_rec_height = width // 5, height * 1 // 3
+			win_rec_width, win_rec_height = width // 4, height - 350
 			
 			self.resize(win_rec_width, win_rec_height)
 			self.move(width // 2 - win_rec_width // 2, height // 2 - win_rec_height // 2)
@@ -254,7 +330,8 @@ class MainWindow(QMainWindow):
 
 	def close_app(self):
 		self.save_geometry()
-		self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree()) # Save the state of the tree to restore it later
+		if self.main_widget.save_tree_at_end:
+			self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree()) # Save the state of the tree to restore it later
 
 		# Close window and exit program to close all dialogs open.
 		self.close()
@@ -282,8 +359,9 @@ class MainWidget(QWidget):
 			"markdown_text_edit": []
 		}
 
-		self.THEME = PREFS.read_prefs_file("GUI/theme.prefs")
 		self.module_content = None
+		self.save_tree_at_end = True
+		self.DEFAULT_MARKDOWN_FILENAME = "Prefs/temp.md"
 
 		self.load_fonts()
 		self.init_prefs()
@@ -306,12 +384,18 @@ class MainWidget(QWidget):
 		default_prefs = {
 			"current_module_path": "", # The path when you open a file to restore it 
 			"current_module": {}, 
-			"current_markdown": "", 
 			"theme": "dark", 
 			"state": {
 				"pos": (-100, -100), 
 				"size": (0, 0), 
 				"is_maximized": False, 
+			}, 
+			"inspect": {
+				"recursion_limit": {
+					"tooltip": "Recursion limit when inspecting module (when large modules it should be bigger).", 
+					"value": 10 ** 6, 
+					"min_val": 1500, 
+				}, 
 			}, 
 			"colors": {
 				"class": "#b140bf",
@@ -322,6 +406,12 @@ class MainWidget(QWidget):
 				"tuple": "#5B82D7", 
 				"list": "#5B82D7", 
 				"dict": "#5B82D7",
+			}, 
+			"filter": {
+				"Modules": ('types.ModuleType', False), 
+				"Classes": ('type', True), 
+				"Functions": ('types.FunctionType', True), 
+				"Include imported members": ("#include_imported_members", True), 
 			}
 		}
 
@@ -338,8 +428,9 @@ class MainWidget(QWidget):
 
 		load_file_button = ButtonWithExtraOptions("Load module", parent=self, 
 			actions=[
-			("Reload module", self.load_last_module), 
-			("Unload module", self.unload_file)
+				("Reload module", self.load_last_module), 
+				("Unload module", self.unload_file), 
+				("Filter", self.create_filter_dialog)
 			]
 		)
 		
@@ -351,7 +442,10 @@ class MainWidget(QWidget):
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
-		# self.load_last_module()
+		if self.prefs.file["current_module"] == {}:
+			self.load_last_module(warning=False)
+			return
+
 		self.restore_tree()
 
 	def load_file(self, file_filter, caption="Select a file", directory=None):
@@ -367,7 +461,11 @@ class MainWidget(QWidget):
 		return path
 
 	def unload_file(self):
-		if not self.prefs.file["current_markdown"] == "":
+		if self.prefs.file["current_module_path"] == "":
+			QMessageBox.warning(self, "No module to unload", "You must load a module first to unload it.")
+			return
+
+		if os.path.isfile(self.DEFAULT_MARKDOWN_FILENAME):
 			warning = WarningDialog(
 				"Lose Markdown", 
 				"If you unload this module, this module's Markdown will get lost.\nExport it if you want to preserve it.", 
@@ -386,12 +484,12 @@ class MainWidget(QWidget):
 			self.widgets["module_content_scrollarea"][-1].setParent(None)
 			self.widgets["module_content_scrollarea"] = []
 		
-		self.prefs.write_prefs("current_markdown", "")
+		os.remove(self.DEFAULT_MARKDOWN_FILENAME)
 		self.prefs.write_prefs("current_module_path", "")
 		self.prefs.write_prefs("current_module", {})
 
 	def load_module_file(self):
-		if not self.prefs.file["current_markdown"] == "":
+		if os.path.isfile(self.DEFAULT_MARKDOWN_FILENAME):
 			warning = WarningDialog(
 				"Lose Markdown", 
 				"If you load another file this file's Markdown will get lost.\nExport it if you want to preserve it.", 
@@ -402,7 +500,7 @@ class MainWidget(QWidget):
 			if not warning:
 				return
 
-			self.prefs.write_prefs("current_markdown", "")
+			os.remove(self.DEFAULT_MARKDOWN_FILENAME)
 
 		path = self.load_file("Python files (*.py)")
 		
@@ -412,13 +510,25 @@ class MainWidget(QWidget):
 		file_size = os.path.getsize(path)
 		
 		if file_size > 15000:
-			warning_message = QMessageBox.warning(self, f"Inspect Warning", "File size is large.\nInspection may take some time.")
+			warning = WarningDialog(
+				"Inspect Markdown", 
+				"File size is large.\nInspection may take some time.", 
+				no_btn_text="Cancel", 
+				yes_btn_text="Continue", 
+				parent=self).exec_()
+			
+			if not warning:
+				return
 
 		self.prefs.write_prefs("current_module_path", path)
 
 		self.create_inspect_module_thread(path)
 
-	def load_last_module(self):
+	def load_last_module(self, warning: bool=True):
+		if self.prefs.file["current_module_path"] == "" and warning:
+			QMessageBox.warning(self, "No module to reload", "You must load a module first to reload it.")
+			return
+
 		if not self.prefs.file["current_module_path"] == "":
 			if not os.path.isfile(self.prefs.file["current_module_path"]):
 				return # Ignore it because is not a valid path
@@ -431,7 +541,9 @@ class MainWidget(QWidget):
 
 		loading_label = QLabel("Loading...")
 		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-		loading_label.setStyleSheet(f"font-size: 20px; font-family: {self.THEME['module_collapsible_font_family']};")
+		loading_label.setStyleSheet(f"font-size: 20px; font-family: {THEME['module_collapsible_font_family']};")
+
+		self.save_tree_at_end = False
 
 		if len(self.widgets["module_content_scrollarea"]) > 0:
 			self.widgets["module_content_scrollarea"][-1].setParent(None)
@@ -447,7 +559,7 @@ class MainWidget(QWidget):
 			self.widgets["retry_button"].pop()
 
 		self.thread = QThread()
-		self.worker = InspectModule(module)
+		self.worker = InspectModule(module, self.prefs)
 		self.worker.moveToThread(self.thread)
 
 		# Start: inspect object / Finish: create widget 
@@ -466,9 +578,14 @@ class MainWidget(QWidget):
 
 		self.widgets["load_file_button"][-1].setEnabled(True)
 
-		exception_message = f"Couldn't load file, Exception found\n\nException: {self.worker.exception['message']}\nFile: {self.worker.exception['file']}\nLine: {self.worker.exception['line']}"
+		self.save_tree_at_end = False
+		self.prefs.write_prefs("current_module", {})
+
 		change_widget_stylesheet(self.widgets["module_content_scrollarea"][-1], "font-size", "15px")
-		self.widgets["module_content_scrollarea"][-1].setText(exception_message)
+		
+		self.widgets["module_content_scrollarea"][-1].setOpenExternalLinks(True)
+		self.widgets["module_content_scrollarea"][-1].setTextFormat(Qt.TextFormat.RichText)		
+		self.widgets["module_content_scrollarea"][-1].setText(self.worker.exception_message)
 
 		retry_button = QPushButton("Retry")
 		retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module_path"]))
@@ -476,6 +593,9 @@ class MainWidget(QWidget):
 		self.widgets["retry_button"].append(retry_button)
 
 		self.layout().addWidget(retry_button, 3, 0)
+
+		self.layout().setRowStretch(2, 0)
+		self.layout().setRowStretch(3, 0)
 		self.layout().setRowStretch(4, 100)
 
 	def inspect_object_worker_finished(self):
@@ -484,6 +604,8 @@ class MainWidget(QWidget):
 		self.thread.deleteLater()
 
 		self.layout().setRowStretch(4, 0)
+
+		self.save_tree_at_end = True
 
 		self.widgets["load_file_button"][-1].setEnabled(True)
 		self.module_content = self.worker.module_content
@@ -516,9 +638,16 @@ class MainWidget(QWidget):
 		self.widgets["module_tabs"].append(module_tabs)
 
 	def create_markdown_tab(self):
+		def update_markdown_file():
+			if len(self.widgets["markdown_text_edit"]) < 1:
+				return
+
+			with open(self.DEFAULT_MARKDOWN_FILENAME, "w+") as file:
+				file.write(self.widgets["markdown_text_edit"][-1].toPlainText())
+
 		def create_markdown_text_edit(text: str=None):
 			if text is None:
-				markdown_text = self.convert_tree_to_markdown(tree=self.filter_tree())
+				markdown_text = convert_tree_to_markdown(tree=self.filter_tree())
 			else:
 				markdown_text = text
 
@@ -528,11 +657,13 @@ class MainWidget(QWidget):
 				return
 
 			text_edit = QTextEdit()
-			text_edit.textChanged.connect(lambda: self.prefs.write_prefs("current_markdown", text_edit.toPlainText()))
+			text_edit.textChanged.connect(update_markdown_file)
 			text_edit.setPlainText(markdown_text)
 			text_edit.setWordWrapMode(QTextOption.NoWrap)
+			text_edit.setStyleSheet(f"background-color: {THEME[self.current_theme]['markdown_highlighter']['background-color']};")
 
-			highlighter = MarkdownHighlighter(text_edit)
+
+			highlighter = MarkdownHighlighter(text_edit, current_theme=self.current_theme)
 
 			markdown_tab = self.widgets["markdown_tab"][-1]
 			self.widgets["markdown_text_edit"].append(text_edit)
@@ -549,6 +680,8 @@ class MainWidget(QWidget):
 				convert_to_markdown_clicked = True
 				convert_to_markdown_button.main_button.setText("Update Markdown")				
 				create_markdown_text_edit(text)
+				update_markdown_file()
+
 				return
 
 			warning = WarningDialog("Overwrite Markdown", "Do you want to overwrite current Markdown text?", parent=self).exec_() # Return 1 if yes, 0 if no
@@ -569,9 +702,31 @@ class MainWidget(QWidget):
 
 			convert_to_markdown_clicked(text=content)
 
+		def preview_markdown_in_browser():
+			if len(self.widgets["markdown_text_edit"]) < 1:
+				QMessageBox.critical(self, "No markdown to preview", "You must create a markdown first to preview.")
+				return
+
+			if self.markdown_preview_thread is not None and self.markdown_preview_worker is not None:
+				# Add here a popup window saying that it is already live at localhost:6346, with two buttons, open and stop.
+				webbrowser.open_new_tab(self.markdown_preview_worker.hyperlink)
+				# QMessageBox.critical(self, "Markdown already live", f"Markdown is being already previewd at <a href='{self.markdown_preview_worker.hyperlink}'>{self.markdown_preview_worker.hyperlink}<a>.")
+				return				
+
+			self.markdown_preview_thread = QThread()
+			self.markdown_preview_worker = PreviewMarkdownInBrowser(path=self.DEFAULT_MARKDOWN_FILENAME, title=tuple(self.module_content)[0])
+			self.markdown_preview_worker.moveToThread(self.markdown_preview_thread)
+
+			self.markdown_preview_thread.started.connect(self.markdown_preview_worker.run)	
+
+			self.markdown_preview_thread.start()
+
 		if len(self.widgets["markdown_text_edit"]) > 0:
 			self.widgets["markdown_text_edit"][-1].setParent(None)
 			self.widgets["markdown_text_edit"].pop()
+
+		self.markdown_preview_thread = None
+		self.markdown_preview_worker = None
 
 		convert_to_markdown_clicked = False
 
@@ -581,7 +736,8 @@ class MainWidget(QWidget):
 		convert_to_markdown_button = ButtonWithExtraOptions("Convert to Markdown", parent=self, 
 			actions=[
 				("Export", lambda: self.export_markdown(MarkdownExportTypes.MARKDOWN)), 
-				("Load Markdown file", load_markdown_file)
+				("Load Markdown file", load_markdown_file), 
+				("Preview Markdown", preview_markdown_in_browser)
 			]
 		)
 		
@@ -592,91 +748,16 @@ class MainWidget(QWidget):
 
 		self.widgets["markdown_tab"].append(markdown_tab)
 
-		if not self.prefs.file["current_markdown"] == "":
-			convert_to_markdown_button_clicked(text=self.prefs.file["current_markdown"])
+		if os.path.isfile(self.DEFAULT_MARKDOWN_FILENAME):
+			convert_to_markdown_button_clicked(text=self.read_markdown_file())
 
 		return markdown_tab
 
-	def convert_tree_to_markdown(self, tree: dict=None):
-		def parameters_to_markdown(parameters: dict, header: str="- "):
-			empty = True
-			markdown_text = "#### Parameters\n"
-			
-			for parameter_name, parameter_props in parameters.items():
-				empty = False
+	def read_markdown_file(self):
+		with open(self.DEFAULT_MARKDOWN_FILENAME, "r") as file:
+			text = file.read()
 
-				parameter_text = f"`{parameter_name}"
-
-				if parameter_props["annotation"] is not None and parameter_props["default"] is not None:
-					parameter_text += f" ({parameter_props['annotation']}={parameter_props['default']})`"
-				elif parameter_props["annotation"] is not None and parameter_props["default"] is None:
-					parameter_text += f" ({parameter_props['annotation']})`"
-
-				elif parameter_props["default"] is not None:
-					parameter_text += f"={parameter_props['default']}`"
-				else:
-					parameter_text += "`"
-
-				markdown_text += f"{header}{parameter_text}\n"
-
-			return markdown_text if not empty else None
-
-		def class_to_markdown(class_dict: dict, header: str=""):
-			markdown_text = ""
-			empty = True
-
-			for property_name, property_val in class_dict.items():
-				if property_name == "inherits" and len(property_val) > 0:
-					markdown_text += f"Inherits: `{', '.join(property_val)}`\n"
-					empty = False
-
-			return markdown_text if not empty else None
-
-		def content_to_markdown(content: dict, header: str="###") -> str:
-			markdown_text = ""
-
-			for member_name, member_props in content.items():
-				member_type = member_props["type"]
-				member_docstring = member_props["docstring"]
-
-				if "value" in member_props: # Means it's a variable so the docstring will be a description of the variable type
-					member_docstring = None
-					markdown_text += f"{header} `{member_name} ({member_type}) = {member_props['value']}`\n"
-				else:
-					markdown_text += f"{header} `{member_name} ({member_type})`\n"
-				
-				markdown_text += f"{member_docstring if member_docstring is not None else f'{member_name} has no description.'}".strip() + "\n\n"
-
-				if "parameters" in member_props:
-					parameter_text = parameters_to_markdown(member_props["parameters"])
-					markdown_text += parameter_text.strip() + "\n\n" if parameter_text is not None else "" 
-
-				if member_type == "class":
-					class_text = class_to_markdown(member_props)					
-					markdown_text += class_text.strip() + "\n\n" if class_text is not None else "" 
-
-			return markdown_text
-
-		if tree is None:
-			tree = self.module_content
-
-		# print(PREFS.convert_to_prefs(tree))
-
-		# object is the main object on the tree
-		module_name = tuple(tree)[0]
-		module_content = tree[module_name]
-
-		markdown_text = f"# {module_name}\n"
-
-		for property_name, property_val in module_content.items():
-			if isinstance(property_val, dict):
-				markdown_text += content_to_markdown(property_val)
-
-			elif property_name == "docstring":
-				markdown_text += f"{property_val if property_val is not None else f'{module_name} has no docstring.'}".strip() + "\n\n"
-				continue
-
-		return markdown_text.strip() + "\n" # This way it only lefts one line at the end
+		return text
 
 	def restore_tree(self, tree=None):
 		if tree is None:
@@ -756,6 +837,26 @@ class MainWidget(QWidget):
 
 		return result
 
+	def create_filter_dialog(self):
+		if self.prefs.file["current_module_path"] == "":
+			QMessageBox.warning(self, "No module to filter", "You must load a module first to filter it.")
+			return
+
+		filter_dialog = FilterDialog(self.prefs, parent=self)
+		filter_dialog.setStyleSheet(
+			f"""
+			QPushButton#CollapseButton {{
+				color: {THEME[self.current_theme]['font_color']};
+			}}
+			""")
+
+		answer = filter_dialog.exec_()
+	
+		if not answer: # if answer == 0
+			return
+
+		self.create_inspect_module_thread(self.prefs.file["current_module_path"])
+
 	def create_module_tree_tab(self):
 		module_content_widget = QWidget()
 		module_content_widget.setLayout(QVBoxLayout())
@@ -763,7 +864,7 @@ class MainWidget(QWidget):
 		module_content_widget.setStyleSheet(
 		f"""
 		*{{
-			font-family: {self.THEME['module_collapsible_font_family']};
+			font-family: {THEME['module_collapsible_font_family']};
 		}}
 		QToolTip {{
 			font-family: {font.defaultFamily()};
@@ -785,10 +886,8 @@ class MainWidget(QWidget):
 	def create_collapsible_widget(self, title: str, color=None, collapse_button=CheckBoxCollapseButton, parent=None) -> QWidget:
 		if parent is None:
 			parent = self
-
+			
 		collapsible_widget = CollapsibleWidget(
-			self.THEME, 
-			self.current_theme, 
 			title, 
 			color, 
 			collapse_button, 
@@ -838,7 +937,7 @@ class MainWidget(QWidget):
 
 					property_collapsible.addWidget(nested_property_label)
 			
-			elif isinstance(property_value, dict):
+			elif isinstance(property_value, dict):				
 				for nested_property_name, nested_property_value in property_value.items():
 
 					if nested_property_name in properties_to_ignore:
@@ -865,6 +964,11 @@ class MainWidget(QWidget):
 
 					property_collapsible.addWidget(nested_property_label)
 		
+				if "collapsed" in property_value:
+					property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
+				if "checked" in property_value:
+					property_collapsible.enable_checkbox() if property_value["checked"] else property_collapsible.disable_checkbox()
+
 			elif isinstance(property_value, str):
 				property_value = property_value.strip()
 
@@ -872,11 +976,6 @@ class MainWidget(QWidget):
 				property_label.setStyleSheet(f"color {color}")
 
 				property_collapsible.addWidget(property_label)
-
-			if "collapsed" in property_value:
-				property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
-			if "checked" in property_value:
-				property_collapsible.enable_checkbox() if property_value["checked"] else property_collapsible.disable_checkbox()
 
 			return property_collapsible
 
@@ -934,11 +1033,11 @@ class MainWidget(QWidget):
 			if object_type == color_object_type:
 				return self.prefs.file["colors"][color_object_type]
 				
-		return self.THEME[self.current_theme]["font_color"]
+		return THEME[self.current_theme]["font_color"]
 
 	def convert_to_code_block(self, string):
-		background_color = self.THEME[self.current_theme]["code_block"]["background_color"]
-		font_color = self.THEME[self.current_theme]["code_block"]["font_color"]
+		background_color = THEME[self.current_theme]["code_block"]["background_color"]
+		font_color = THEME[self.current_theme]["code_block"]["font_color"]
 
 		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
 

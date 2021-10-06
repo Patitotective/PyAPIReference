@@ -5,3 +5,5 @@ multipledispatch
 pyqtdarktheme
 markdown
 m2r2
+casestyle
+grip

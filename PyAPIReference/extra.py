@@ -1,9 +1,21 @@
 import os
 import sys
+import inspect
+import traceback
 from importlib.util import spec_from_file_location, module_from_spec
-from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout
 
-TAB = "&nbsp;" * 4 
+from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout
+from PyQt5.QtGui import QFont, QFontMetrics
+from PyQt5.QtCore import QSize
+
+HTML_TAB = "&nbsp;" * 4 
+
+def get_text_size(text: str):
+	font = QFont()
+	font = QFont(font.defaultFamily())
+	font_metrics = QFontMetrics(font)
+
+	return QSize(font_metrics.width(text), font_metrics.height())
 
 def create_qaction(menu, text: str, shortcut: str="", callback: callable=lambda: print("No callback"), parent=None) -> QAction:
 	"""This function will create a QAction and return it"""
@@ -31,12 +43,7 @@ def get_module_from_path(path: str):
 	try:
 		spec.loader.exec_module(module)
 	except Exception as error:
-		exception_info = {}
-		exception_info["message"] = error.args[0]
-		exception_info["file"] = path
-		exception_info["line"] = sys.exc_info()[2].tb_lineno
-		
-		return None, exception_info
+		return None, traceback.format_exc()
 
 	return module, None
 
@@ -46,7 +53,7 @@ def convert_to_code_block(string: str, stylesheet: str="background-color: #48484
 
 
 	result = f"<span style='{stylesheet}'>"
-	result += str(string).replace("\t", TAB).replace("\n", "<br>")
+	result += str(string).replace("\t", HTML_TAB).replace("\n", "<br>")
 	result += "</span>"
 
 	return result
@@ -99,4 +106,8 @@ def get_widgets_from_layout(layout: QLayout, widget_type: QWidget=QWidget, exact
 
         yield widget
 
-#print(get_module_from_path("trial.py"))
+def remove_key_from_dict(my_dict: dict, key: str) -> dict:
+	return {k:v for k, v in my_dict.items() if k != key}
+
+def to_sentence_case(string: str) -> str:
+	return string.replace("-", " ").replace("_", " ").capitalize()

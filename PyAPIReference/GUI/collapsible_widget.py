@@ -4,13 +4,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QCursor
 
 if __name__ == "__main__":
-    import collapsible_widget_resources
-else:
-    import GUI.collapsible_widget_resources
-
-if __name__ == "__main__":
     raise RuntimeError("collapsible_widget.py requires get_widgets_from_layout from extra.py which is outside this folder, you can't run this script as main")
 else:
+    import GUI.collapsible_widget_resources
     from extra import get_widgets_from_layout 
 
 VERTICAL_ARROW_PATH = ":/vertical_arrow_collapsible.png"
@@ -24,6 +20,7 @@ class CollapseButton(QWidget):
         self.parent = parent
 
         self.setLayout(QHBoxLayout())
+        self.setObjectName("CollapseButton")
 
         self.button = QPushButton(title)
         self.layout().addWidget(self.button)
@@ -34,7 +31,7 @@ class CollapseButton(QWidget):
         QPushButton {{
             text-align: left; 
             padding: 3px 5px 3px 5px; 
-            color: {color};
+            color: {color if color is not None else ''};
         }}
         """)
 
@@ -66,8 +63,6 @@ class CheckBoxCollapseButton(CollapseButton):
 
 class CollapsibleWidget(QWidget):
     def __init__(self, 
-        THEME, 
-        current_theme, 
         title: str=None, 
         color=None, 
         collapse_button: QWidget=CollapseButton, 
@@ -77,15 +72,10 @@ class CollapsibleWidget(QWidget):
         
         self.parent = parent
 
-        self.THEME = THEME
-        self.current_theme = current_theme
         self.title = title
 
         self.is_collapsed = True
 
-        if color is None:
-            color = self.THEME[self.current_theme]["font_color"]
-        
         self.title_frame = collapse_button(title, color, self.is_collapsed, parent=self)
         self.title_frame.button.clicked.connect(self.toggle_collapsed)
 

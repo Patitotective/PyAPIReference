@@ -1,68 +1,23 @@
-from PyQt5.QtWidgets import QWidget, QLabel, QDialog, QPushButton, QVBoxLayout, QHBoxLayout, QStyle, QComboBox, QTabWidget, QFormLayout, QColorDialog, QGridLayout
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (
+	QWidget, QLabel, 
+	QDialog, QPushButton, 
+	QVBoxLayout, QHBoxLayout, 
+	QStyle, QComboBox, 
+	QTabWidget, QFormLayout, 
+	QColorDialog, QGridLayout, 
+	QSpinBox, QDoubleSpinBox)
+
 from PyQt5.QtGui import QColor
 
 from qtwidgets import AnimatedToggle
-from multipledispatch import dispatch
 import PREFS
 
 if __name__ == "__main__":
-	from scrollarea import ScrollArea
+    raise RuntimeError("settings_dialog.py requires to_sentence_case from extra.py which is outside this folder, you can't run this script as main")
 else:
 	from GUI.scrollarea import ScrollArea
-
-class FormLayout(QGridLayout):
-	"""This layout will work as QFormLayout but this will center the two columns vertically.
-	QFormLayout:
-		--- ___
-	This:
-		--- ---
-	"""
-	def __init__(self, stretch=True, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-
-		self.stretch = stretch
-		self.row = 0
-
-	def addRowEvent(self):
-		"""This function is called whenever a row is added.
-		"""
-		if self.stretch: self.setRowStretch(self.row, 0)
-		self.row += 1
-		if self.stretch: self.setRowStretch(self.row, 1)
-
-	@dispatch(QWidget, QWidget)
-	def addRow(self, widget1: QWidget, widget2: QWidget):		
-		self.addWidget(widget1, self.row, 0)
-		self.addWidget(widget2, self.row, 1)
-
-		self.addRowEvent()
-
-	@dispatch(str, QWidget)
-	def addRow(self, string: str, widget: QWidget):
-		self.addWidget(QLabel(string), self.row, 0)
-		self.addWidget(widget, self.row, 1)
-
-		self.addRowEvent()
-	
-	@dispatch(QWidget, str)
-	def addRow(self, string: str, widget: QWidget):
-		self.addWidget(widget, self.row, 0)
-		self.addWidget(QLabel(string), self.row, 1)
-
-		self.addRowEvent()
-
-	@dispatch(QWidget)
-	def addRow(self, widget: QWidget):
-		self.addWidget(widget, self.row, 0, 1, 0)
-		
-		self.addRowEvent()
-
-	@dispatch(str)
-	def addRow(self, string: str):
-		self.addWidget(QLabel(string), self.row, 0, 1, 0)
-		
-		self.addRowEvent()
+	from GUI.formlayout import FormLayout
+	from extra import to_sentence_case
 
 class SettingsDialog(QDialog):
 	def __init__(self, prefs, *args, title="Settings", parent=None, **kwargs):
@@ -80,6 +35,7 @@ class SettingsDialog(QDialog):
 	def create_widgets(self):
 		tabs = QTabWidget()
 
+		tabs.addTab(self.create_inspect_module_tab(), "Inspect module")
 		tabs.addTab(self.create_theme_tab(), "Theme")
 
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
@@ -90,7 +46,33 @@ class SettingsDialog(QDialog):
 	
 	def create_inspect_module_tab(self):
 		inspect_module_tab = QWidget()
-		inspect_module_tab.setLayout(QVBoxLayout())
+		inspect_module_tab.setLayout(FormLayout())
+
+		for pref, pref_props in self.prefs.file["inspect"].items():
+			val = pref_props["value"]
+			tooltip = pref_props["tooltip"]
+
+			if isinstance(val, (int, float)):
+				min_val, max_val = 0, 2147483647
+				if "min_val" in pref_props:
+					min_val = pref_props["min_val"]
+				if "max_val" in pref_props:
+					max_val = pref_props["max_val"]
+
+				if isinstance(val, int):
+					spinbox = QSpinBox()
+				elif isinstance(val, float):
+					spinbox = QDoubleSpinBox(val)
+					spinbox.setDecimals(2)
+
+				spinbox.setRange(min_val, max_val)
+				spinbox.setValue(val)	
+				spinbox.valueChanged.connect(lambda spinbox_val: self.prefs.write_prefs(f"inspect/{pref}/value", spinbox_val))
+				spinbox.setToolTip(tooltip)
+
+				inspect_module_tab.layout().addRow(f"{to_sentence_case(pref)}: ", spinbox)
+
+		return inspect_module_tab
 
 	def create_theme_tab(self):
 		def dark_theme_toggle_changed(state: int):
@@ -151,5 +133,3 @@ class SettingsDialog(QDialog):
 		theme_tab.layout().addRow(ScrollArea(color_pattern_widget))
 
 		return theme_tab
-
-

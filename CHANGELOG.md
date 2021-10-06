@@ -1,5 +1,25 @@
 # Change Log
 
+### v0.1.35 (06/10/2021)
+- Fixed bug when adding more than one action to `ButtonWithExtraOptions`.
+- Added `Inspect` tab in settings where you can change the recursion limit.
+- Changed way it gets errors and display them.
+- `inspect_object.py`:
+	- Fixed some bugs when unknown docstring (`PyQt5`).
+	- Added `exclude_types` and `include_imported_members` parameters to `inspect_object` function.
+	- Added `recursion_limit` parameter too.
+- Remade filter option.
+- Added _Preview in Markdown_ option.
+- Changed initial window size.
+- Now markdown file is stored at `Prefs/temp.md`.
+- When file size is large you can cancel the operation in a warning dialog.
+- Fixed stretch when retry button.
+- Replaced settings screenshot with markdown one.
+
+### v0.1.31 (03/10/2021)
+- User can filter objects to remove/show on tree.
+- Need to add more options
+
 ### v0.1.30 (30/09/2021)
 - Now it restores the last tree (checked and collapsed widgets) if you uncomment line `360` and comment the line before. Why? because it takes some time and seems like it weren't working.
 - Created a button with extra options.
