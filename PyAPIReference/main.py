@@ -40,7 +40,7 @@ from PyQt5.QtMultimedia import QMediaPlayer
 # Dependencies
 from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
 from GUI.scrollarea import ScrollArea
-from GUI.settings_dialog import SettingsDialog
+from GUI.settings_dialog import SettingsDialog, FilterDialog
 from GUI.markdownhighlighter import MarkdownHighlighter
 from GUI.warning_dialog import WarningDialog
 from GUI.button_with_extra_options import ButtonWithExtraOptions
@@ -406,12 +406,6 @@ class MainWidget(QWidget):
 				"tuple": "#5B82D7", 
 				"list": "#5B82D7", 
 				"dict": "#5B82D7",
-			}, 
-			"filter": {
-				"Modules": ('types.ModuleType', False), 
-				"Classes": ('type', True), 
-				"Functions": ('types.FunctionType', True), 
-				"Include imported members": ("#include_imported_members", True), 
 			}
 		}
 
@@ -1088,6 +1082,11 @@ class MainWidget(QWidget):
 			elif export_type == MarkdownExportTypes.RESTRUCTUREDTEXT:
 				file.write(m2r2.convert(markdown_text))
 	
+	def create_filter(self):
+		filter_dialog = FilterDialog(parent=self)
+		response = filter_dialog.exec_()
+		if self.prefs.file["current_module_path"] != "":
+			self.create_inspect_module_thread(self.prefs.file["current_module_path"])
 
 
 def init_app():

@@ -32,7 +32,6 @@ def prefs(func: callable):
 
     return wrapper_function # Return function to call
 
-def inspect_object(object_: object, exclude_types: tuple=(types.ModuleType), include_imported_members: bool=False, recursion_limit: int=10 ** 6):
 	"""Find all members of Python object.
 	Example:
 		def say_hi(name: str) -> str:
@@ -61,7 +60,7 @@ def get_object_members(object_: object, exclude_types: tuple=(types.ModuleType),
 	def filter_member(member_name: str, member: object):
 		if isinstance(member, exclude_types):
 			return False
- 
+
  		# If the object it's a module
 		if inspect.ismodule(object_) and not include_imported_members:
 			# Get the module of the member (where it was defined or it belongs to)
@@ -137,7 +136,7 @@ def get_object_properties(object_: object, exclude_types: tuple=(types.ModuleTyp
 	result = {"type": object_type, "docstring": str(object_.__doc__) if object_.__doc__ is not None else object_.__doc__}
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
-		
+
 		if inspect.isclass(object_):
 			result["inherits"] = [i.__name__ for i in inspect.getmro(object_)[1:-1]]
 		
@@ -160,6 +159,15 @@ def get_object_properties(object_: object, exclude_types: tuple=(types.ModuleTyp
 		result["value"] = str(object_)
 	
 	return result
+
+def check_filter(object_):
+	if inspect.isclass(object_):
+		if "class" in FilterDialog.filters:
+			return True
+
+	if inspect.isfunction(object_):
+		if "function" in FilterDialog.filters:
+			return True
 
 def get_callable_parameters(callable_: callable):
 	"""Given a callable object (functions, lambda or methods) get all it's parameters, 
