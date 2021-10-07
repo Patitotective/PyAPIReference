@@ -1,5 +1,9 @@
 # Change Log
 
+### v0.1.36 (07/10/2021)
+- Removed tree scrollbar border.
+- Fixed issues with preview markdown thread.
+
 ### v0.1.35 (06/10/2021)
 - Fixed bug when adding more than one action to `ButtonWithExtraOptions`.
 - Added `Inspect` tab in settings where you can change the recursion limit.

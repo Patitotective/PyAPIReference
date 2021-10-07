@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget,  QScrollBar, QScrollArea
+from PyQt5.QtWidgets import QWidget,  QScrollBar, QScrollArea, QFrame
 from PyQt5.QtCore import Qt, QCoreApplication, QEvent
 
 from enum import Enum, auto
@@ -20,6 +20,7 @@ class ScrollArea(QScrollArea):
 
 		self.setWidget(main_widget)
 		self.setWidgetResizable(True)
+		self.setStyleSheet("QScrollArea { border: none; }")
 		#self.set_stylesheet()
 
 		main_widget.installEventFilter(self)

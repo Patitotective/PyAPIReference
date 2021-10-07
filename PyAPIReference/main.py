@@ -14,6 +14,7 @@ import json
 import yaml
 import webbrowser
 from enum import Enum, auto
+import multiprocessing
 
 import PREFS
 import markdown # Markdown to HTML converter
@@ -134,7 +135,8 @@ class InspectModule(QObject):
 
 		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
 
-class PreviewMarkdownInBrowser(QObject):
+class PreviewMarkdownInBrowser(QObject):	
+	adress_already_in_use_signal = pyqtSignal()
 	def __init__(self, *args, **kwargs):
 		super().__init__()
 
@@ -142,13 +144,26 @@ class PreviewMarkdownInBrowser(QObject):
 		self.kwargs = kwargs
 		self.app = None
 		self.hyperlink = None
+		self.server = None
 
 	def run(self):
+		def init_app():
+			try:
+				self.app.run(open_browser=True)
+			except OSError: # Means address already in use
+				self.adress_already_in_use_signal.emit()
+
 		self.app = grip.create_app(*self.args, **self.kwargs)
-		
+
 		self.hyperlink = f"{self.app.config['HOST']}:{self.app.config['PORT']}"
 
-		self.app.run(open_browser=True)
+		self.server = multiprocessing.Process(target=init_app)
+		self.server.start()
+
+	def stop(self):
+		self.server.terminate()
+		self.server.join()
+
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -502,6 +517,15 @@ class MainWidget(QWidget):
 
 			os.remove(self.DEFAULT_MARKDOWN_FILENAME)
 
+		if self.markdown_preview_worker is not None:
+			self.markdown_preview_worker.stop()
+			self.markdown_preview_thread.quit()
+			self.markdown_preview_worker.deleteLater()
+			self.markdown_preview_thread.deleteLater()
+
+			self.markdown_preview_worker = None
+			self.markdown_preview_thread = None
+
 		path = self.load_file("Python files (*.py)")
 		
 		if path == '':
@@ -632,7 +656,7 @@ class MainWidget(QWidget):
 		self.layout().setRowStretch(2, 1)		
 		self.layout().setRowStretch(1, 0)
 
-		module_tabs.addTab(self.create_module_tree_tab(), "Tree")		
+		module_tabs.addTab(self.create_tree_tab(), "Tree")		
 		module_tabs.addTab(self.create_markdown_tab(), "Markdown")		
 
 		self.widgets["module_tabs"].append(module_tabs)
@@ -702,20 +726,45 @@ class MainWidget(QWidget):
 
 			convert_to_markdown_clicked(text=content)
 
+		def stop_markdown_preview():
+			self.markdown_preview_worker.stop()
+			self.markdown_preview_thread.quit()
+			self.markdown_preview_worker.deleteLater()
+			self.markdown_preview_thread.deleteLater()
+
+			self.markdown_preview_worker = None
+			self.markdown_preview_thread = None
+
 		def preview_markdown_in_browser():
+			def addres_already_in_use():
+				answer = WarningDialog(
+					"Preview Markdown already live", 
+					f"You are already previewing the Markdown at {self.markdown_preview_worker.hyperlink}.", 
+					yes_btn_text="Open", 
+					yes_btn_callback=2, 
+					no_btn_text="Stop", 
+					no_btn_callback=1, 
+					parent=self
+				).exec_()
+				
+				if answer == 2: # Means open
+					webbrowser.open_new_tab(self.markdown_preview_worker.hyperlink)
+				elif answer == 1: # Means stop
+					stop_markdown_preview()
+
 			if len(self.widgets["markdown_text_edit"]) < 1:
 				QMessageBox.critical(self, "No markdown to preview", "You must create a markdown first to preview.")
 				return
 
 			if self.markdown_preview_thread is not None and self.markdown_preview_worker is not None:
-				# Add here a popup window saying that it is already live at localhost:6346, with two buttons, open and stop.
-				webbrowser.open_new_tab(self.markdown_preview_worker.hyperlink)
-				# QMessageBox.critical(self, "Markdown already live", f"Markdown is being already previewd at <a href='{self.markdown_preview_worker.hyperlink}'>{self.markdown_preview_worker.hyperlink}<a>.")
-				return				
+				addres_already_in_use()
+				return
 
 			self.markdown_preview_thread = QThread()
 			self.markdown_preview_worker = PreviewMarkdownInBrowser(path=self.DEFAULT_MARKDOWN_FILENAME, title=tuple(self.module_content)[0])
 			self.markdown_preview_worker.moveToThread(self.markdown_preview_thread)
+
+			self.markdown_preview_worker.adress_already_in_use_signal.connect(addres_already_in_use)
 
 			self.markdown_preview_thread.started.connect(self.markdown_preview_worker.run)	
 
@@ -857,7 +906,7 @@ class MainWidget(QWidget):
 
 		self.create_inspect_module_thread(self.prefs.file["current_module_path"])
 
-	def create_module_tree_tab(self):
+	def create_tree_tab(self):
 		module_content_widget = QWidget()
 		module_content_widget.setLayout(QVBoxLayout())
 		font = QFont()
