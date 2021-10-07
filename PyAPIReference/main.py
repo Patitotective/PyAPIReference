@@ -375,6 +375,8 @@ class MainWidget(QWidget):
 		}
 
 		self.module_content = None
+		self.markdown_preview_worker = None
+		self.markdown_preview_thread = None
 		self.save_tree_at_end = True
 		self.DEFAULT_MARKDOWN_FILENAME = "Prefs/temp.md"
 
