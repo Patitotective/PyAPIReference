@@ -35,7 +35,7 @@ from PyQt5.QtWidgets import (
 )
 
 from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QTextOption
-from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream
+from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream, QTimer
 from PyQt5.QtMultimedia import QMediaPlayer
 
 # Dependencies
@@ -53,7 +53,8 @@ from extra import (
 	create_qaction, convert_to_code_block, 
 	get_module_from_path, change_widget_stylesheet, 
 	add_text_to_text_edit, get_widgets_from_layout, 
-	HTML_TAB)
+	HTML_TAB
+)
 
 from tree_to_markdown import convert_tree_to_markdown
 
@@ -401,6 +402,7 @@ class MainWidget(QWidget):
 		default_prefs = {
 			"current_module_path": "", # The path when you open a file to restore it 
 			"current_module": {}, 
+			"current_tab": 0, 
 			"theme": "dark", 
 			"state": {
 				"pos": (-100, -100), 
@@ -459,11 +461,35 @@ class MainWidget(QWidget):
 		self.layout().addWidget(load_file_button, 1, 0, Qt.AlignTop)
 		self.layout().setRowStretch(1, 1)
 
-		if self.prefs.file["current_module"] == {}:
-			self.load_last_module(warning=False)
-			return
+		self.restore_module()
 
-		self.restore_tree()
+	def restore_module(self):
+		"""Restore tree if tree available else load last module.
+		"""
+		self.timer = QTimer()
+		
+		if os.path.isfile(self.prefs.file["current_module_path"]): # Means the path really exist
+			self.timer.timeout.connect(lambda: self.load_last_module(warning=False))	
+		elif not self.prefs.file["current_module"] == {}: # Means it's not empty
+			self.timer.timeout.connect(self.restore_tree)
+		else:
+			return
+		
+		# Disable Load File button
+		self.widgets["load_file_button"][-1].setEnabled(False)
+
+		loading_label = QLabel("Loading...")
+		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+		loading_label.setStyleSheet(f"font-size: 20px; font-family: {THEME['module_collapsible_font_family']};")
+
+		self.widgets["module_content_scrollarea"].append(loading_label)
+
+		self.layout().addWidget(loading_label, 2, 0)
+		self.layout().setRowStretch(2, 100)
+		
+		self.timer.timeout.connect(lambda: self.widgets["load_file_button"][-1].setEnabled(True))
+		self.timer.timeout.connect(self.timer.stop)		
+		self.timer.start(100)
 
 	def load_file(self, file_filter, caption="Select a file", directory=None):
 		if directory is None:
@@ -595,7 +621,10 @@ class MainWidget(QWidget):
 		self.worker.finished.connect(self.inspect_object_worker_finished)
 		self.worker.expection_found.connect(self.inspect_object_worker_exception)
 
-		self.thread.start()
+		self.timer = QTimer()
+		self.timer.timeout.connect(self.thread.start)
+		self.timer.timeout.connect(self.timer.stop)
+		self.timer.start(100)
 
 	def inspect_object_worker_exception(self):
 		self.thread.quit()
@@ -639,6 +668,15 @@ class MainWidget(QWidget):
 		self.create_module_tabs()
 		
 	def create_module_tabs(self):
+		def tab_changed(index: int):
+			nonlocal first_time
+
+			if first_time:
+				first_time = False
+				return
+
+			self.prefs.write_prefs("current_tab", index)
+
 		if len(self.widgets["module_tabs"]) > 0:	
 			self.widgets["module_tabs"][-1].setParent(None)
 			self.widgets["module_tabs"] = []
@@ -648,11 +686,13 @@ class MainWidget(QWidget):
 			self.widgets["module_content_scrollarea"][-1].setParent(None)
 			self.widgets["module_content_scrollarea"] = []
 
+		first_time = True
+
 		module_tabs = QTabWidget()
+		module_tabs.currentChanged.connect(tab_changed)
 
 		module_tabs_shortcut = QShortcut(QKeySequence("Ctrl+Tab"), module_tabs)
 		module_tabs_shortcut.activated.connect(lambda: module_tabs.setCurrentIndex((module_tabs.currentIndex() + 1) % module_tabs.count()))
-
 
 		self.layout().addWidget(module_tabs, 2, 0, 1, 0)
 		self.layout().setRowStretch(2, 1)		
@@ -660,6 +700,8 @@ class MainWidget(QWidget):
 
 		module_tabs.addTab(self.create_tree_tab(), "Tree")		
 		module_tabs.addTab(self.create_markdown_tab(), "Markdown")		
+
+		module_tabs.setCurrentIndex(self.prefs.file["current_tab"])
 
 		self.widgets["module_tabs"].append(module_tabs)
 
@@ -889,10 +931,6 @@ class MainWidget(QWidget):
 		return result
 
 	def create_filter_dialog(self):
-		if self.prefs.file["current_module_path"] == "":
-			QMessageBox.warning(self, "No module to filter", "You must load a module first to filter it.")
-			return
-
 		filter_dialog = FilterDialog(self.prefs, parent=self)
 		filter_dialog.setStyleSheet(
 			f"""

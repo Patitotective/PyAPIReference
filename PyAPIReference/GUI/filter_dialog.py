@@ -8,6 +8,7 @@ else:
 	from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton
 	from GUI.formlayout import FormLayout
 	from GUI.scrollarea import ScrollArea
+	from GUI.warning_dialog import WarningDialog
 	from extra import get_text_size, remove_key_from_dict
 
 class FilterDialog(QDialog):
@@ -21,7 +22,7 @@ class FilterDialog(QDialog):
 		self.setLayout(QVBoxLayout())
 		self.create_widgets()
 
-		self.setFixedSize(self.sizeHint().width() + 50, self.sizeHint().height() + 100)
+		self.setFixedSize(self.sizeHint().width(), self.sizeHint().height() + 100)
 
 	def create_filter(self, filter_: dict=None):
 		def add_filter_item_dialog(edit=False, display_name: str="", type_: str=""):
@@ -175,10 +176,17 @@ class FilterDialog(QDialog):
 		return ScrollArea(filter_widget)
 
 	def create_widgets(self):
+		def apply():
+			if self.prefs.file["current_module_path"] == "":
+				QMessageBox.warning(self, "No module to filter", "You must load a module first to apply these changes.")
+				return
+
+			self.done(1)
+
 		filter_widget = self.create_filter()
 
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
-		apply_button.clicked.connect(lambda: self.done(1))
+		apply_button.clicked.connect(apply)
 
 		self.layout().addWidget(filter_widget)
 		self.layout().addWidget(apply_button)

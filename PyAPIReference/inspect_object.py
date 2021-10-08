@@ -157,7 +157,7 @@ def get_object_properties(object_: object, exclude_types: tuple=(types.ModuleTyp
 				result["return_annotation"] = str(object_.__annotations__["return"].__name__) if object_.__annotations__["return"] is not None else None 
 
 	else:
-		result["value"] = str(object_)
+		result["value"] = str(object_) if not isinstance(object_, str) else "'" + object_ +"'"
 	
 	return result
 

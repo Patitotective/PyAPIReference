@@ -1,5 +1,13 @@
 # Change Log
 
+### v0.1.37 (08/10/2021)
+- Changed filter dialog width (-50).
+- Now you can open filter dialog size even if there is no module loaded, but you can't apply those changes, you need to load a module first to do it.
+- Now the tab you're selecting is saved and restored.
+- Wait 100 milliseconds before restoring module so the app loads properly before it gets stuck (this way you know the app is working) and before inspecting a module because the loading label wasn't displayed properly.
+- When inspecting object, if variable is a string save it's value with quotes.
+
+
 ### v0.1.36 (07/10/2021)
 - Removed tree scrollbar border.
 - Fixed issues with preview markdown thread.
