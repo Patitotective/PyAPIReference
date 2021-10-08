@@ -136,6 +136,7 @@ class InspectModule(QObject):
 
 		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
 
+
 class PreviewMarkdownInBrowser(QObject):	
 	adress_already_in_use_signal = pyqtSignal()
 	def __init__(self, *args, **kwargs):
@@ -147,24 +148,19 @@ class PreviewMarkdownInBrowser(QObject):
 		self.hyperlink = None
 		self.server = None
 
-	def run(self):
-		def init_app():
-			try:
-				self.app.run(open_browser=True)
-			except OSError: # Means address already in use
-				self.adress_already_in_use_signal.emit()
+	def init_app(self):
+		try:
+			self.app.run(open_browser=True)
+		except OSError: # Means address already in use
+			self.adress_already_in_use_signal.emit()
 
+	def run(self):
 		self.app = grip.create_app(*self.args, **self.kwargs)
 
 		self.hyperlink = f"{self.app.config['HOST']}:{self.app.config['PORT']}"
 
-		self.server = multiprocessing.Process(target=init_app)
+		self.server = multiprocessing.Process(target=self.init_app)
 		self.server.start()
-
-	def stop(self):
-		self.server.terminate()
-		self.server.join()
-
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
