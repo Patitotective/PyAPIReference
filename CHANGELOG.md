@@ -1,5 +1,9 @@
 # Change Log
 
+### v0.1.39 (10/10/2021)
+- Now in settings, dark theme toggle is only applied when you click apply.
+- Now it does restore the tree, previously it wasn't.
+
 ### v0.1.38 (10/10/2021)
 - Now you can add items to the color pattern.
 - Each color pattern item require a display name, a (python) type (`types` library available) and a color.

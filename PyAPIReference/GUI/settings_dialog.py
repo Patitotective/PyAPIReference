@@ -25,6 +25,7 @@ class SettingsDialog(QDialog):
 		super().__init__(parent=parent, *args, **kwargs)
 
 		self.prefs = prefs
+		self.widgets = {"dark_theme_toggle": []}
 
 		self.setWindowTitle(title)
 		self.setLayout(QFormLayout())
@@ -36,13 +37,22 @@ class SettingsDialog(QDialog):
 		self.setFixedSize(width if not width > 325 else 325, height if not height > 455 else 455)
 
 	def create_widgets(self):
+		def apply():
+			state = bool(self.widgets["dark_theme_toggle"][-1].checkState)
+			if not state:
+				self.prefs.write_prefs("theme", "light")
+			elif state:
+				self.prefs.write_prefs("theme", "dark")
+
+			self.done(1)
+
 		tabs = QTabWidget()
 
 		tabs.addTab(self.create_inspect_module_tab(), "Inspect module")
 		tabs.addTab(self.create_theme_tab(), "Theme")
 
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
-		apply_button.clicked.connect(lambda: self.done(1))
+		apply_button.clicked.connect(apply)
 
 		self.layout().addRow(tabs)
 		self.layout().addRow(apply_button)
@@ -94,13 +104,6 @@ class SettingsDialog(QDialog):
 		return color.name()
 
 	def create_theme_tab(self):
-		def dark_theme_toggle_changed(state: int):
-			state = bool(state)
-			if not state:
-				self.prefs.write_prefs("theme", "light")
-			elif state:
-				self.prefs.write_prefs("theme", "dark")		
-
 		def get_type_color(button, display_name: str="", default_type: str="",  default_color: str=None, write_in_prefs: bool=True):
 			if default_color is None:
 				if self.prefs.file["theme"] == "light":
@@ -274,7 +277,7 @@ class SettingsDialog(QDialog):
 			state = 1
 			
 		dark_theme_toggle.setCheckState(state)
-		dark_theme_toggle.stateChanged.connect(dark_theme_toggle_changed)
+		self.widgets["dark_theme_toggle"].append(dark_theme_toggle)
 
 		color_pattern_widget = QWidget()
 		color_pattern_widget.setLayout(QVBoxLayout())
