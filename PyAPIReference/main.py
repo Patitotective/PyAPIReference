@@ -429,7 +429,7 @@ class MainWidget(QWidget):
 				"Modules": ('types.ModuleType', False), 
 				"Classes": ('type', True), 
 				"Functions": ('types.FunctionType', True), 
-				"Include imported members": ("#include_imported_members", True), 
+				"Include imported members": ("#include_imported_members", False), 
 			}
 		}
 
