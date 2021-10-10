@@ -54,11 +54,10 @@ def convert_tree_to_markdown(tree: dict):
 
 		markdown_text = ""
 
-		for property_name, property_val in class_dict.items():
-			if property_name == "inherits" and len(property_val) > 0:
-				markdown_text += f"Inherits: `{', '.join(property_val)}`.\n"
+		if "inherits" in class_dict and len(class_dict["inherits"]) > 0:
+			markdown_text += f"Inherits: `{', '.join(class_dict['inherits'])}`.\n"
 
-		markdown_text += class_content_to_markdown(class_dict["content"])
+		markdown_text += class_content_to_markdown(class_dict["content"]) if "content" in class_dict else ""
 
 		return markdown_text
 
@@ -89,7 +88,7 @@ def convert_tree_to_markdown(tree: dict):
 
 			elif member_type == "class":
 				class_text = class_to_markdown(member_name, member_props)					
-				markdown_text += class_text.strip() + "\n\n" if class_text is not None else "" 
+				markdown_text += class_text.strip() + "\n\n" if class_text is not None and not class_text == "" else "" 
 
 		return markdown_text
 

@@ -1,5 +1,10 @@
 # Change Log
 
+### v0.1.40 (10/10/2021)
+- Now when you disable a collapsible widget's checkbox, it's children's checkboxes don't get unchecked.
+- Added `Check all` and `Uncheck all` action to collapsible's context menu.
+- Added tooltips to tree members.
+
 ### v0.1.39 (10/10/2021)
 - Now in settings, dark theme toggle is only applied when you click apply.
 - Now it does restore the tree, previously it wasn't.
@@ -7,7 +12,7 @@
 ### v0.1.38 (10/10/2021)
 - Now you can add items to the color pattern.
 - Each color pattern item require a display name, a (python) type (`types` library available) and a color.
-- (Python) type in color pattern and filter is interpreted with `interpret_type` function in `extra.py` module, which is way more safe than using `eval`. Also it doesn't let you to add an unvalidad type.
+- (Python) type in color pattern and filter is interpreted with `interpret_type` function in `extra.py` module, which is way more safe than using `eval`. Also it doesn't let you to add an invalid type.
 
 ### v0.1.37 (08/10/2021)
 - Changed filter dialog width (-50).

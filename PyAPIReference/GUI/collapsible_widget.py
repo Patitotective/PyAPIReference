@@ -47,18 +47,11 @@ class CheckBoxCollapseButton(CollapseButton):
         super().__init__(*args, **kwargs)
 
         self.checkbox = QCheckBox()
-        self.checkbox.stateChanged.connect(self.checkbox_state_changed)
         self.checkbox.setFixedSize(30, 30)
         self.checkbox.setChecked(True)
         self.checkbox.setToolTip(f"Include {self.parent.title} in Markdown?")
 
         self.layout().addWidget(self.checkbox)
-
-    def checkbox_state_changed(self, state):
-        if state == 0: # Means not checked
-            self.parent.disable_all_checkboxes()
-        elif state == 2: # Means checked
-            pass
 
 
 class CollapsibleWidget(QWidget):
@@ -98,11 +91,17 @@ class CollapsibleWidget(QWidget):
         unfold_action.triggered.connect(self.uncollapse)
 
         fold_all_action = QAction("Fold all")
-        fold_all_action.triggered.connect(lambda ignore: self.fold_all())
+        fold_all_action.triggered.connect(self.fold_all)
         
         unfold_all_action = QAction("Unfold all")
-        unfold_all_action.triggered.connect(lambda ignore: self.unfold_all())
+        unfold_all_action.triggered.connect(self.unfold_all)
+       
+        check_all_action = QAction("Check all")
+        check_all_action.triggered.connect(self.enable_all_checkboxes)
 
+        uncheck_all_action = QAction("Uncheck all")
+        uncheck_all_action.triggered.connect(self.disable_all_checkboxes)
+       
         # print_tree_action = QAction("Print tree")
         # print_tree_action.triggered.connect(lambda ignore: print(self.tree_to_dict()))
            
@@ -111,6 +110,9 @@ class CollapsibleWidget(QWidget):
            
         menu.addAction(fold_all_action)
         menu.addAction(unfold_all_action)
+
+        menu.addAction(check_all_action)
+        menu.addAction(uncheck_all_action)
 
         # menu.addAction(print_tree_action)
 
@@ -161,11 +163,24 @@ class CollapsibleWidget(QWidget):
     def disable_all_checkboxes(self):
         """This function will disable all child collapsible objects checkboxes if CollapseButton == CheckBoxCollapseButton
         """
+        if isinstance(self.title_frame, CheckBoxCollapseButton):
+            self.disable_checkbox()
 
         for widget in get_widgets_from_layout(self.content_layout):
             if isinstance(widget, CollapsibleWidget):
                 if isinstance(widget.title_frame, CheckBoxCollapseButton):
-                    widget.title_frame.checkbox.setChecked(False)
+                    widget.disable_all_checkboxes()
+    
+    def enable_all_checkboxes(self):
+        """This function will enable all child collapsible objects checkboxes if CollapseButton == CheckBoxCollapseButton
+        """
+        if isinstance(self.title_frame, CheckBoxCollapseButton):
+            self.enable_checkbox()
+
+        for widget in get_widgets_from_layout(self.content_layout):
+            if isinstance(widget, CollapsibleWidget):
+                if isinstance(widget.title_frame, CheckBoxCollapseButton):
+                    widget.enable_all_checkboxes()
 
     def disable_checkbox(self):
         self.title_frame.checkbox.setChecked(False)

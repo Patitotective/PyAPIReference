@@ -66,20 +66,20 @@ class MarkdownHighlighter(QSyntaxHighlighter):
        
         'CodeSpan': re.compile(u'(?P<delim>`+).+?(?P=delim)'), # `This is a inline code block`
        
-        'HR': re.compile(u'(?u)^(\s*(\*|-)\s*){3,}$'), # 
+        'HR': re.compile(u'(?u)^(\s*(\*|-)\s*){3,}$'), # --- or ***
        
         'eHR': re.compile(u'(?u)^(\s*(\*|=)\s*){3,}$'), # 
        
         'Html': re.compile(u'<.+?>') # This is an html tag
     }
 
-    def __init__(self, parent, current_theme="dark"):
+    def __init__(self, parent, THEME, current_theme="dark"):
         super().__init__(parent)
         self.parent = parent
         parent.setTabStopWidth(parent.fontMetrics().width(' ') * 4)
 
 
-        self.defaultTheme = PREFS.read_prefs_file("GUI/theme.prefs")[current_theme]["markdown_highlighter"]
+        self.defaultTheme = THEME[current_theme]["markdown_highlighter"]
 
         self.setTheme(self.defaultTheme)
 
@@ -381,7 +381,7 @@ class MainWindow(QMainWindow):
 
         text_edit = QTextEdit("## Some header<br>Some paragraph")
 
-        syntax_highlighter = MarkdownHighlighter(text_edit)
+        syntax_highlighter = MarkdownHighlighter(text_edit, PREFS.read_prefs_file("theme.prefs"))
 
         self.setCentralWidget(text_edit)
 

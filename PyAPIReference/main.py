@@ -212,7 +212,7 @@ class MainWindow(QMainWindow):
 			menu=export_tree_menu, 
 			text="Export as PREFS", 
 			#shortcut="Ctrl+P", 
-			callback=lambda x: self.main_widget.export_module_content(TreeExportTypes.PREFS), 
+			callback=lambda x: self.main_widget.export_tree(TreeExportTypes.PREFS), 
 			parent=self)
 		
 		# Create a export action to export as JSON
@@ -220,7 +220,7 @@ class MainWindow(QMainWindow):
 			menu=export_tree_menu, 
 			text="Export as JSON", 
 			#shortcut="Ctrl+J", 
-			callback=lambda x: self.main_widget.export_module_content(TreeExportTypes.JSON), 
+			callback=lambda x: self.main_widget.export_tree(TreeExportTypes.JSON), 
 			parent=self)
 
 		# Create a export action to export as YAML
@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
 			menu=export_tree_menu, 
 			text="Export as YAML", 
 			#shortcut="Ctrl+Y", 
-			callback=lambda x: self.main_widget.export_module_content(TreeExportTypes.YAML), 
+			callback=lambda x: self.main_widget.export_tree(TreeExportTypes.YAML), 
 			parent=self)
 
 
@@ -729,7 +729,7 @@ class MainWidget(QWidget):
 			text_edit.setStyleSheet(f"background-color: {THEME[self.current_theme]['markdown_highlighter']['background-color']};")
 
 
-			highlighter = MarkdownHighlighter(text_edit, current_theme=self.current_theme)
+			highlighter = MarkdownHighlighter(text_edit, THEME=THEME, current_theme=self.current_theme)
 
 			markdown_tab = self.widgets["markdown_tab"][-1]
 			self.widgets["markdown_text_edit"].append(text_edit)
@@ -988,18 +988,17 @@ class MainWidget(QWidget):
 		"""
 
 		def create_property_collapsible(
-			property_content: dict, 
+			property_name: str,
+			property_value: any,  
 			properties_to_ignore: tuple=("collapsed, checked"), 
 			properties_without_checkbox: tuple=("docstring", "inherits"), 
 			properties_disabled_by_default: tuple=("self"), 
+			parent: str=None
 			):
 			
 			"""Given a dicionary with {property_name: property_value}, where property_value could be a dictionary or a list
 			return a collapsible widget.
 			"""
-			property_name = tuple(property_content)[0]
-			property_value = property_content[property_name]
-
 			if not not not property_value: # Means empty
 				return
 
@@ -1026,7 +1025,7 @@ class MainWidget(QWidget):
 					property_collapsible.addWidget(nested_property_label)
 			
 			elif isinstance(property_value, dict):				
-				add_object_properties_to_collapsible(property_value, property_collapsible)
+				add_object_properties_to_collapsible(property_value, property_collapsible, parent=property_name)
 
 			elif isinstance(property_value, str):
 				property_value = property_value.strip()
@@ -1036,9 +1035,29 @@ class MainWidget(QWidget):
 
 				property_collapsible.addWidget(property_label)
 
+			# Add tooltips
+			if "type" in property_value: # Means is a variable (classes, strings, etc)
+				property_collapsible.title_frame.setToolTip(f"{property_name} {property_value['type']}")
+			elif "annotation" in property_value: # Means is a parameter
+				parameter_tooltip = property_name
+
+				if property_value["annotation"] is not None and property_value["default"] is not None:
+					parameter_tooltip += f" ({property_value['annotation']}={property_value['default']})"
+				elif property_value["annotation"] is not None and property_value["default"] is None:
+					parameter_tooltip += f" ({property_value['annotation']})"
+				elif property_value["default"] is not None:
+					parameter_tooltip += f"={property_value['default']}"
+
+				property_collapsible.title_frame.setToolTip(parameter_tooltip)
+			else:
+				if property_name == "inherits":
+					property_name = "inheritance"
+					
+				property_collapsible.title_frame.setToolTip(f"{parent}'s {property_name}")
+			
 			return property_collapsible
 
-		def add_object_properties_to_collapsible(object_properties: dict, collapsible: CollapsibleWidget, properties_to_ignore: tuple=("collapsed, checked")):
+		def add_object_properties_to_collapsible(object_properties: dict, collapsible: CollapsibleWidget, properties_to_ignore: tuple=("collapsed, checked"), parent: str=None):
 			"""Given a dictionary with the properties of an object an a collapsible, add widgest to the collapsible representing the properties.
 			"""
 			for property_name, property_value in object_properties.items():
@@ -1047,12 +1066,13 @@ class MainWidget(QWidget):
 
 				multiple_line_string = "\n" in property_value if isinstance(property_value, str) else ""
 				if isinstance(property_value, (list, tuple, dict)) or multiple_line_string:
-					property_content = {property_name: property_value}
-
-					property_collapsible = create_property_collapsible(property_content)
 					
+					property_collapsible = create_property_collapsible(property_name, property_value, parent=parent)
+
 					if property_collapsible is None:
 						continue
+
+					# property_collapsible.title_frame.setToolTip(f"{object_name}'s {property_name}")
 					
 					if "collapsed" in property_value:
 						property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
@@ -1074,13 +1094,14 @@ class MainWidget(QWidget):
 		color = self.find_object_type_color(object_properties["type"])
 
 		collapsible_object = self.create_collapsible_widget(object_name, color, collapse_button=collapse_button)
-		
+		collapsible_object.title_frame.setToolTip(f"{object_name} module at {self.prefs.file['current_module_path']}")
+
 		if "collapsed" in object_properties:
 			if object_properties["collapsed"]: collapsible_object.collapse()
 		if "checked" in object_properties:
 			collapsible_object.enable_checkbox() if object_properties["checked"] else collapsible_object.disable_checkbox()
 
-		add_object_properties_to_collapsible(object_content[object_name], collapsible_object)
+		add_object_properties_to_collapsible(object_content[object_name], collapsible_object, parent=object_name)
 
 		return collapsible_object
 
@@ -1100,12 +1121,12 @@ class MainWidget(QWidget):
 
 		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
 
-	def export_module_content(self, export_type: TreeExportTypes) -> None:
+	def export_tree(self, export_type: TreeExportTypes) -> None:
 		"""Export the object tree as a file"""
 
 		if not self.module_content:
 			# If user has not loaded a file, display export error
-			error_message = QMessageBox.warning(self, f"Export as {export_type.name}", "Nothing to save.")
+			error_message = QMessageBox.warning(self, f"Export as {export_type.name}", "Nothing to export, load a module first.")
 			return
 		
 		default_filename = f"{tuple(self.module_content)[0]}.{export_type.value[1]}"
@@ -1116,13 +1137,13 @@ class MainWidget(QWidget):
 
 		with open(path, "w") as file:
 			if export_type == TreeExportTypes.PREFS:
-				file.write(PREFS.convert_to_prefs(self.module_content))
+				file.write(PREFS.convert_to_prefs(self.filter_tree()))
 			
 			elif export_type == TreeExportTypes.JSON:
-				json.dump(self.module_content, file, indent=4)
+				json.dump(self.filter_tree(), file, indent=4)
 			
 			elif export_type == TreeExportTypes.YAML:
-				yaml.dump(self.module_content, file)
+				yaml.dump(self.filter_tree(), file)
 	
 	def export_markdown(self, export_type: MarkdownExportTypes):
 		if len(self.widgets["markdown_text_edit"]) < 1:
