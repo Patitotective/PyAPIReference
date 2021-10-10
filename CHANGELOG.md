@@ -1,12 +1,16 @@
 # Change Log
 
+### v0.1.38 (10/10/2021)
+- Now you can add items to the color pattern.
+- Each color pattern item require a display name, a (python) type (`types` library available) and a color.
+- (Python) type in color pattern and filter is interpreted with `interpret_type` function in `extra.py` module, which is way more safe than using `eval`. Also it doesn't let you to add an unvalidad type.
+
 ### v0.1.37 (08/10/2021)
 - Changed filter dialog width (-50).
 - Now you can open filter dialog size even if there is no module loaded, but you can't apply those changes, you need to load a module first to do it.
 - Now the tab you're selecting is saved and restored.
 - Wait 100 milliseconds before restoring module so the app loads properly before it gets stuck (this way you know the app is working) and before inspecting a module because the loading label wasn't displayed properly.
 - When inspecting object, if variable is a string save it's value with quotes.
-
 
 ### v0.1.36 (07/10/2021)
 - Removed tree scrollbar border.

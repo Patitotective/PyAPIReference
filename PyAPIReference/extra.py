@@ -2,6 +2,8 @@ import os
 import sys
 import inspect
 import traceback
+import builtins
+import types
 from importlib.util import spec_from_file_location, module_from_spec
 
 from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout
@@ -105,6 +107,12 @@ def get_widgets_from_layout(layout: QLayout, widget_type: QWidget=QWidget, exact
             continue
 
         yield widget
+
+def interpret_type(type_string: str):
+    if type_string.startswith("types."):
+        return getattr(types, type_string.removeprefix("types."))
+
+    return getattr(builtins, type_string)
 
 def remove_key_from_dict(my_dict: dict, key: str) -> dict:
 	return {k:v for k, v in my_dict.items() if k != key}

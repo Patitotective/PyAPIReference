@@ -1,5 +1,5 @@
 """PyAPIReference is a GUI application to generate Python Api References.
-https://patitotective.github.io/PyAPIReference/
+https://patitotective.github.io/PyAPIReference/.
 """
 
 # Libraries
@@ -53,7 +53,7 @@ from extra import (
 	create_qaction, convert_to_code_block, 
 	get_module_from_path, change_widget_stylesheet, 
 	add_text_to_text_edit, get_widgets_from_layout, 
-	HTML_TAB
+	HTML_TAB, interpret_type
 )
 
 from tree_to_markdown import convert_tree_to_markdown
@@ -93,7 +93,7 @@ class InspectModule(QObject):
 				continue
 
 			if not filter_checked:
-				exclude_types.append(eval(filter_type))
+				exclude_types.append(interpret_type(filter_type))
 
 		return tuple(exclude_types), kwargs
 
@@ -115,14 +115,14 @@ class InspectModule(QObject):
 
 				self.module_content = inspect_object(module, exclude_types=exclude_types, **kwargs)
 			except BaseException as error:
-				error = traceback.format_exc().replace('\n', '<br>').replace('\t', HTML_TAB)
+				error = traceback.format_exc().replace('\n', '<br>').replace('\t', HTML_TAB).replace("  ", HTML_TAB[0] * 2).replace("   ", HTML_TAB[0] * 3)
 
 				self.exception_message = f"""An unexpected error ocurred: <br>
 				{self.convert_to_code_block(error)}<br>
 				"""
 
 				if isinstance(error, RecursionError): self.exception_message += "Try changing the <b>Recursion limit</b> on settings.<br>"
-				self.exception_message += "If you think it is and issue, please report it at <a style='color: {THEME[self.prefs.file['theme']]['link_color']};' href='https://github.com/Patitotective/PyAPIReference/issues'>GitHub issues</a>."
+				self.exception_message += f"If you think it is and issue, please report it at <a style='color: {THEME[self.prefs.file['theme']]['link_color']};' href='https://github.com/Patitotective/PyAPIReference/issues'>GitHub issues</a>."
 
 				self.expection_found.emit()
 				self.running = False
@@ -161,6 +161,11 @@ class PreviewMarkdownInBrowser(QObject):
 
 		self.server = multiprocessing.Process(target=self.init_app)
 		self.server.start()
+
+	def stop(self):
+		self.server.terminate()
+		self.server.join()
+
 
 class MainWindow(QMainWindow):
 	def __init__(self, parent=None):
@@ -343,7 +348,9 @@ class MainWindow(QMainWindow):
 	def close_app(self):
 		self.save_geometry()
 		if self.main_widget.save_tree_at_end:
-			self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree()) # Save the state of the tree to restore it later
+			self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree())
+		
+			# self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree()) # Save the state of the tree to restore it later
 
 		# Close window and exit program to close all dialogs open.
 		self.close()
@@ -413,14 +420,10 @@ class MainWidget(QWidget):
 				}, 
 			}, 
 			"colors": {
-				"class": "#b140bf",
-				"function": "#ce5c00",
-				"parameters": "#4e9a06",
-				"int": "#5B82D7",
-				"str": "#5B82D7", 
-				"tuple": "#5B82D7", 
-				"list": "#5B82D7", 
-				"dict": "#5B82D7",
+				"Modules": ("types.ModuleType", "#4e9a06"),			
+				"Classes": ("type", "#b140bf"),
+				"Functions": ("types.FunctionType", "#ce5c00"),
+				"Strings": ("str", "#5B82D7"), 
 			}, 
 			"filter": {
 				"Modules": ('types.ModuleType', False), 
@@ -927,7 +930,7 @@ class MainWidget(QWidget):
 		return result
 
 	def create_filter_dialog(self):
-		filter_dialog = FilterDialog(self.prefs, parent=self)
+		filter_dialog = a(self.prefs, parent=self)
 		filter_dialog.setStyleSheet(
 			f"""
 			QPushButton#CollapseButton {{
@@ -1003,7 +1006,7 @@ class MainWidget(QWidget):
 			if "type" in property_value and isinstance(property_value, dict):
 				color = self.find_object_type_color(property_value["type"])
 			else:
-				color = self.find_object_type_color(property_name)
+				color = THEME[self.current_theme]["font_color"]
 
 			if property_name in properties_without_checkbox:
 				property_collapsible = self.create_collapsible_widget(property_name, color, collapse_button=CollapseButton)
@@ -1043,9 +1046,9 @@ class MainWidget(QWidget):
 						property_collapsible.addWidget(nested_property_collapsible)
 						continue
 					
-					nested_property_color = self.find_object_type_color(nested_property_name)
+					# nested_property_color = self.find_object_type_color(nested_property_name)
 					nested_property_label = QLabel(f"{nested_property_name}: {self.convert_to_code_block(nested_property_value)}")
-					nested_property_label.setStyleSheet(f"color: {nested_property_color};")
+					# nested_property_label.setStyleSheet(f"color: {nested_property_color};")
 
 					property_collapsible.addWidget(nested_property_label)
 		
@@ -1090,9 +1093,9 @@ class MainWidget(QWidget):
 					collapsible.addWidget(property_collapsible)
 					continue
 
-				property_color = self.find_object_type_color(property_name)
+				# property_color = self.find_object_type_color(property_name)
 				property_label = QLabel(f"{property_name}: {self.convert_to_code_block(property_value)}")
-				property_label.setStyleSheet(f"color: {property_color};")
+				# property_label.setStyleSheet(f"color: {property_color};")
 
 				collapsible.addWidget(property_label)
 		
@@ -1112,11 +1115,13 @@ class MainWidget(QWidget):
 
 		return collapsible_object
 
-	def find_object_type_color(self, object_type: str) -> str:
-		for color_object_type in self.prefs.file["colors"]:
+	def find_object_type_color(self, object_type: str, change_types_dict: dict={"class": "type"}) -> str:
+		if object_type in change_types_dict:
+			object_type = change_types_dict[object_type]
 
-			if object_type == color_object_type:
-				return self.prefs.file["colors"][color_object_type]
+		for _, (type_, type_color) in self.prefs.file["colors"].items():
+			if object_type == interpret_type(type_).__name__:
+				return type_color
 				
 		return THEME[self.current_theme]["font_color"]
 
@@ -1173,7 +1178,6 @@ class MainWidget(QWidget):
 			elif export_type == MarkdownExportTypes.RESTRUCTUREDTEXT:
 				file.write(m2r2.convert(markdown_text))
 	
-
 
 def init_app():
 	"""Init PyAPIReference application and main window.

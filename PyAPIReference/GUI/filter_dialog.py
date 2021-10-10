@@ -9,7 +9,7 @@ else:
 	from GUI.formlayout import FormLayout
 	from GUI.scrollarea import ScrollArea
 	from GUI.warning_dialog import WarningDialog
-	from extra import get_text_size, remove_key_from_dict
+	from extra import get_text_size, remove_key_from_dict, interpret_type
 
 class FilterDialog(QDialog):
 	def __init__(self, prefs, title="Filter", parent=None):
@@ -26,6 +26,27 @@ class FilterDialog(QDialog):
 
 	def create_filter(self, filter_: dict=None):
 		def add_filter_item_dialog(edit=False, display_name: str="", type_: str=""):
+			def add_btn_clicked():
+				if display_name_input.text().strip() == "":
+					QMessageBox.critical(self, "Display name emtpy", "You cannot have an item with an emtpy display name.")
+					return
+
+				if type_input.text().strip() == "":
+					QMessageBox.critical(self, "Type emtpy", "You cannot have an item with an emtpy type.")
+					return
+					
+				try:
+					interpret_type(type_input.text())
+				except AttributeError:
+					QMessageBox.critical(
+						self, 
+						"Not valid type", 
+						"Given type is not a valid type, make sure there is are no typos and the type really exists."
+					)
+					return
+
+				dialog.done(1)
+						
 			dialog = QDialog(self)
 
 			dialog.setWindowTitle("Add filter" if not edit else "Edit filter")
@@ -51,7 +72,7 @@ class FilterDialog(QDialog):
 			buttons_widget.setLayout(QHBoxLayout())
 
 			add_btn = QPushButton(self.style().standardIcon(QStyle.SP_DialogApplyButton), "Add" if not edit else "Edit")
-			add_btn.clicked.connect(lambda: dialog.done(1))
+			add_btn.clicked.connect(add_btn_clicked)
 
 			cancel_bnt = QPushButton(self.style().standardIcon(QStyle.SP_DialogCancelButton), "Cancel")
 			cancel_bnt.clicked.connect(lambda: dialog.done(0))
@@ -73,13 +94,6 @@ class FilterDialog(QDialog):
 				if not answer: # if answer == 0
 					return
 
-				if display_name.strip() == "":
-					QMessageBox.critical(self, "Emtpy display name", "Cannot add a filter with an empty display name")
-					return
-				if type_.strip() == "":
-					QMessageBox.critical(self, "Emtpy type", "Cannot add a filter with an empty type")
-					return
-					
 				self.prefs.write_prefs(f"filter/{display_name}", (type_, True))
 
 				filter_widget.layout().insertWidget(filter_widget.layout().count() - (constant_filter_count + 2), create_filter_item(display_name, type_, True))
@@ -114,12 +128,13 @@ class FilterDialog(QDialog):
 
 			filter_item = QWidget()
 			filter_item.setLayout(QHBoxLayout())
+			filter_item.layout().setSpacing(5)
 
 			filter_checkbox = QCheckBox(filter_name)
 			filter_checkbox.setChecked(filter_checked)
 			filter_checkbox.stateChanged.connect(lambda state, filter_name=filter_name, filter_type=filter_type, filter_checkbox=filter_checkbox: self.prefs.write_prefs(f"filter/{filter_name}", (filter_type, bool(filter_checkbox.checkState()))))
 
-			edit_icon = QIcon(f"Images/edit_icon_{self.prefs.file['theme']}.png")#nutrition_tab.style().standardIcon(QStyle.SP_FileDialogInfoView)
+			edit_icon = QIcon(f":/Images/edit_icon_{self.prefs.file['theme']}.png")
 			edit_icon_size = min(edit_icon.availableSizes())
 
 			filter_edit_button = QPushButton(icon=edit_icon)

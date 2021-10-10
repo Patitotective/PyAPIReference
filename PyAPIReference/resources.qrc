@@ -1,7 +1,9 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/Images">
     <file alias="icon.png">Images/icon.png</file>
-    <file alias="logo_without_background.png">Images/logo_without_background.png</file>    
+    <file alias="logo_without_background.png">Images/logo_without_background.png</file>
+    <file alias="edit_icon_dark.png">Images/edit_icon_dark.png</file>
+    <file alias="edit_icon_light.png">Images/edit_icon_light.png</file>    
 </qresource>
 <qresource prefix="/Fonts">
     <file alias="UbuntuMono-B.ttf">Fonts/UbuntuMono-B.ttf</file>

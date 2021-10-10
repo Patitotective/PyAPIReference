@@ -57,7 +57,7 @@ def inspect_object(object_: object, exclude_types: tuple=(types.ModuleType), inc
 
 	return result
 
-def get_object_members(object_: object, exclude_types: tuple=(types.ModuleType), include_imported_members: bool=False):
+def get_object_members(object_: object, exclude_types: tuple=(types.ModuleType), dunder_methods_to_include_by_type={"type": ("__init__")}, include_imported_members: bool=False):
 	def filter_member(member_name: str, member: object):
 		if isinstance(member, exclude_types):
 			return False
@@ -71,9 +71,8 @@ def get_object_members(object_: object, exclude_types: tuple=(types.ModuleType),
 			if member_module is not None:
 				return member_module.__name__ == object_.__name__
 
-		dunder_methods = PREFS.read_prefs_file("dunder_methods.prefs")
-		if type(object_).__name__ in dunder_methods:
-			dunder_methods_to_include = dunder_methods[type(object_).__name__]
+		if type(object_).__name__ in dunder_methods_to_include_by_type:
+			dunder_methods_to_include = dunder_methods_to_include_by_type[type(object_).__name__]
 		else:
 			dunder_methods_to_include = ()
 
