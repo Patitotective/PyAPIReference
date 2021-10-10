@@ -36,7 +36,7 @@
   <body>
     <div id="navbar"></div>
 
-    <section class="bg-primary pt-12 pb-10">
+    <section class="bg-primary pt-12 pb-10" id="main">
       <div
         class="
           container
@@ -105,7 +105,29 @@
       </div>
     </section>
 
-    <section class="bg-dark" id="scroll">
+    <section class="bg-dark" id="features">
+        <div class="flex justify-center py-5">
+          <div class="container max-w-3xl p-4">
+            <h1 class="py-5 text-3xl font-bold text-gray-200">Features</h1>
+            <div class="post py-5" data-aos="fade-up">
+              <ul class="list-disc text-gray-200 text-lg">
+                <li>Dark and light theme (using <a class="text-blue-400 hover:text-blue-500" href="https://github.com/5yutan5/PyQtDarkTheme">https://github.com/5yutan5/PyQtDarkTheme</a>).</li>
+                <li>Inspect a Python module and convert it into a tree.</li>
+                <li>Export the tree as JSON, YAML or <a class="text-blue-400 hover:text-blue-500" href="https://patitotective.github.io/PREFS/">PREFS</a>.</li>
+                <li>Filter members to include in the tree (by type).</li>
+                <li>Customize the color used to display different types in the tree (<b>color pattern</b>).</li>
+                <li>Convert tree to Markdown (the Markdown will be the API Reference).</li>
+                <li>Select the members to include in the Markdown.</li>
+                <li>Markdown editor to edit the API Reference.</li>
+                <li>Live preview of the Markdown (WIP).</li>
+                <li>Export the Markdown API Reference as HTML, Markdown or ReStructuredText.</li>
+              <ul>
+            </div>
+          </div>
+        </div>      
+    </section>
+
+    <section class="bg-primary" id="scroll">
       <div
         class="grid grid-cols-1 p-5 lg:grid-cols-2 lg:p-40"
         data-aos="fade-up"
@@ -138,7 +160,7 @@
       </div>
     </section>
 
-    <section class="bg-primary">
+    <section class="bg-dark" id="behind-pyapireference">
       <div class="container px-5 py-24 mx-auto">
         <div
           class="flex flex-col text-center w-full mb-20"
