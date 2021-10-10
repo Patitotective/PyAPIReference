@@ -930,7 +930,7 @@ class MainWidget(QWidget):
 		return result
 
 	def create_filter_dialog(self):
-		filter_dialog = a(self.prefs, parent=self)
+		filter_dialog = FilterDialog(self.prefs, parent=self)
 		filter_dialog.setStyleSheet(
 			f"""
 			QPushButton#CollapseButton {{
