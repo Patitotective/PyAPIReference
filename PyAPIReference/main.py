@@ -48,7 +48,7 @@ from GUI.button_with_extra_options import ButtonWithExtraOptions
 from GUI.filter_dialog import FilterDialog
 
 import resources # Qt resources resources.qrc
-from inspect_object import inspect_object
+from inspect_object import inspect_object, check_file
 from extra import (
 	create_qaction, convert_to_code_block, 
 	get_module_from_path, change_widget_stylesheet, 
@@ -586,6 +586,28 @@ class MainWidget(QWidget):
 			self.create_inspect_module_thread(self.prefs.file["current_module_path"])		
 
 	def create_inspect_module_thread(self, module):
+		# Check if file is safe 
+		not_safe_lines, name_main = check_file(module)
+		lines = ""
+
+		# If name main is present, file is safe. Otherwise enter here.
+		if not name_main:
+			if len(not_safe_lines) > 0:
+				for index, line in not_safe_lines:
+					lines += f"Line: {index}, {line}\n"
+
+				warning = WarningDialog(
+						"File Not Safe", 
+						"This module contains global calls which can be unsafe when inspecting.\n" +
+						f"\nUnsafe Lines\n{lines}\n"+
+						"Consider moving these inside a if __name__ == '__main__' condition.\nWould you still like to continue?", 
+						no_btn_text="Cancel", 
+						yes_btn_text="Continue", 
+						parent=self).exec_()
+			
+				if not warning:
+					return
+		
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
