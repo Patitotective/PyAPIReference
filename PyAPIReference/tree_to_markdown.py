@@ -108,6 +108,6 @@ def convert_tree_to_markdown(tree: dict):
 			markdown_text += f"{property_val if property_val is not None else f'{module_name} has no docstring.'}".strip() + "\n\n"
 			continue
 
-	markdown_text += "---\n_Created using [PyAPIReference](https://patitotective.github.io/PyAPIReference/)._"
+	markdown_text += "***\n_Created using **PyAPIReference**._" # https://patitotective.github.io/PyAPIReference/
 
 	return markdown_text.strip() + "\n" # This way it only lefts one line at the end

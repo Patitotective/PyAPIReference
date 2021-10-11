@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import (
 	QTabWidget, QFormLayout, 
 	QColorDialog, QGridLayout, 
 	QSpinBox, QDoubleSpinBox, 
-	QLineEdit, QMessageBox)
+	QLineEdit, QMessageBox, 
+	QCheckBox)
 
 from PyQt5.QtGui import QColor, QIcon
 
@@ -48,7 +49,7 @@ class SettingsDialog(QDialog):
 
 		tabs = QTabWidget()
 
-		tabs.addTab(self.create_inspect_module_tab(), "Inspect module")
+		tabs.addTab(self.create_general_tab(), "General")
 		tabs.addTab(self.create_theme_tab(), "Theme")
 
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
@@ -57,15 +58,16 @@ class SettingsDialog(QDialog):
 		self.layout().addRow(tabs)
 		self.layout().addRow(apply_button)
 	
-	def create_inspect_module_tab(self):
-		inspect_module_tab = QWidget()
-		inspect_module_tab.setLayout(FormLayout())
 
-		for pref, pref_props in self.prefs.file["inspect"].items():
+	def create_general_tab(self):
+		general_tab = QWidget()
+		general_tab.setLayout(FormLayout())
+
+		for pref, pref_props in self.prefs.file["settings"].items():
 			val = pref_props["value"]
 			tooltip = pref_props["tooltip"]
 
-			if isinstance(val, (int, float)):
+			if type(val) in (int, float):
 				min_val, max_val = 0, 2147483647
 				if "min_val" in pref_props:
 					min_val = pref_props["min_val"]
@@ -80,12 +82,20 @@ class SettingsDialog(QDialog):
 
 				spinbox.setRange(min_val, max_val)
 				spinbox.setValue(val)	
-				spinbox.valueChanged.connect(lambda spinbox_val: self.prefs.write_prefs(f"inspect/{pref}/value", spinbox_val))
+				spinbox.valueChanged.connect(lambda spinbox_val: self.prefs.write_prefs(f"settings/{pref}/value", spinbox_val))
 				spinbox.setToolTip(tooltip)
 
-				inspect_module_tab.layout().addRow(f"{to_sentence_case(pref)}: ", spinbox)
+				general_tab.layout().addRow(f"{to_sentence_case(pref)}: ", spinbox)
 
-		return inspect_module_tab
+			elif type(val) == bool:
+				checkbox = QCheckBox(to_sentence_case(pref))
+				checkbox.setChecked(val)
+				checkbox.stateChanged.connect(lambda checked: self.prefs.write_prefs(f"settings/{pref}/value", checked))				
+				checkbox.setToolTip(tooltip)
+
+				general_tab.layout().addRow(checkbox)
+
+		return general_tab
 
 	def get_color_dialog(self, default_color: str=None, title: str="Pick a color"):
 		"""Open a color picker dialog and return it's hex, if no selected color return an empty string.

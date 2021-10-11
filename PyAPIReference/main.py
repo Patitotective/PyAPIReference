@@ -9,12 +9,9 @@ import os
 import types
 import time
 import traceback
-import grip
 import json
 import yaml
-import webbrowser
 from enum import Enum, auto
-import multiprocessing
 
 import PREFS
 import markdown # Markdown to HTML converter
@@ -46,6 +43,7 @@ from GUI.markdownhighlighter import MarkdownHighlighter
 from GUI.warning_dialog import WarningDialog
 from GUI.button_with_extra_options import ButtonWithExtraOptions
 from GUI.filter_dialog import FilterDialog
+from GUI.markdown_previewer import MarkdownPreviewer
 
 import resources # Qt resources resources.qrc
 from inspect_object import inspect_object
@@ -111,7 +109,7 @@ class InspectModule(QObject):
 			try:
 				exclude_types, kwargs = self.get_filter()
 
-				kwargs["recursion_limit"] = self.prefs.file["inspect"]["recursion_limit"]["value"]
+				kwargs["recursion_limit"] = self.prefs.file["settings"]["recursion_limit"]["value"]
 
 				self.module_content = inspect_object(module, exclude_types=exclude_types, **kwargs)
 			except BaseException as error:
@@ -137,41 +135,13 @@ class InspectModule(QObject):
 		return convert_to_code_block(string, stylesheet=f"background-color: {background_color}; color: {font_color};")
 
 
-class PreviewMarkdownInBrowser(QObject):	
-	adress_already_in_use_signal = pyqtSignal()
-	def __init__(self, *args, **kwargs):
-		super().__init__()
-
-		self.args = args
-		self.kwargs = kwargs
-		self.app = None
-		self.hyperlink = None
-		self.server = None
-
-	def init_app(self):
-		try:
-			self.app.run(open_browser=True)
-		except OSError: # Means address already in use
-			self.adress_already_in_use_signal.emit()
-
-	def run(self):
-		self.app = grip.create_app(*self.args, **self.kwargs)
-
-		self.hyperlink = f"{self.app.config['HOST']}:{self.app.config['PORT']}"
-
-		self.server = multiprocessing.Process(target=self.init_app)
-		self.server.start()
-
-	def stop(self):
-		self.server.terminate()
-		self.server.join()
-
-
 class MainWindow(QMainWindow):
-	def __init__(self, parent=None):
+	def __init__(self, app=None, parent=None):
 		super().__init__(parent=parent)
 
 		print("PyAPIReference started")
+
+		self.app = app
 
 		self.init_window()
 		self.create_menu_bar()
@@ -183,7 +153,7 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("PyAPIReference")
 		self.setWindowIcon(QIcon(':/Images/icon.png'))
 
-		self.main_widget = MainWidget(parent=self)
+		self.main_widget = MainWidget(app=self.app, parent=self)
 		
 		#self.set_stylesheet()
 		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme))
@@ -346,6 +316,9 @@ class MainWindow(QMainWindow):
 		self.main_widget.prefs.write_prefs("state/is_maximized", self.isMaximized())
 
 	def close_app(self):
+		if len(self.main_widget.widgets["markdown_previewer"]) > 0:
+			self.main_widget.widgets["markdown_previewer"][-1].close()
+
 		self.save_geometry()
 		if self.main_widget.save_tree_at_end:
 			self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree())
@@ -364,8 +337,11 @@ class MainWindow(QMainWindow):
 
 
 class MainWidget(QWidget):
-	def __init__(self, parent=None):
+	def __init__(self, app=None, parent=None):
 		super().__init__()
+
+		self.parent = parent
+		self.app = app
 
 		self.FONTS = ("UbuntuMono-B.ttf", "UbuntuMono-BI.ttf", "UbuntuMono-R.ttf", "UbuntuMono-RI.ttf")
 
@@ -375,14 +351,13 @@ class MainWidget(QWidget):
 			"load_file_button": [], 
 			"retry_button": [], 
 			"markdown_tab": [], 
-			"markdown_text_edit": []
+			"markdown_text_edit": [], 
+			"markdown_previewer": [], 
 		}
 
 		self.module_content = None
-		self.markdown_preview_worker = None
-		self.markdown_preview_thread = None
+
 		self.save_tree_at_end = True
-		self.DEFAULT_MARKDOWN_FILENAME = "Prefs/temp.md"
 
 		self.load_fonts()
 		self.init_prefs()
@@ -405,6 +380,7 @@ class MainWidget(QWidget):
 		default_prefs = {
 			"current_module_path": "", # The path when you open a file to restore it 
 			"current_module": {}, 
+			"current_markdown": "", 
 			"current_tab": 0, 
 			"theme": "dark", 
 			"state": {
@@ -412,12 +388,16 @@ class MainWidget(QWidget):
 				"size": (0, 0), 
 				"is_maximized": False, 
 			}, 
-			"inspect": {
+			"settings": {
 				"recursion_limit": {
 					"tooltip": "Recursion limit when inspecting module (when large modules it should be bigger).", 
 					"value": 10 ** 6, 
 					"min_val": 1500, 
 				}, 
+				"preview_markdown_side_by_side": {
+					"tooltip": "When click preview markdown make windows side by side.", 
+					"value": True, 
+				}
 			}, 
 			"colors": {
 				"Modules": ("types.ModuleType", "#4e9a06"),			
@@ -506,7 +486,7 @@ class MainWidget(QWidget):
 			QMessageBox.warning(self, "No module to unload", "You must load a module first to unload it.")
 			return
 
-		if os.path.isfile(self.DEFAULT_MARKDOWN_FILENAME):
+		if self.prefs.file['current_markdown'] != "":
 			warning = WarningDialog(
 				"Lose Markdown", 
 				"If you unload this module, this module's Markdown will get lost.\nExport it if you want to preserve it.", 
@@ -525,37 +505,31 @@ class MainWidget(QWidget):
 			self.widgets["module_content_scrollarea"][-1].setParent(None)
 			self.widgets["module_content_scrollarea"] = []
 		
-		os.remove(self.DEFAULT_MARKDOWN_FILENAME)
+		self.prefs.write_prefs("current_markdown", "")
 		self.prefs.write_prefs("current_module_path", "")
 		self.prefs.write_prefs("current_module", {})
 
 	def load_module_file(self):
-		if os.path.isfile(self.DEFAULT_MARKDOWN_FILENAME):
-			warning = WarningDialog(
+		markdown_warning = True
+
+		if self.prefs.file['current_markdown'] != "":
+			markdown_warning = WarningDialog(
 				"Lose Markdown", 
 				"If you load another file this file's Markdown will get lost.\nExport it if you want to preserve it.", 
 				no_btn_text="Cancel", 
 				yes_btn_text="Continue", 
 				parent=self).exec_()
 			
-			if not warning:
-				return
-
-			os.remove(self.DEFAULT_MARKDOWN_FILENAME)
-
-		if self.markdown_preview_worker is not None:
-			self.markdown_preview_worker.stop()
-			self.markdown_preview_thread.quit()
-			self.markdown_preview_worker.deleteLater()
-			self.markdown_preview_thread.deleteLater()
-
-			self.markdown_preview_worker = None
-			self.markdown_preview_thread = None
-
 		path = self.load_file("Python files (*.py)")
 		
 		if path == '':
 			return
+
+		if not markdown_warning:
+			return
+
+		if self.prefs.file['current_markdown'] == "":
+			self.prefs.write_prefs("current_markdown", "")
 
 		file_size = os.path.getsize(path)
 		
@@ -704,14 +678,13 @@ class MainWidget(QWidget):
 		self.widgets["module_tabs"].append(module_tabs)
 
 	def create_markdown_tab(self):
-		def update_markdown_file():
-			if len(self.widgets["markdown_text_edit"]) < 1:
-				return
-
-			with open(self.DEFAULT_MARKDOWN_FILENAME, "w+") as file:
-				file.write(self.widgets["markdown_text_edit"][-1].toPlainText())
-
 		def create_markdown_text_edit(text: str=None):
+			def text_edit_updated():
+				self.prefs.write_prefs("current_markdown", text_edit.toPlainText())
+
+				if len(self.widgets["markdown_previewer"]) > 0:
+					self.widgets["markdown_previewer"][-1].update_markdown(text_edit.toPlainText())
+
 			if text is None:
 				markdown_text = convert_tree_to_markdown(tree=self.filter_tree())
 			else:
@@ -723,11 +696,10 @@ class MainWidget(QWidget):
 				return
 
 			text_edit = QTextEdit()
-			text_edit.textChanged.connect(update_markdown_file)
+			text_edit.textChanged.connect(text_edit_updated)	
 			text_edit.setPlainText(markdown_text)
 			text_edit.setWordWrapMode(QTextOption.NoWrap)
 			text_edit.setStyleSheet(f"background-color: {THEME[self.current_theme]['markdown_highlighter']['background-color']};")
-
 
 			highlighter = MarkdownHighlighter(text_edit, THEME=THEME, current_theme=self.current_theme)
 
@@ -746,7 +718,8 @@ class MainWidget(QWidget):
 				convert_to_markdown_clicked = True
 				convert_to_markdown_button.main_button.setText("Update Markdown")				
 				create_markdown_text_edit(text)
-				update_markdown_file()
+				# if text is not None:
+					# self.prefs.write_prefs("current_markdown", text)
 
 				return
 
@@ -768,56 +741,51 @@ class MainWidget(QWidget):
 
 			convert_to_markdown_clicked(text=content)
 
-		def stop_markdown_preview():
-			self.markdown_preview_worker.stop()
-			self.markdown_preview_thread.quit()
-			self.markdown_preview_worker.deleteLater()
-			self.markdown_preview_thread.deleteLater()
-
-			self.markdown_preview_worker = None
-			self.markdown_preview_thread = None
-
 		def preview_markdown_in_browser():
-			def addres_already_in_use():
+			def preview_already_live():
 				answer = WarningDialog(
-					"Preview Markdown already live", 
-					f"You are already previewing the Markdown at {self.markdown_preview_worker.hyperlink}.", 
-					yes_btn_text="Open", 
+					"Markdown preview already live", 
+					"You cannot preview the same file again.", 
+					yes_btn_text="Switch to window", 
 					yes_btn_callback=2, 
-					no_btn_text="Stop", 
+					no_btn_text="Close window", 
 					no_btn_callback=1, 
 					parent=self
 				).exec_()
 				
-				if answer == 2: # Means open
-					webbrowser.open_new_tab(self.markdown_preview_worker.hyperlink)
-				elif answer == 1: # Means stop
-					stop_markdown_preview()
+				markdown_previewer = self.widgets["markdown_previewer"][-1]
 
-			if len(self.widgets["markdown_text_edit"]) < 1:
+				if answer == 2: # Means open
+					markdown_previewer.activateWindow()
+				elif answer == 1: # Means stop
+					markdown_previewer.close()
+					self.widgets["markdown_previewer"].pop()
+
+			if self.prefs.file['current_markdown'] == "":
 				QMessageBox.critical(self, "No markdown to preview", "You must create a markdown first to preview.")
 				return
 
-			if self.markdown_preview_thread is not None and self.markdown_preview_worker is not None:
-				addres_already_in_use()
+			if len(self.widgets["markdown_previewer"]) > 0:
+				preview_already_live()
 				return
 
-			self.markdown_preview_thread = QThread()
-			self.markdown_preview_worker = PreviewMarkdownInBrowser(path=self.DEFAULT_MARKDOWN_FILENAME, title=tuple(self.module_content)[0])
-			self.markdown_preview_worker.moveToThread(self.markdown_preview_thread)
+			markdown_previewer = MarkdownPreviewer(self.prefs.file['current_markdown'])
+			markdown_previewer.show()
 
-			self.markdown_preview_worker.adress_already_in_use_signal.connect(addres_already_in_use)
+			if self.prefs.file["settings"]["preview_markdown_side_by_side"]["value"]:
+				screen_size = QDesktopWidget().size()
 
-			self.markdown_preview_thread.started.connect(self.markdown_preview_worker.run)	
+				self.parent.move(0, 0)
+				self.parent.resize(screen_size.width() // 2, screen_size.height())
 
-			self.markdown_preview_thread.start()
+				markdown_previewer.move(screen_size.width() // 2, 0)
+				markdown_previewer.resize(screen_size.width() // 2, screen_size.height())
+			
+			self.widgets["markdown_previewer"].append(markdown_previewer)
 
 		if len(self.widgets["markdown_text_edit"]) > 0:
 			self.widgets["markdown_text_edit"][-1].setParent(None)
 			self.widgets["markdown_text_edit"].pop()
-
-		self.markdown_preview_thread = None
-		self.markdown_preview_worker = None
 
 		convert_to_markdown_clicked = False
 
@@ -839,16 +807,10 @@ class MainWidget(QWidget):
 
 		self.widgets["markdown_tab"].append(markdown_tab)
 
-		if os.path.isfile(self.DEFAULT_MARKDOWN_FILENAME):
-			convert_to_markdown_button_clicked(text=self.read_markdown_file())
+		if self.prefs.file['current_markdown'] != "":
+			convert_to_markdown_button_clicked(text=self.prefs.file['current_markdown'])
 
 		return markdown_tab
-
-	def read_markdown_file(self):
-		with open(self.DEFAULT_MARKDOWN_FILENAME, "r") as file:
-			text = file.read()
-
-		return text
 
 	def restore_tree(self, tree=None):
 		if tree is None:
@@ -1036,9 +998,9 @@ class MainWidget(QWidget):
 				property_collapsible.addWidget(property_label)
 
 			# Add tooltips
-			if "type" in property_value: # Means is a variable (classes, strings, etc)
+			if "type" in property_value and isinstance(property_value, dict): # Means is a variable (classes, strings, etc)
 				property_collapsible.title_frame.setToolTip(f"{property_name} {property_value['type']}")
-			elif "annotation" in property_value: # Means is a parameter
+			elif "annotation" in property_value and isinstance(property_value, dict): # Means is a parameter
 				parameter_tooltip = property_name
 
 				if property_value["annotation"] is not None and property_value["default"] is not None:
@@ -1052,7 +1014,7 @@ class MainWidget(QWidget):
 			else:
 				if property_name == "inherits":
 					property_name = "inheritance"
-					
+
 				property_collapsible.title_frame.setToolTip(f"{parent}'s {property_name}")
 			
 			return property_collapsible
@@ -1071,13 +1033,12 @@ class MainWidget(QWidget):
 
 					if property_collapsible is None:
 						continue
-
-					# property_collapsible.title_frame.setToolTip(f"{object_name}'s {property_name}")
 					
-					if "collapsed" in property_value:
-						property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
-					if "checked" in property_value:
-						property_collapsible.enable_checkbox() if property_value["checked"] else property_collapsible.disable_checkbox()
+					if isinstance(property_value, dict):
+						if "collapsed" in property_value:
+							property_collapsible.collapse() if property_value["collapsed"] else property_collapsible.uncollapse()
+						if "checked" in property_value:
+							property_collapsible.enable_checkbox() if property_value["checked"] else property_collapsible.disable_checkbox()
 
 					collapsible.addWidget(property_collapsible)
 					continue
@@ -1174,7 +1135,7 @@ def init_app():
 	"""
 	app = QApplication(sys.argv)
 	app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps) # https://github.com/5yutan5/PyQtDarkTheme#usage
-	main_window = MainWindow()
+	main_window = MainWindow(app=app)
 
 	sys.exit(app.exec_())
 

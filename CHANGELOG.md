@@ -1,5 +1,11 @@
 # Change Log
 
+### v0.1.45 (11/10/2021)
+- New markdown previewer with live update.
+- When previewing markdown position windows side by side.
+- Added option to disable positioning windows side by side when previewing markdown.
+- Fixed some bugs.
+
 ### v0.1.40 (10/10/2021)
 - Now when you disable a collapsible widget's checkbox, it's children's checkboxes don't get unchecked.
 - Added `Check all` and `Uncheck all` action to collapsible's context menu.

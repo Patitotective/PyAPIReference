@@ -2,13 +2,17 @@ from PyQt5.QtWidgets import QWidget, QDialog, QLabel, QPushButton, QGridLayout, 
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QSize, Qt
 
+if __name__ == "__main__":
+	from scrollarea import ScrollArea
+else:
+	from GUI.scrollarea import ScrollArea
+
 class WarningDialog(QDialog):
 	def __init__(self, title: str, text: str, yes_btn_callback: callable=1, yes_btn_text: str="Yes", no_btn_callback: callable=0, no_btn_text: str="No", icon_size: (tuple, list)=(60, 60), parent=None):
 		super().__init__(parent=parent)
 
 		self.setWindowTitle(title)
 		self.setLayout(QGridLayout())
-		self.setMaximumSize(0, 0)
 
 		icon = self.style().standardIcon(QStyle.SP_MessageBoxWarning)
 		icon_label = QLabel()
@@ -26,7 +30,9 @@ class WarningDialog(QDialog):
 		text_label.setAlignment(Qt.AlignTop)
 
 		self.layout().addWidget(icon_label, 0, 0)
-		self.layout().addWidget(text_label, 0, 1, 0, 2)
+		self.layout().addWidget(ScrollArea(text_label), 0, 1, 0, 2)
 
 		self.layout().addWidget(yes_btn, 1, 1)
 		self.layout().addWidget(no_btn, 1, 2)
+
+		self.setMaximumSize(self.sizeHint())
