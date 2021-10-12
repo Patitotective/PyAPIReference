@@ -19,6 +19,7 @@ if __name__ == "__main__":
 else:
 	from GUI.scrollarea import ScrollArea
 	from GUI.formlayout import FormLayout
+	from GUI.warning_dialog import WarningDialog
 	from extra import to_sentence_case, get_text_size, stylesheet_to_dict, remove_key_from_dict, interpret_type
 
 class SettingsDialog(QDialog):
@@ -38,64 +39,108 @@ class SettingsDialog(QDialog):
 		self.setFixedSize(width if not width > 325 else 325, height if not height > 455 else 455)
 
 	def create_widgets(self):
-		def apply():
-			state = bool(self.widgets["dark_theme_toggle"][-1].checkState)
-			if not state:
-				self.prefs.write_prefs("theme", "light")
-			elif state:
-				self.prefs.write_prefs("theme", "dark")
+		def apply_cache(cache: dict=None, path: str=""):
+			"""Apply the settings in self.prefs.file["cache"]
+			"""
+			if cache is None:
+				cache = self.prefs.file["cache"]
+
+			for pref, pref_val in cache.items():
+				if isinstance(pref_val, dict):
+					apply_cache(cache=pref_val, path=f"{path}/{pref}" if path != "" else pref)
+					continue
+
+				self.prefs.write_prefs(pref if path == "" else f"{path}/{pref}", pref_val)
+
+		def apply_changes():
+			apply_cache()
 
 			self.done(1)
+
+		def cancel_changes():
+			if self.prefs.file["cache"] != {}:
+				warning = WarningDialog(
+					"Discard changes", 
+					"Do you want to discard your changes?", 
+					no_btn_text="Cancel", 
+					parent=self).exec_()
+
+				if not warning:
+					return
+
+			self.prefs.write_prefs("cache", {})
+
+			self.done(0)
 
 		tabs = QTabWidget()
 
 		tabs.addTab(self.create_general_tab(), "General")
 		tabs.addTab(self.create_theme_tab(), "Theme")
 
+		buttons_widget = QWidget()
+		buttons_widget.setLayout(QHBoxLayout())
+
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
-		apply_button.clicked.connect(apply)
+		apply_button.clicked.connect(apply_changes)
+
+		cancel_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogCancelButton), text="cancel")
+		cancel_button.clicked.connect(cancel_changes)
+
+		buttons_widget.layout().addWidget(apply_button)
+		buttons_widget.layout().addWidget(cancel_button)
 
 		self.layout().addRow(tabs)
-		self.layout().addRow(apply_button)
-	
+		self.layout().addRow(buttons_widget)
 
 	def create_general_tab(self):
+		def create_widgets(settings: dict, parent=None):
+			for pref, pref_props in settings.items():
+				if not "value" in pref_props:  # Means is a section that contains other settings
+					section_label = QLabel(f"{to_sentence_case(pref)}<hr>")
+					section_label.setStyleSheet("font-size: 16px; margin-top: 10px; margin-bottom: 0px; padding-bottom: 0px;")
+					general_tab.layout().addRow(section_label)
+
+					create_widgets(settings[pref], parent=pref)
+					continue
+
+				val = pref_props["value"]
+				tooltip = pref_props["tooltip"]
+				path = f"cache/settings/{parent}/{pref}/value" if parent is not None else f"cache/settings/{pref}/value"
+
+				if type(val) in (int, float):
+					min_val, max_val = 0, 2147483647
+					if "min_val" in pref_props:
+						min_val = pref_props["min_val"]
+					if "max_val" in pref_props:
+						max_val = pref_props["max_val"]
+
+					if isinstance(val, int):
+						spinbox = QSpinBox()
+					elif isinstance(val, float):
+						spinbox = QDoubleSpinBox(val)
+						spinbox.setDecimals(2)
+
+					spinbox.setRange(min_val, max_val)
+					spinbox.setValue(val)	
+					spinbox.valueChanged.connect(lambda spinbox_val, path=path: self.prefs.write_prefs(path, spinbox_val))
+					spinbox.setToolTip(tooltip)
+
+					general_tab.layout().addRow(f"{to_sentence_case(pref)}: ", spinbox)
+
+				elif type(val) == bool:
+					checkbox = QCheckBox(to_sentence_case(pref))
+					checkbox.setChecked(val)
+					checkbox.stateChanged.connect(lambda checked, path=path: self.prefs.write_prefs(path, bool(checked)))				
+					checkbox.setToolTip(tooltip)
+
+					general_tab.layout().addRow(checkbox)
+
 		general_tab = QWidget()
 		general_tab.setLayout(FormLayout())
 
-		for pref, pref_props in self.prefs.file["settings"].items():
-			val = pref_props["value"]
-			tooltip = pref_props["tooltip"]
+		create_widgets(self.prefs.file["settings"])
 
-			if type(val) in (int, float):
-				min_val, max_val = 0, 2147483647
-				if "min_val" in pref_props:
-					min_val = pref_props["min_val"]
-				if "max_val" in pref_props:
-					max_val = pref_props["max_val"]
-
-				if isinstance(val, int):
-					spinbox = QSpinBox()
-				elif isinstance(val, float):
-					spinbox = QDoubleSpinBox(val)
-					spinbox.setDecimals(2)
-
-				spinbox.setRange(min_val, max_val)
-				spinbox.setValue(val)	
-				spinbox.valueChanged.connect(lambda spinbox_val: self.prefs.write_prefs(f"settings/{pref}/value", spinbox_val))
-				spinbox.setToolTip(tooltip)
-
-				general_tab.layout().addRow(f"{to_sentence_case(pref)}: ", spinbox)
-
-			elif type(val) == bool:
-				checkbox = QCheckBox(to_sentence_case(pref))
-				checkbox.setChecked(val)
-				checkbox.stateChanged.connect(lambda checked: self.prefs.write_prefs(f"settings/{pref}/value", checked))				
-				checkbox.setToolTip(tooltip)
-
-				general_tab.layout().addRow(checkbox)
-
-		return general_tab
+		return ScrollArea(general_tab)
 
 	def get_color_dialog(self, default_color: str=None, title: str="Pick a color"):
 		"""Open a color picker dialog and return it's hex, if no selected color return an empty string.
@@ -277,15 +322,25 @@ class SettingsDialog(QDialog):
 
 			return add_btn
 
+		def dark_theme_toggled(state):
+			nonlocal first_time
+			if first_time:
+				first_time = False
+				return
+
+			self.prefs.write_prefs("cache/theme", 'dark' if bool(state) else 'light')
+
 		theme_tab = QWidget()
 		theme_tab.setLayout(FormLayout(stretch=False))
-	
+		first_time = True
+
 		dark_theme_toggle = AnimatedToggle()
 		if self.prefs.file["theme"] == "light":
 			state = 0
 		elif self.prefs.file["theme"] == "dark":
 			state = 1
 			
+		dark_theme_toggle.stateChanged.connect(dark_theme_toggled)
 		dark_theme_toggle.setCheckState(state)
 		self.widgets["dark_theme_toggle"].append(dark_theme_toggle)
 

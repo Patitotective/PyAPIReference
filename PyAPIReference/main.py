@@ -31,9 +31,8 @@ from PyQt5.QtWidgets import (
 	QShortcut
 )
 
-from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QTextOption
-from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QFile, QTextStream, QTimer
-from PyQt5.QtMultimedia import QMediaPlayer
+from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QTextOption, QGuiApplication, QHoverEvent
+from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer, QEvent
 
 # Dependencies
 from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
@@ -109,7 +108,7 @@ class InspectModule(QObject):
 			try:
 				exclude_types, kwargs = self.get_filter()
 
-				kwargs["recursion_limit"] = self.prefs.file["settings"]["recursion_limit"]["value"]
+				kwargs["recursion_limit"] = self.prefs.file["settings"]["inspect_module"]["recursion_limit"]["value"]
 
 				self.module_content = inspect_object(module, exclude_types=exclude_types, **kwargs)
 			except BaseException as error:
@@ -272,9 +271,7 @@ class MainWindow(QMainWindow):
 		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
 		answer = settings_dialog.exec_()
 
-		if answer == 1: # Means apply
-			self.main_widget.prefs.write_prefs("current_module", {})
-			self.reset_app()
+		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme)) # Update theme
 
 	def reset_app(self):
 		self.close() # Close
@@ -342,6 +339,7 @@ class MainWidget(QWidget):
 
 		self.parent = parent
 		self.app = app
+		self.mouse_hover = False
 
 		self.FONTS = ("UbuntuMono-B.ttf", "UbuntuMono-BI.ttf", "UbuntuMono-R.ttf", "UbuntuMono-RI.ttf")
 
@@ -359,6 +357,9 @@ class MainWidget(QWidget):
 
 		self.save_tree_at_end = True
 
+		self.installEventFilter(self)
+		self.setAttribute(Qt.WA_Hover, True)
+
 		self.load_fonts()
 		self.init_prefs()
 		self.init_window()
@@ -366,6 +367,15 @@ class MainWidget(QWidget):
 	@property	
 	def current_theme(self):
 		return self.prefs.file["theme"]
+
+	def eventFilter(self, obj, event):
+		if event.type() == QEvent.HoverEnter:
+			self.mouse_hover = True
+
+		elif event.type() == QEvent.HoverLeave:
+			self.mouse_hover = False
+
+		return super().eventFilter(obj, event)		
 
 	def load_fonts(self):
 		for font in self.FONTS:
@@ -389,16 +399,25 @@ class MainWidget(QWidget):
 				"is_maximized": False, 
 			}, 
 			"settings": {
-				"recursion_limit": {
-					"tooltip": "Recursion limit when inspecting module (when large modules it should be bigger).", 
-					"value": 10 ** 6, 
-					"min_val": 1500, 
+				"inspect_module": {
+					"recursion_limit": {
+						"tooltip": "Recursion limit when inspecting module (when large modules it should be bigger).", 
+						"value": 10 ** 6, 
+						"min_val": 1500, 
+					}, 
 				}, 
-				"preview_markdown_side_by_side": {
-					"tooltip": "When click preview markdown make windows side by side.", 
-					"value": True, 
-				}
+				"preview_markdown": {
+					"make_windows_side_by_side": {
+						"tooltip": "When click preview markdown make windows side by side.", 
+						"value": True, 
+					}, 
+					"synchronize_scrollbars": {
+						"tooltip": "When previewing markdown synchronize editor's and preview's scrollbar.", 
+						"value": True, 
+					}					
+				}, 
 			}, 
+			"cache": {}, 			
 			"colors": {
 				"Modules": ("types.ModuleType", "#4e9a06"),			
 				"Classes": ("type", "#b140bf"),
@@ -718,7 +737,8 @@ class MainWidget(QWidget):
 				return
 
 			text_edit = QTextEdit()
-			text_edit.textChanged.connect(text_edit_updated)	
+			text_edit.textChanged.connect(text_edit_updated)
+
 			text_edit.setPlainText(markdown_text)
 			text_edit.setWordWrapMode(QTextOption.NoWrap)
 			text_edit.setStyleSheet(f"background-color: {THEME[self.current_theme]['markdown_highlighter']['background-color']};")
@@ -766,8 +786,8 @@ class MainWidget(QWidget):
 		def preview_markdown_in_browser():
 			def preview_already_live():
 				answer = WarningDialog(
-					"Markdown preview already live", 
-					"You cannot preview the same file again.", 
+					"Markdown preview already open", 
+					"You are already previewing the Markdown.", 
 					yes_btn_text="Switch to window", 
 					yes_btn_callback=2, 
 					no_btn_text="Close window", 
@@ -777,11 +797,15 @@ class MainWidget(QWidget):
 				
 				markdown_previewer = self.widgets["markdown_previewer"][-1]
 
-				if answer == 2: # Means open
+				if answer == 2: # Means switch
 					markdown_previewer.activateWindow()
 				elif answer == 1: # Means stop
 					markdown_previewer.close()
-					self.widgets["markdown_previewer"].pop()
+
+			def markdown_previewer_scrollbar_changed(point):
+				if not self.mouse_hover and self.prefs.file["settings"]["preview_markdown"]["synchronize_scrollbars"]["value"]:
+					y = int(point.y())
+					self.widgets["markdown_text_edit"][-1].verticalScrollBar().setValue(y)
 
 			if self.prefs.file['current_markdown'] == "":
 				QMessageBox.critical(self, "No markdown to preview", "You must create a markdown first to preview.")
@@ -791,15 +815,20 @@ class MainWidget(QWidget):
 				preview_already_live()
 				return
 
-			markdown_previewer = MarkdownPreviewer(self.prefs.file['current_markdown'])
+			markdown_previewer = MarkdownPreviewer(self.prefs, self.prefs.file['current_markdown'], scroll_link=self.widgets["markdown_text_edit"][-1].verticalScrollBar())
+			markdown_previewer.closed.connect(self.widgets["markdown_previewer"].pop)
+			markdown_previewer.web_view.page().scrollPositionChanged.connect(markdown_previewer_scrollbar_changed)
+			
 			markdown_previewer.show()
 
-			if self.prefs.file["settings"]["preview_markdown_side_by_side"]["value"]:
-				screen_size = QDesktopWidget().size()
+			if self.prefs.file["settings"]["preview_markdown"]["make_windows_side_by_side"]["value"]:
+				screen_size = QGuiApplication.primaryScreen().size()
 
+				self.parent.showNormal()
 				self.parent.move(0, 0)
 				self.parent.resize(screen_size.width() // 2, screen_size.height())
 
+				markdown_previewer.showNormal()
 				markdown_previewer.move(screen_size.width() // 2, 0)
 				markdown_previewer.resize(screen_size.width() // 2, screen_size.height())
 			

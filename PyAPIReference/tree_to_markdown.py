@@ -98,7 +98,7 @@ def convert_tree_to_markdown(tree: dict):
 	module_name = tuple(tree)[0]
 	module_content = tree[module_name]
 
-	markdown_text = f"# {module_name}\n"
+	markdown_text = f"{module_name}\n---\n"
 
 	for property_name, property_val in module_content.items():
 		if isinstance(property_val, dict):

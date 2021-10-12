@@ -1,5 +1,10 @@
 # Change Log
 
+### v0.1.47 (12/10/2021)
+- Add synchronize scrollbars when previewing markdown.
+- Changed way settings store settings (added cache that is applied when you click apply).
+- Changing theme now don't require resetting the app.
+
 ### v0.1.45 (11/10/2021)
 - New markdown previewer with live update.
 - When previewing markdown position windows side by side.
