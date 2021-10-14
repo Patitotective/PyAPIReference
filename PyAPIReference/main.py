@@ -779,8 +779,8 @@ class MainWidget(QWidget):
 				self.parent.save_geometry()
 				
 				screen_size = QGuiApplication.primaryScreen().size()
-				half_screen_widht = half_screen_widht
 				screen_height = screen_size.height()
+				half_screen_width = screen_size.width() // 2
 
 				if platform.system() == "Windows":
 					# If the system is windows subtract the taskbar height from the total height
@@ -796,11 +796,11 @@ class MainWidget(QWidget):
 
 				self.parent.showNormal()
 				self.parent.move(0, 0)
-				self.parent.resize(half_screen_widht, screen_height)
+				self.parent.resize(half_screen_width, screen_height)
 
 				markdown_previewer.showNormal()
-				markdown_previewer.move(half_screen_widht, 0)
-				markdown_previewer.resize(half_screen_widht, screen_height)
+				markdown_previewer.move(half_screen_width, 0)
+				markdown_previewer.resize(half_screen_width, screen_height)
 			
 			self.widgets["markdown_previewer"].append(markdown_previewer)
 

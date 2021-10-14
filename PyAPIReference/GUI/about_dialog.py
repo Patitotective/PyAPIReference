@@ -12,7 +12,7 @@ class AboutDialog(QDialog):
 		self.setLayout(about_layout)
 
 		icon_label = QLabel()
-		icon = QPixmap(":/Images/icon100x100.png")
+		icon = QPixmap(":/Images/about_icon.png")
 		icon_label.setAlignment(Qt.AlignLeft)
 		icon_label.setPixmap(icon)
 
