@@ -9,7 +9,7 @@ if __name__ == "__main__":
     raise RuntimeError("button_with_extra_options.py requires get_text_size from extra.py which is outside this folder, you can't run this script as main")
 else:
     import GUI.collapsible_widget_resources
-    from extra import get_text_size 
+    from extra import get_text_size, create_menu
 
 class MainWindow(QMainWindow):
 	def __init__(self, *args, **kwargs):
@@ -48,6 +48,10 @@ class ButtonWithExtraOptions(QWidget):
 		menu = QMenu(self.parent)
 
 		for action_name, action_callback in self.actions:
+			if isinstance(action_callback, dict):
+				menu.addMenu(create_menu(action_name, action_callback, parent=self))
+				continue
+
 			menu.addAction(action_name, action_callback)
 
 		menu.exec_(QCursor.pos())

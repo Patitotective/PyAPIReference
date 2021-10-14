@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/Images">
+    <file alias="icon100x100.png">Images/icon100x100.png</file>    
     <file alias="icon.png">Images/icon.png</file>
     <file alias="logo_without_background.png">Images/logo_without_background.png</file>
     <file alias="edit_icon_dark.png">Images/edit_icon_dark.png</file>

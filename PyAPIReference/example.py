@@ -7,6 +7,7 @@ from PyQt5 import *
 BLACK = "#000000"
 WHITE = "#ffffff"
 
+
 class Person:
 	"""Class person that requires name, last name and age.
 	Allows you to display some info about it.
@@ -22,6 +23,7 @@ class Person:
 
 	def display_info(self):
 		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\n")
+
 
 class Student(Person):
 	"""Class Student that inherits from Person and requires grade and institution (besides the Person ones).
@@ -78,7 +80,6 @@ class CollegeStudent(Student):
 
 	def display_info(self):
 		print(f"Hello, my name is {self.name} {self.last_name} I have {self.age} years old.\nI'm a college student of {self.career}, I'm on {self.semester} semester\n")
-
 
 
 class Me(Teacher, CollegeStudent):

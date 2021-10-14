@@ -16,6 +16,7 @@ from enum import Enum, auto
 import PREFS
 import markdown # Markdown to HTML converter
 import m2r2 # Markdown to ReStructuredText converter
+import platform
 
 # PyQt5
 import qdarktheme # Dark theme
@@ -28,10 +29,10 @@ from PyQt5.QtWidgets import (
 	QMessageBox, QVBoxLayout, 
 	QMenu, QDesktopWidget, 
 	QTabWidget, QTextEdit, 
-	QShortcut
+	QShortcut, QMenuBar
 )
 
-from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QTextOption, QGuiApplication, QHoverEvent
+from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QGuiApplication, QHoverEvent
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer, QEvent
 
 # Dependencies
@@ -43,11 +44,13 @@ from GUI.warning_dialog import WarningDialog
 from GUI.button_with_extra_options import ButtonWithExtraOptions
 from GUI.filter_dialog import FilterDialog
 from GUI.markdown_previewer import MarkdownPreviewer
+from GUI.about_dialog import AboutDialog
+from GUI.markdown_text_edit import MarkdownTextEdit
+from GUI import resources # Qt resources GUI/resources.qrc
 
-import resources # Qt resources resources.qrc
 from inspect_object import inspect_object, check_file
 from extra import (
-	create_qaction, convert_to_code_block, 
+	create_menu, convert_to_code_block, 
 	get_module_from_path, change_widget_stylesheet, 
 	add_text_to_text_edit, get_widgets_from_layout, 
 	HTML_TAB, interpret_type
@@ -56,7 +59,7 @@ from extra import (
 from tree_to_markdown import convert_tree_to_markdown
 
 THEME = PREFS.read_prefs_file("GUI/theme.prefs")
-
+VERSION = "v0.1.48"
 
 class TreeExportTypes(Enum):
 	PREFS = ("PREFS", "prefs")
@@ -135,15 +138,70 @@ class InspectModule(QObject):
 
 
 class MainWindow(QMainWindow):
-	def __init__(self, app=None, parent=None):
+	def __init__(self, parent=None):
 		super().__init__(parent=parent)
 
 		print("PyAPIReference started")
 
-		self.app = app
+		self.EXPORT_TREE_MENU = {
+			"Export as PREFS": {
+				"callback": lambda: self.main_widget.export_tree(TreeExportTypes.PREFS), 
+			}, 
+			"Export as JSON": {
+				"callback": lambda: self.main_widget.export_tree(TreeExportTypes.JSON), 
+			}, 
+			"Export as YAML": {
+				"callback": lambda: self.main_widget.export_tree(TreeExportTypes.YAML), 
+			}, 
+		}
 
+		self.EXPORT_API_MENU = {
+			"Export as Markdown": {
+				"callback": lambda: self.main_widget.export_markdown(MarkdownExportTypes.MARKDOWN), 
+			}, 
+			"Export as HTML": {
+				"callback": lambda: self.main_widget.export_markdown(MarkdownExportTypes.HTML), 
+			}, 
+			"Export as ReStructuredText": {
+				"callback": lambda: self.main_widget.export_markdown(MarkdownExportTypes.RESTRUCTUREDTEXT), 
+			}, 	
+		}
+
+		self.FILE_MENU = {
+			"Load module": {
+				"callback": lambda: self.main_widget.load_module_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
+				"shortcut": "Ctrl+O", 
+			}, 
+			"Export tree>": self.EXPORT_TREE_MENU, 
+			"Export API Reference>": self.EXPORT_API_MENU, 
+			"Close": {
+				"callback": self.close, 
+				"shortcut": "Ctrl+Q", 
+			}
+		}
+
+		self.EDIT_MENU = {
+			"&Filter tree": {
+				"callback": lambda: self.main_widget.create_filter_dialog(), 
+				"shortcut": "Ctrl+F", 
+			}, 
+			"&Settings": {
+				"callback": self.open_settings_dialog, 
+				"shortcut": "Ctrl+S",  
+			}
+		}
+
+		self.ABOUT_MENU = {
+			"About &Qt": {
+				"callback": lambda: QMessageBox.aboutQt(self), 
+			}, 
+			"About &PyAPIReference": {
+				"callback": lambda: AboutDialog(VERSION, THEME[self.main_widget.current_theme]["link_color"], self).exec_()
+			}
+		}
+
+		self.create_menubar()
 		self.init_window()
-		self.create_menu_bar()
 
 		self.show()
 		self.restore_geometry()
@@ -152,121 +210,21 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("PyAPIReference")
 		self.setWindowIcon(QIcon(':/Images/icon.png'))
 
-		self.main_widget = MainWidget(app=self.app, parent=self)
+		self.main_widget = MainWidget(parent=self)
 		
 		#self.set_stylesheet()
 		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme))
 
 		self.setCentralWidget(self.main_widget)
 
-	def create_menu_bar(self):
+	def create_menubar(self):
 		"""Create menu bar."""
-		bar = self.menuBar() # Get the menu bar of the mainwindow
+		menubar = self.menuBar()
+
+		menubar.addMenu(create_menu('&File', self.FILE_MENU, parent=self))
+		menubar.addMenu(create_menu('&Edit', self.EDIT_MENU, parent=self))
+		menubar.addMenu(create_menu('&About', self.ABOUT_MENU, parent=self))
 		
-		## File menu ##
-		file_menu = bar.addMenu('&File')
-
-		load_file_action = create_qaction(
-			menu=file_menu, 
-			text="Load module", 
-			shortcut="Ctrl+O", 
-			callback=lambda: self.main_widget.load_module_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
-			parent=self)			
-
-		## Export tree menu ##
-		export_tree_menu = file_menu.addMenu("Export tree...")
-		
-		# Create a export action to export as PREFS
-		export_prefs_action = create_qaction(
-			menu=export_tree_menu, 
-			text="Export as PREFS", 
-			#shortcut="Ctrl+P", 
-			callback=lambda x: self.main_widget.export_tree(TreeExportTypes.PREFS), 
-			parent=self)
-		
-		# Create a export action to export as JSON
-		export_json_action = create_qaction(
-			menu=export_tree_menu, 
-			text="Export as JSON", 
-			#shortcut="Ctrl+J", 
-			callback=lambda x: self.main_widget.export_tree(TreeExportTypes.JSON), 
-			parent=self)
-
-		# Create a export action to export as YAML
-		export_yaml_action = create_qaction(
-			menu=export_tree_menu, 
-			text="Export as YAML", 
-			#shortcut="Ctrl+Y", 
-			callback=lambda x: self.main_widget.export_tree(TreeExportTypes.YAML), 
-			parent=self)
-
-
-		## Export markdown menu ##
-		export_markdown_menu = file_menu.addMenu("Export markdown...")
-		
-		# Create a export action to export as PREFS
-		export_markdown_action = create_qaction(
-			menu=export_markdown_menu, 
-			text="Export as Markdown", 
-			#shortcut="Ctrl+P", 
-			callback=lambda x: self.main_widget.export_markdown(MarkdownExportTypes.MARKDOWN), 
-			parent=self)
-		
-		# Create a export action to export as JSON
-		export_html_action = create_qaction(
-			menu=export_markdown_menu, 
-			text="Export as HTML", 
-			#shortcut="Ctrl+J", 
-			callback=lambda x: self.main_widget.export_markdown(MarkdownExportTypes.HTML), 
-			parent=self)
-
-		# Create a export action to export as YAML
-		export_restructuredtext_action = create_qaction(
-			menu=export_markdown_menu, 
-			text="Export as ReStructuredText", 
-			callback=lambda x: self.main_widget.export_markdown(MarkdownExportTypes.RESTRUCTUREDTEXT), 
-			parent=self)
-
-
-		# Create a close action that will call self.close_app
-		close_action = create_qaction(
-			menu=file_menu, 
-			text="Close", 
-			shortcut="Ctrl+Q", 
-			callback=self.close_app, 
-			parent=self)
-
-
-		## Edit menu ##
-		edit_menu = bar.addMenu('&Edit') # Add a menu called edit
-
-		# Filer tree action
-		filter_tree_action = create_qaction(
-			menu=edit_menu, 
-			text="&Filter tree", 
-			shortcut="Ctrl+F", 
-			callback=self.main_widget.create_filter_dialog, 
-			parent=self)
-
-		# Create a settings action that will open the settings dialog
-		settings_action = create_qaction( 
-			menu=edit_menu, 
-			text="&Settings", 
-			shortcut="Ctrl+S", 
-			callback=self.open_settings_dialog, 
-			parent=self)
-
-		## About menu ##
-		about_menu = bar.addMenu('&About') # Add a menu called about
-
-		# Create an about action that will create an instance of AboutDialog
-		about_qt_action = create_qaction(
-			menu=about_menu, 
-			text="About Q&t", 
-			shortcut="Ctrl+t", 
-			callback=lambda: QMessageBox.aboutQt(self), 
-			parent=self)
-
 	def open_settings_dialog(self):
 		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
 		answer = settings_dialog.exec_()
@@ -334,11 +292,10 @@ class MainWindow(QMainWindow):
 
 
 class MainWidget(QWidget):
-	def __init__(self, app=None, parent=None):
+	def __init__(self, parent=None):
 		super().__init__()
 
 		self.parent = parent
-		self.app = app
 		self.mouse_hover = False
 
 		self.FONTS = ("UbuntuMono-B.ttf", "UbuntuMono-BI.ttf", "UbuntuMono-R.ttf", "UbuntuMono-RI.ttf")
@@ -531,23 +488,23 @@ class MainWidget(QWidget):
 	def load_module_file(self):
 		markdown_warning = True
 
-		if self.prefs.file['current_markdown'] != "":
+		if self.prefs.file['current_markdown'] != "": # If the markdown is not emtpy
 			markdown_warning = WarningDialog(
 				"Lose Markdown", 
 				"If you load another file this file's Markdown will get lost.\nExport it if you want to preserve it.", 
 				no_btn_text="Cancel", 
 				yes_btn_text="Continue", 
 				parent=self).exec_()
-			
+
+			if not markdown_warning:
+				return
+
 		path = self.load_file("Python files (*.py)")
 		
 		if path == '':
 			return
 
-		if not markdown_warning:
-			return
-
-		if self.prefs.file['current_markdown'] == "":
+		if markdown_warning:
 			self.prefs.write_prefs("current_markdown", "")
 
 		file_size = os.path.getsize(path)
@@ -592,7 +549,7 @@ class MainWidget(QWidget):
 				warning = WarningDialog(
 						"File Not Safe", 
 						"This module contains global calls which can be unsafe when inspecting.\n" +
-						f"\nUnsafe Lines\n{lines}\n"+
+						f"\nUnsafe Lines: \n{lines}\n"+
 						"Consider moving these inside a if __name__ == '__main__' condition.\nWould you still like to continue?", 
 						no_btn_text="Cancel", 
 						yes_btn_text="Continue", 
@@ -712,7 +669,7 @@ class MainWidget(QWidget):
 		self.layout().setRowStretch(1, 0)
 
 		module_tabs.addTab(self.create_tree_tab(), "Tree")		
-		module_tabs.addTab(self.create_markdown_tab(), "Markdown")		
+		module_tabs.addTab(self.create_markdown_tab(), "API Reference")		
 
 		module_tabs.setCurrentIndex(self.prefs.file["current_tab"])
 
@@ -736,11 +693,10 @@ class MainWidget(QWidget):
 				self.widgets["markdown_text_edit"][-1].setText(markdown_text)
 				return
 
-			text_edit = QTextEdit()
+			text_edit = MarkdownTextEdit()
 			text_edit.textChanged.connect(text_edit_updated)
 
 			text_edit.setPlainText(markdown_text)
-			text_edit.setWordWrapMode(QTextOption.NoWrap)
 			text_edit.setStyleSheet(f"background-color: {THEME[self.current_theme]['markdown_highlighter']['background-color']};")
 
 			highlighter = MarkdownHighlighter(text_edit, THEME=THEME, current_theme=self.current_theme)
@@ -758,11 +714,8 @@ class MainWidget(QWidget):
 
 			if not convert_to_markdown_clicked:
 				convert_to_markdown_clicked = True
-				convert_to_markdown_button.main_button.setText("Update Markdown")				
+				convert_to_markdown_button.main_button.setText("Update API Reference")				
 				create_markdown_text_edit(text)
-				# if text is not None:
-					# self.prefs.write_prefs("current_markdown", text)
-
 				return
 
 			warning = WarningDialog("Overwrite Markdown", "Do you want to overwrite current Markdown text?", parent=self).exec_() # Return 1 if yes, 0 if no
@@ -781,7 +734,7 @@ class MainWidget(QWidget):
 			with open(path, "r") as file:
 				content = file.read()
 
-			convert_to_markdown_clicked(text=content)
+			convert_to_markdown_button_clicked(text=content)
 
 		def preview_markdown_in_browser():
 			def preview_already_live():
@@ -817,20 +770,37 @@ class MainWidget(QWidget):
 
 			markdown_previewer = MarkdownPreviewer(self.prefs, self.prefs.file['current_markdown'], scroll_link=self.widgets["markdown_text_edit"][-1].verticalScrollBar())
 			markdown_previewer.closed.connect(self.widgets["markdown_previewer"].pop)
+			markdown_previewer.closed.connect(self.parent.restore_geometry)
 			markdown_previewer.web_view.page().scrollPositionChanged.connect(markdown_previewer_scrollbar_changed)
 			
 			markdown_previewer.show()
 
 			if self.prefs.file["settings"]["preview_markdown"]["make_windows_side_by_side"]["value"]:
+				self.parent.save_geometry()
+				
 				screen_size = QGuiApplication.primaryScreen().size()
+				half_screen_widht = half_screen_widht
+				screen_height = screen_size.height()
+
+				if platform.system() == "Windows":
+					# If the system is windows subtract the taskbar height from the total height
+					from win32api import GetMonitorInfo, MonitorFromPoint
+
+					monitor_info = GetMonitorInfo(MonitorFromPoint((0,0)))
+					monitor_area = monitor_info.get("Monitor")
+					work_area = monitor_info.get("Work")					
+
+					task_bar_height = monitor_area[3] - work_area[3]
+
+					screen_height -= task_bar_height
 
 				self.parent.showNormal()
 				self.parent.move(0, 0)
-				self.parent.resize(screen_size.width() // 2, screen_size.height())
+				self.parent.resize(half_screen_widht, screen_height)
 
 				markdown_previewer.showNormal()
-				markdown_previewer.move(screen_size.width() // 2, 0)
-				markdown_previewer.resize(screen_size.width() // 2, screen_size.height())
+				markdown_previewer.move(half_screen_widht, 0)
+				markdown_previewer.resize(half_screen_widht, screen_height)
 			
 			self.widgets["markdown_previewer"].append(markdown_previewer)
 
@@ -843,11 +813,11 @@ class MainWidget(QWidget):
 		markdown_tab = QWidget()
 		markdown_tab.setLayout(QGridLayout())
 
-		convert_to_markdown_button = ButtonWithExtraOptions("Convert to Markdown", parent=self, 
+		convert_to_markdown_button = ButtonWithExtraOptions("Generate API Reference", parent=self, 
 			actions=[
-				("Export", lambda: self.export_markdown(MarkdownExportTypes.MARKDOWN)), 
+				("Preview Markdown", preview_markdown_in_browser), 			
+				("Export", self.parent.EXPORT_API_MENU), 
 				("Load Markdown file", load_markdown_file), 
-				("Preview Markdown", preview_markdown_in_browser)
 			]
 		)
 		
@@ -1186,7 +1156,7 @@ def init_app():
 	"""
 	app = QApplication(sys.argv)
 	app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps) # https://github.com/5yutan5/PyQtDarkTheme#usage
-	main_window = MainWindow(app=app)
+	main_window = MainWindow()
 
 	sys.exit(app.exec_())
 

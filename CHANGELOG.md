@@ -1,5 +1,15 @@
 # Change Log
 
+### v0.1.48 (13/10/2021)
+- Added `create_menu` functio in `extra.py` which creates a `QMenu` given the `menu_name` and a `menu_dict` that contains all menu information.
+- Renamed `Markdown` tab to `API Reference`, `Generate/Update markdown` button to `Generate/Update API Reference`, `Export markdown` action to `Export API Reference`.
+- Added all export options in the extra options of `Generate/Update API Reference` button.
+- When you preview the markdown it saves the geometry before resizing it, this way it can restore the geometry when you stop previewing.
+- Fixed bug when loading a module when you are already editing a markdown file.
+- Added about dialog (**sharkface**).
+- On windows when previewing markdown subtracted taskbar height to the screen size (not tested).
+- Moved resources to `GUI` folder.
+
 ### v0.1.47 (12/10/2021)
 - Add synchronize scrollbars when previewing markdown.
 - Changed way settings store settings (added cache that is applied when you click apply).

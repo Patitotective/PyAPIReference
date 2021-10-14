@@ -6,11 +6,29 @@ import builtins
 import types
 from importlib.util import spec_from_file_location, module_from_spec
 
-from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout
+from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTextEdit, QLayout, QMenu
 from PyQt5.QtGui import QFont, QFontMetrics
 from PyQt5.QtCore import QSize
 
 HTML_TAB = "&nbsp;" * 4 
+
+def create_menu(menu_name: str, menu_dict: dict, parent=None) -> QMenu:
+	menu = QMenu(menu_name, parent=parent)
+
+	for action_name, action_props in menu_dict.items():
+		if action_name[-1] == ">":
+			menu.addMenu(create_menu(action_name[:-1], action_props, parent=parent))
+			continue
+
+		action = menu.addAction(action_name)
+		action.setParent(parent)
+
+		if "callback" in action_props:
+			action.triggered.connect(action_props["callback"])
+		if "shortcut" in action_props:
+			action.setShortcut(action_props["shortcut"])
+
+	return menu
 
 def get_text_size(text: str):
 	font = QFont()
@@ -18,19 +36,6 @@ def get_text_size(text: str):
 	font_metrics = QFontMetrics(font)
 
 	return QSize(font_metrics.width(text), font_metrics.height())
-
-def create_qaction(menu, text: str, shortcut: str="", callback: callable=lambda: print("No callback"), parent=None) -> QAction:
-	"""This function will create a QAction and return it"""
-	action = QAction(parent) # Create a qaction in the window (self)
-
-	action.setText(text) # Set the text of the QAction 
-	action.setShortcut(shortcut) # Set the shortcut of the QAction
-
-	menu.addAction(action) # Add the action to the menu
-	
-	action.triggered.connect(callback) # Connect callback to callback argument
-
-	return action # Return QAction
 
 def get_module_from_path(path: str):
 	"""Given a path of a Python module, returns it. If some exception when executing the module returns None, error

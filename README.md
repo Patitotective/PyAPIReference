@@ -24,7 +24,8 @@ _Join our [Discord server](https://discord.gg/as85Q4GnR6) to keep updated._
 Feel free to contribute, join our [Discord server](https://discord.gg/as85Q4GnR6) for more information.
 
 ## Screenshots
-[![Example module tree](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/tree.png?raw=true)](https://github.com/Patitotective/PyAPIReference)[![Markdown editor](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Example module tree](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/tree.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Markdown editor](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
 
 ## Test it from source code
 1. First you will need to clone this repository by pasting this command into your terminal:
