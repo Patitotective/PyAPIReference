@@ -5,7 +5,7 @@ from PyQt5.QtCore import QSize, Qt
 if __name__ == "__main__":
 	from scrollarea import ScrollArea
 else:
-	from GUI.scrollarea import ScrollArea
+	from pyapireference.ui.scrollarea import ScrollArea
 
 class WarningDialog(QDialog):
 	def __init__(self, title: str, text: str, yes_btn_callback: callable=1, yes_btn_text: str="Yes", no_btn_callback: callable=0, no_btn_text: str="No", icon_size: (tuple, list)=(60, 60), parent=None):
@@ -28,9 +28,10 @@ class WarningDialog(QDialog):
 
 		text_label = QLabel(text)
 		text_label.setAlignment(Qt.AlignTop)
+		text_scrollarea = ScrollArea(text_label)
 
 		self.layout().addWidget(icon_label, 0, 0)
-		self.layout().addWidget(ScrollArea(text_label), 0, 1, 0, 2)
+		self.layout().addWidget(text_scrollarea, 0, 1, 0, 2)
 
 		self.layout().addWidget(yes_btn, 1, 1)
 		self.layout().addWidget(no_btn, 1, 2)

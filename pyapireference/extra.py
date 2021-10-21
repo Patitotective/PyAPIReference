@@ -10,14 +10,15 @@ from PyQt5.QtWidgets import QAction, QDialog, QLabel, QVBoxLayout, QWidget, QTex
 from PyQt5.QtGui import QFont, QFontMetrics
 from PyQt5.QtCore import QSize
 
-HTML_TAB = "&nbsp;" * 4 
+HTML_SPACE = "&nbsp;"
+HTML_TAB = HTML_SPACE * 4 
 
-def create_menu(menu_name: str, menu_dict: dict, parent=None) -> QMenu:
+def create_menu(menu_dict: dict, menu_name: str="", parent=None) -> QMenu:
 	menu = QMenu(menu_name, parent=parent)
 
 	for action_name, action_props in menu_dict.items():
 		if action_name[-1] == ">":
-			menu.addMenu(create_menu(action_name[:-1], action_props, parent=parent))
+			menu.addMenu(create_menu(action_props, action_name[:-1], parent=parent))
 			continue
 
 		action = menu.addAction(action_name)

@@ -4,21 +4,25 @@ import commonmark
 from PyQt5.QtWidgets import QWidget, QApplication, QVBoxLayout, QTextBrowser
 from PyQt5.QtCore import Qt, QEvent, pyqtSignal
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtGui import QCursor
 
 if __name__ == "__main__":
-    from github_markdown_style import GITHUB_MARKDOWN_STYLE
+    raise RuntimeError("This module requires extra.py module which is outside this folder, you can't run this script as main")
 else:
-    from GUI.github_markdown_style import GITHUB_MARKDOWN_STYLE
+    from pyapireference.ui.github_markdown_style import GITHUB_MARKDOWN_STYLE
+    from pyapireference.extra import create_menu
 
-class MarkdownPreviewer(QWidget):
-    closed = pyqtSignal()
-    def __init__(self, prefs, initial_md_text="", title="Markdown Preview", scroll_link=None, *args, **kwargs):
+class MarkdownPreviewer(QWebEngineView):    
+    stop = pyqtSignal()
+
+    def __init__(self, prefs, initial_md_text="", title="Markdown Preview", scroll_link=None, parent=None, *args, **kwargs):
         """
         Parameters:
             scroll_link=None: A scrollbar to synchronize with (only y not x).
         """
         super().__init__(*args, **kwargs)
 
+        self.parent = parent
         self.prefs = prefs
         self.scroll_link = scroll_link
         self.mouse_hover = False
@@ -26,31 +30,35 @@ class MarkdownPreviewer(QWidget):
         self.installEventFilter(self)
         self.setAttribute(Qt.WA_Hover, True)
 
-        self.setLayout(QVBoxLayout())
-        self.setWindowTitle(title)
-
-        self.web_view = QWebEngineView()
-        self.web_view.setHtml(self.markdown_to_html(initial_md_text))
+        self.setHtml(self.markdown_to_html(initial_md_text))
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.open_context_menu)
 
         self.synchronize_scrollbars()
 
-        self.layout().addWidget(self.web_view)
-
     @property
     def scroll_pos(self):
-        return self.web_view.page().scrollPosition()
+        return self.page().scrollPosition()
 
     def set_scroll_pos(self, x:  int, y: int):
-        self.web_view.page().runJavaScript(f"window.scrollTo({x}, {y});")
+        self.page().runJavaScript(f"window.scrollTo({x}, {y});")
 
-    def closeEvent(self, event):
-        self.closed.emit()
-        event.accept()
+    def open_context_menu(self):
+        menu = create_menu(
+            {
+                "Stop previewing": {
+                    "callback": self.stop.emit, 
+                }, 
+            }, 
+            parent=self.parent
+        )
+
+        menu.exec_(QCursor.pos())
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.HoverEnter:
             self.mouse_hover = True
-            
+
         elif event.type() == QEvent.HoverLeave:
             self.mouse_hover = False
 
@@ -64,18 +72,10 @@ class MarkdownPreviewer(QWidget):
         self.scroll_link.valueChanged.connect(scrollbar_changed)
 
     def update_markdown(self, md_text):
-        self.web_view.setHtml(self.markdown_to_html(md_text))
+        self.setHtml(self.markdown_to_html(md_text))
 
     def markdown_to_html(self, text: str) -> str:
         text = f"<head><style>{GITHUB_MARKDOWN_STYLE}</style></head><body>{commonmark.commonmark(text)}</body>"
 
         return text
 
-
-if __name__ == '__main__':
-   app = QApplication(sys.argv)
-   
-   markdown_previewer_dialog = MarkdownPreviewer(path)
-   markdown_previewer_dialog.show()
-
-   sys.exit(app.exec_())

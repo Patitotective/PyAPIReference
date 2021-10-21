@@ -1,5 +1,25 @@
 # Change Log
 
+### v0.1.50 (21/10/2021)
+- Renamed various folder and files:
+	- `PyAPIReference` (folder) -> `pyapireference`.
+	- `Assets` (folder) -> `assets`.
+	- `Screenshots` (folder) -> `screenshots`.
+	- `PyAPIReference/GUI` (folder) -> `pyapireference/ui`.
+	- `PyAPIReference/GUI/Images` (folder) -> `pyapireference/ui/img`.
+	- `PyAPIReference/GUI/Fonts` (folder) -> `pyapireference/ui/fonts`.
+- Moved `pyapireference/example.py` to `example.py`.
+- Added `snapcraft.yaml`, `MANIFEST.in`, `setup.py`, `pyproject.toml` and `main.spec` to build the app.
+- Bundled `pyapireference/ui/theme.prefs` with PREFS resources.
+- Now markdown preview is in a `QSplitter` with the text edit in the main window.
+- Added badges to `README.md`.
+- Added a `.gitignore` file.
+- Lowered update time for markdown preview from 300 msec to 200 msec.
+
+### v0.1.49 (15/10/2021)
+- Added update time to preview markdown (300 msec).
+- Added support for `typing` module.
+
 ### v0.1.48 (13/10/2021)
 - Added `create_menu` functio in `extra.py` which creates a `QMenu` given the `menu_name` and a `menu_dict` that contains all menu information.
 - Renamed `Markdown` tab to `API Reference`, `Generate/Update markdown` button to `Generate/Update API Reference`, `Export markdown` action to `Export API Reference`.

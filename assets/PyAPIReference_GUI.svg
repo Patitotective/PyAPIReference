@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.5156845"
-     inkscape:cx="697.37468"
-     inkscape:cy="354.62525"
+     inkscape:zoom="1.0717508"
+     inkscape:cx="107.30106"
+     inkscape:cy="609.74996"
      inkscape:window-width="1920"
      inkscape:window-height="948"
      inkscape:window-x="0"
@@ -228,10 +228,10 @@
        inkscape:export-ydpi="254.00002"><tspan
          x="236.91425"
          y="29.198992"
-         id="tspan933">Generate API References for Python modules easily with </tspan><tspan
+         id="tspan1146">Generate API References for Python modules easily with </tspan><tspan
          x="236.91425"
          y="33.167743"
-         id="tspan935">a beautiful and intuitive GUI app.</tspan></text>
+         id="tspan1148">a beautiful and intuitive GUI app.</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.43958px;line-height:1.25;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';text-align:center;word-spacing:0px;text-anchor:middle;fill:#ffffff;stroke-width:0.264583"
@@ -312,7 +312,7 @@
     <g
        id="g5568"
        transform="matrix(0.0733797,0,0,0.0733797,11.764661,128.50694)"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/Images/edit_icon_light.png"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/assets/img/edit_icon_light.png"
        inkscape:export-xdpi="27.042562"
        inkscape:export-ydpi="27.042562">
       <path
@@ -328,7 +328,7 @@
     <g
        id="g22089"
        transform="matrix(0.0733797,0,0,0.0733797,10.188208,173.09701)"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/Images/edit_icon_dark.png"
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/assets/img/edit_icon_dark.png"
        inkscape:export-xdpi="27.042562"
        inkscape:export-ydpi="27.042562"
        style="fill:#ffffff">

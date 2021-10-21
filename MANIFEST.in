@@ -1,0 +1,4 @@
+include pyapireference/*
+global-include .py, .txt
+global-exclude trial.*
+recursive-exclude dir-pattern __pycache__

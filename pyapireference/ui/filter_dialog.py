@@ -3,13 +3,13 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 if __name__ == "__main__":
-    raise RuntimeError("button_with_extra_options.py requires get_text_size from extra.py which is outside this folder, you can't run this script as main")
+    raise RuntimeError("button_with_extra_options.py requires get_text_size from pyapireference.extra.py which is outside this folder, you can't run this script as main")
 else:
-	from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton
-	from GUI.formlayout import FormLayout
-	from GUI.scrollarea import ScrollArea
-	from GUI.warning_dialog import WarningDialog
-	from extra import get_text_size, remove_key_from_dict, interpret_type
+	from pyapireference.ui.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton
+	from pyapireference.ui.formlayout import FormLayout
+	from pyapireference.ui.scrollarea import ScrollArea
+	from pyapireference.ui.warning_dialog import WarningDialog
+	from pyapireference.extra import get_text_size, remove_key_from_dict, interpret_type
 
 class FilterDialog(QDialog):
 	def __init__(self, prefs, title="Filter", parent=None):

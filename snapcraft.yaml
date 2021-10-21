@@ -1,0 +1,29 @@
+name: pyapireference
+version: git
+summary: PyAPIReference
+description: |
+  PyAPIReference is a GUI application to inspect Python modules, 
+  generate API references in markdown, edit and preview them.
+base: core18
+confinement: devmode
+parts:
+  test-offlineimap:
+    plugin: python
+    python-version: python3.9
+    source: .
+    # stage-packages:
+    #   - PyQt5
+    #   - PyQt5
+    #   - PREFS
+    #   - qtwidgets
+    #   - multipledispatch
+    #   - pyqtdarktheme
+    #   - markdown
+    #   - m2r2
+    #   - casestyle
+    #   - commonmark
+    #   - PyQtWebEngine
+    #   - pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
+apps:
+  pyapireference:
+    command: builds/PyAPIReference.bin

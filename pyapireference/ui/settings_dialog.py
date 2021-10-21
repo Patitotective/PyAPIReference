@@ -15,12 +15,12 @@ from qtwidgets import AnimatedToggle
 import PREFS
 
 if __name__ == "__main__":
-    raise RuntimeError("settings_dialog.py requires to_sentence_case from extra.py which is outside this folder, you can't run this script as main")
+    raise RuntimeError("settings_dialog.py requires to_sentence_case from pyapireference.extra.py which is outside this folder, you can't run this script as main")
 else:
-	from GUI.scrollarea import ScrollArea
-	from GUI.formlayout import FormLayout
-	from GUI.warning_dialog import WarningDialog
-	from extra import to_sentence_case, get_text_size, stylesheet_to_dict, remove_key_from_dict, interpret_type
+	from pyapireference.ui.scrollarea import ScrollArea
+	from pyapireference.ui.formlayout import FormLayout
+	from pyapireference.ui.warning_dialog import WarningDialog
+	from pyapireference.extra import to_sentence_case, get_text_size, stylesheet_to_dict, remove_key_from_dict, interpret_type
 
 class SettingsDialog(QDialog):
 	def __init__(self, prefs, *args, title="Settings", parent=None, **kwargs):

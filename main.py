@@ -29,37 +29,41 @@ from PyQt5.QtWidgets import (
 	QMessageBox, QVBoxLayout, 
 	QMenu, QDesktopWidget, 
 	QTabWidget, QTextEdit, 
-	QShortcut, QMenuBar
+	QShortcut, QMenuBar, 
+	QSplitter
 )
 
 from PyQt5.QtGui import QIcon, QPixmap, QFontDatabase, QFont, QKeySequence, QGuiApplication, QHoverEvent
 from PyQt5.QtCore import Qt, QObject, QThread, pyqtSignal, QTimer, QEvent
 
 # Dependencies
-from GUI.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
-from GUI.scrollarea import ScrollArea
-from GUI.settings_dialog import SettingsDialog
-from GUI.markdownhighlighter import MarkdownHighlighter
-from GUI.warning_dialog import WarningDialog
-from GUI.button_with_extra_options import ButtonWithExtraOptions
-from GUI.filter_dialog import FilterDialog
-from GUI.markdown_previewer import MarkdownPreviewer
-from GUI.about_dialog import AboutDialog
-from GUI.markdown_text_edit import MarkdownTextEdit
-from GUI import resources # Qt resources GUI/resources.qrc
+from pyapireference.ui.collapsible_widget import CollapsibleWidget, CheckBoxCollapseButton, CollapseButton
+from pyapireference.ui.scrollarea import ScrollArea
+from pyapireference.ui.settings_dialog import SettingsDialog
+from pyapireference.ui.markdownhighlighter import MarkdownHighlighter
+from pyapireference.ui.warning_dialog import WarningDialog
+from pyapireference.ui.button_with_extra_options import ButtonWithExtraOptions
+from pyapireference.ui.filter_dialog import FilterDialog
+from pyapireference.ui.markdown_previewer import MarkdownPreviewer
+from pyapireference.ui.about_dialog import AboutDialog
+from pyapireference.ui.markdown_text_edit import MarkdownTextEdit
+from pyapireference.ui import resources # Qt resources GUI/resources.qrc
+from pyapireference.ui import theme_resource
 
-from inspect_object import inspect_object, check_file
-from extra import (
+from pyapireference.inspect_object import inspect_object
+from pyapireference.extra import (
 	create_menu, convert_to_code_block, 
 	get_module_from_path, change_widget_stylesheet, 
 	add_text_to_text_edit, get_widgets_from_layout, 
-	HTML_TAB, interpret_type
+	HTML_TAB, interpret_type, 
+	HTML_SPACE
 )
 
-from tree_to_markdown import convert_tree_to_markdown
+from pyapireference.tree_to_markdown import convert_tree_to_markdown
 
-THEME = PREFS.read_prefs_file("GUI/theme.prefs")
-VERSION = "v0.1.48"
+
+THEME = PREFS.read_prefs_file(":/theme.prefs")
+VERSION = "v0.1.50"
 
 class TreeExportTypes(Enum):
 	PREFS = ("PREFS", "prefs")
@@ -97,10 +101,27 @@ class InspectModule(QObject):
 
 		return tuple(exclude_types), kwargs
 
+	def generate_error_text(self, error: Exception):
+		result = ""
+		error = traceback.format_exc().replace('\n', '<br>').replace('\t', HTML_TAB).replace("    ", HTML_TAB).replace("  ", HTML_SPACE * 2).replace("   ", HTML_SPACE * 3)
+
+		result = f"""An unexpected error ocurred: <br>
+		{self.convert_to_code_block(error)}<br>
+		"""
+
+		if isinstance(error, RecursionError): result += "Try changing the <b>Recursion limit</b> on settings.<br>"
+		result += f"If you think it is and issue, please report it at <a style='color: {THEME[self.prefs.file['theme']]['link_color']};' href='https://github.com/Patitotective/PyAPIReference/issues'>GitHub issues</a>."		
+
 	def run(self):
 		self.running = True
-		module, error = get_module_from_path(self.path)
+		try:
+			module, error = get_module_from_path(self.path)
+		except Exception as error:
+			self.exception_message = self.generate_error_text(error)
 
+			self.expection_found.emit()
+			self.running = False
+			
 		if module is None: # Means exception
 			error = error.replace('\n', '<br>').replace('    ', HTML_TAB)		
 
@@ -114,15 +135,8 @@ class InspectModule(QObject):
 				kwargs["recursion_limit"] = self.prefs.file["settings"]["inspect_module"]["recursion_limit"]["value"]
 
 				self.module_content = inspect_object(module, exclude_types=exclude_types, **kwargs)
-			except BaseException as error:
-				error = traceback.format_exc().replace('\n', '<br>').replace('\t', HTML_TAB).replace("  ", HTML_TAB[0] * 2).replace("   ", HTML_TAB[0] * 3)
-
-				self.exception_message = f"""An unexpected error ocurred: <br>
-				{self.convert_to_code_block(error)}<br>
-				"""
-
-				if isinstance(error, RecursionError): self.exception_message += "Try changing the <b>Recursion limit</b> on settings.<br>"
-				self.exception_message += f"If you think it is and issue, please report it at <a style='color: {THEME[self.prefs.file['theme']]['link_color']};' href='https://github.com/Patitotective/PyAPIReference/issues'>GitHub issues</a>."
+			except Exception as error:
+				self.exception_message = self.generate_error_text(error)
 
 				self.expection_found.emit()
 				self.running = False
@@ -208,7 +222,7 @@ class MainWindow(QMainWindow):
 
 	def init_window(self):
 		self.setWindowTitle("PyAPIReference")
-		self.setWindowIcon(QIcon(':/Images/icon.png'))
+		self.setWindowIcon(QIcon(':/img/icon.png'))
 
 		self.main_widget = MainWidget(parent=self)
 		
@@ -221,9 +235,9 @@ class MainWindow(QMainWindow):
 		"""Create menu bar."""
 		menubar = self.menuBar()
 
-		menubar.addMenu(create_menu('&File', self.FILE_MENU, parent=self))
-		menubar.addMenu(create_menu('&Edit', self.EDIT_MENU, parent=self))
-		menubar.addMenu(create_menu('&About', self.ABOUT_MENU, parent=self))
+		menubar.addMenu(create_menu(self.FILE_MENU, '&File', parent=self))
+		menubar.addMenu(create_menu(self.EDIT_MENU, '&Edit', parent=self))
+		menubar.addMenu(create_menu(self.ABOUT_MENU, '&About', parent=self))
 		
 	def open_settings_dialog(self):
 		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
@@ -236,9 +250,13 @@ class MainWindow(QMainWindow):
 		self.__init__() # Init again
 
 	def restore_geometry(self):
+		print("Restoring MainWindow geometry")
+
+		self.showNormal()
+
 		pos, size = self.main_widget.prefs.file["state"]["pos"], self.main_widget.prefs.file["state"]["size"]
 		is_maximized = self.main_widget.prefs.file["state"]["is_maximized"]
-		
+
 		if pos == (-100, -100):
 			win_rec = self.frameGeometry()
 			
@@ -261,6 +279,7 @@ class MainWindow(QMainWindow):
 		self.resize(*size)
 
 	def save_geometry(self):
+		print("Saving MainWindow geometry")
 		geometry = self.geometry()
 
 		pos = geometry.x(), geometry.y()
@@ -271,17 +290,11 @@ class MainWindow(QMainWindow):
 		self.main_widget.prefs.write_prefs("state/is_maximized", self.isMaximized())
 
 	def close_app(self):
-		if len(self.main_widget.widgets["markdown_previewer"]) > 0:
-			self.main_widget.widgets["markdown_previewer"][-1].close()
-
-		self.save_geometry()
+		if self.main_widget.save_geometry_at_end:
+			self.save_geometry()
+	
 		if self.main_widget.save_tree_at_end:
 			self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree())
-		
-			# self.main_widget.prefs.write_prefs("current_module", self.main_widget.get_tree()) # Save the state of the tree to restore it later
-
-		# Close window and exit program to close all dialogs open.
-		self.close()
 
 	def closeEvent(self, event) -> None:
 		"""This will be called when the windows is closed."""		
@@ -302,10 +315,8 @@ class MainWidget(QWidget):
 
 		self.widgets = {
 			"module_tabs": [], 
-			"module_content_scrollarea": [], 
 			"load_file_button": [], 
 			"retry_button": [], 
-			"markdown_tab": [], 
 			"markdown_text_edit": [], 
 			"markdown_previewer": [], 
 		}
@@ -313,8 +324,8 @@ class MainWidget(QWidget):
 		self.module_content = None
 
 		self.save_tree_at_end = True
+		self.save_geometry_at_end = True
 
-		self.installEventFilter(self)
 		self.setAttribute(Qt.WA_Hover, True)
 
 		self.load_fonts()
@@ -325,18 +336,9 @@ class MainWidget(QWidget):
 	def current_theme(self):
 		return self.prefs.file["theme"]
 
-	def eventFilter(self, obj, event):
-		if event.type() == QEvent.HoverEnter:
-			self.mouse_hover = True
-
-		elif event.type() == QEvent.HoverLeave:
-			self.mouse_hover = False
-
-		return super().eventFilter(obj, event)		
-
 	def load_fonts(self):
 		for font in self.FONTS:
-			QFontDatabase.addApplicationFont(f':/Fonts/{font}')
+			QFontDatabase.addApplicationFont(f':/fonts/{font}')
 
 	def init_window(self):
 		self.setLayout(QGridLayout())
@@ -364,14 +366,14 @@ class MainWidget(QWidget):
 					}, 
 				}, 
 				"preview_markdown": {
-					"make_windows_side_by_side": {
-						"tooltip": "When click preview markdown make windows side by side.", 
-						"value": True, 
-					}, 
 					"synchronize_scrollbars": {
 						"tooltip": "When previewing markdown synchronize editor's and preview's scrollbar.", 
 						"value": True, 
-					}					
+					}, 
+					"maximize_window": {
+						"tooltip": "Maximize window when previewing markdown", 
+						"value": True, 
+					}
 				}, 
 			}, 
 			"cache": {}, 			
@@ -389,12 +391,12 @@ class MainWidget(QWidget):
 			}
 		}
 
-		self.prefs = PREFS.PREFS(default_prefs, filename="Prefs/settings.prefs")
+		self.prefs = PREFS.Prefs(default_prefs, filename="Prefs/settings.prefs")
 
 	def main_frame(self):
 		logo = QLabel()
 
-		pixmap = QPixmap(":/Images/logo_without_background.png")
+		pixmap = QPixmap(":/img/logo_without_background.png")
 		logo.setPixmap(pixmap)
 
 		logo.setStyleSheet("margin-bottom: 10px;")
@@ -418,6 +420,13 @@ class MainWidget(QWidget):
 
 		self.restore_module()
 
+	def create_loading_label(self):
+		loading_label = QLabel("Loading...")
+		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+		loading_label.setStyleSheet(f"font-size: 20px; font-family: {THEME['tree_font_family']};")
+
+		return loading_label
+
 	def restore_module(self):
 		"""Restore tree if tree available else load last module.
 		"""
@@ -432,16 +441,13 @@ class MainWidget(QWidget):
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
-		loading_label = QLabel("Loading...")
-		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-		loading_label.setStyleSheet(f"font-size: 20px; font-family: {THEME['module_collapsible_font_family']};")
-
-		self.widgets["module_content_scrollarea"].append(loading_label)
+		loading_label = self.create_loading_label()
 
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 100)
 		
 		self.timer.timeout.connect(lambda: self.widgets["load_file_button"][-1].setEnabled(True))
+		self.timer.timeout.connect(lambda: loading_label.setParent(None))
 		self.timer.timeout.connect(self.timer.stop)		
 		self.timer.start(500)
 
@@ -477,10 +483,6 @@ class MainWidget(QWidget):
 			self.widgets["module_tabs"][-1].setParent(None)
 			self.widgets["module_tabs"] = []
 
-		if len(self.widgets["module_content_scrollarea"]) > 0:	
-			self.widgets["module_content_scrollarea"][-1].setParent(None)
-			self.widgets["module_content_scrollarea"] = []
-		
 		self.prefs.write_prefs("current_markdown", "")
 		self.prefs.write_prefs("current_module_path", "")
 		self.prefs.write_prefs("current_module", {})
@@ -507,19 +509,6 @@ class MainWidget(QWidget):
 		if markdown_warning:
 			self.prefs.write_prefs("current_markdown", "")
 
-		file_size = os.path.getsize(path)
-		
-		if file_size > 15000:
-			warning = WarningDialog(
-				"Inspect Markdown", 
-				"File size is large.\nInspection may take some time.", 
-				no_btn_text="Cancel", 
-				yes_btn_text="Continue", 
-				parent=self).exec_()
-			
-			if not warning:
-				return
-
 		self.prefs.write_prefs("current_module_path", path)
 
 		self.create_inspect_module_thread(path)
@@ -536,42 +525,12 @@ class MainWidget(QWidget):
 			self.create_inspect_module_thread(self.prefs.file["current_module_path"])		
 
 	def create_inspect_module_thread(self, module):
-		# Check if file is safe 
-		not_safe_lines, name_main = check_file(module)
-		lines = ""
-
-		# If name main is present, file is safe. Otherwise enter here.
-		if not name_main:
-			if len(not_safe_lines) > 0:
-				for index, line in not_safe_lines:
-					lines += f"Line: {index}, {line}\n"
-
-				warning = WarningDialog(
-						"File Not Safe", 
-						"This module contains global calls which can be unsafe when inspecting.\n" +
-						f"\nUnsafe Lines: \n{lines}\n"+
-						"Consider moving these inside a if __name__ == '__main__' condition.\nWould you still like to continue?", 
-						no_btn_text="Cancel", 
-						yes_btn_text="Continue", 
-						parent=self).exec_()
-			
-				if not warning:
-					return
-		
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
-		loading_label = QLabel("Loading...")
-		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-		loading_label.setStyleSheet(f"font-size: 20px; font-family: {THEME['module_collapsible_font_family']};")
-
 		self.save_tree_at_end = False
 
-		if len(self.widgets["module_content_scrollarea"]) > 0:
-			self.widgets["module_content_scrollarea"][-1].setParent(None)
-			self.widgets["module_content_scrollarea"].pop()
-
-		self.widgets["module_content_scrollarea"].append(loading_label)
+		loading_label = self.create_loading_label()
 
 		self.layout().addWidget(loading_label, 2, 0)
 		self.layout().setRowStretch(2, 100)
@@ -589,6 +548,7 @@ class MainWidget(QWidget):
 
 		# Delete thread and inspect objects
 		self.worker.finished.connect(self.inspect_object_worker_finished)
+		self.worker.finished.connect(lambda: loading_label.setParent(None))
 		self.worker.expection_found.connect(self.inspect_object_worker_exception)
 
 		self.timer = QTimer()
@@ -597,20 +557,19 @@ class MainWidget(QWidget):
 		self.timer.start(100)
 
 	def inspect_object_worker_exception(self):
-		self.thread.quit()
-		self.worker.deleteLater()		
-		self.thread.deleteLater()
+		self.stop_inspect_object_worker()
 
 		self.widgets["load_file_button"][-1].setEnabled(True)
 
 		self.save_tree_at_end = False
 		self.prefs.write_prefs("current_module", {})
 
-		change_widget_stylesheet(self.widgets["module_content_scrollarea"][-1], "font-size", "15px")
+		tree_scrollarea = self.widgets["module_tabs"][-1].widget(0)
+		change_widget_stylesheet(tree_scrollarea, "font-size", "15px")
 		
-		self.widgets["module_content_scrollarea"][-1].setOpenExternalLinks(True)
-		self.widgets["module_content_scrollarea"][-1].setTextFormat(Qt.TextFormat.RichText)		
-		self.widgets["module_content_scrollarea"][-1].setText(self.worker.exception_message)
+		tree_scrollarea.setOpenExternalLinks(True)
+		tree_scrollarea.setTextFormat(Qt.TextFormat.RichText)		
+		tree_scrollarea.setText(self.worker.exception_message)
 
 		retry_button = QPushButton("Retry")
 		retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module_path"]))
@@ -618,15 +577,19 @@ class MainWidget(QWidget):
 		self.widgets["retry_button"].append(retry_button)
 
 		self.layout().addWidget(retry_button, 3, 0)
-
+		
+		self.layout().setRowStretch(1, 0)
 		self.layout().setRowStretch(2, 0)
 		self.layout().setRowStretch(3, 0)
 		self.layout().setRowStretch(4, 100)
 
-	def inspect_object_worker_finished(self):
+	def stop_inspect_object_worker(self):
 		self.thread.quit()
 		self.worker.deleteLater()
-		self.thread.deleteLater()
+		self.thread.deleteLater()		
+
+	def inspect_object_worker_finished(self):
+		self.stop_inspect_object_worker()
 
 		self.layout().setRowStretch(4, 0)
 
@@ -637,7 +600,7 @@ class MainWidget(QWidget):
 
 		self.create_module_tabs()
 		
-	def create_module_tabs(self):
+	def create_module_tabs(self):	
 		def tab_changed(index: int):
 			nonlocal first_time
 
@@ -652,10 +615,6 @@ class MainWidget(QWidget):
 			self.widgets["module_tabs"] = []
 			self.widgets["markdown_text_edit"] = []
 		
-		if len(self.widgets["module_content_scrollarea"]) > 0:	
-			self.widgets["module_content_scrollarea"][-1].setParent(None)
-			self.widgets["module_content_scrollarea"] = []
-
 		first_time = True
 
 		module_tabs = QTabWidget()
@@ -679,9 +638,19 @@ class MainWidget(QWidget):
 		def create_markdown_text_edit(text: str=None):
 			def text_edit_updated():
 				self.prefs.write_prefs("current_markdown", text_edit.toPlainText())
+				
+				if self.text_timer.isActive():
+					self.text_timer.setInterval(UPDATE_TIME)
+					return
 
+				self.text_timer.start(UPDATE_TIME)
+
+			def text_timeout():
 				if len(self.widgets["markdown_previewer"]) > 0:
 					self.widgets["markdown_previewer"][-1].update_markdown(text_edit.toPlainText())
+
+				self.text_timer.stop()
+			nonlocal markdown_edit_section
 
 			if text is None:
 				markdown_text = convert_tree_to_markdown(tree=self.filter_tree())
@@ -693,6 +662,10 @@ class MainWidget(QWidget):
 				self.widgets["markdown_text_edit"][-1].setText(markdown_text)
 				return
 
+			UPDATE_TIME = 200 # msec
+			self.text_timer = QTimer()
+			self.text_timer.timeout.connect(text_timeout)
+
 			text_edit = MarkdownTextEdit()
 			text_edit.textChanged.connect(text_edit_updated)
 
@@ -701,11 +674,11 @@ class MainWidget(QWidget):
 
 			highlighter = MarkdownHighlighter(text_edit, THEME=THEME, current_theme=self.current_theme)
 
-			markdown_tab = self.widgets["markdown_tab"][-1]
 			self.widgets["markdown_text_edit"].append(text_edit)
 
-			markdown_tab.layout().addWidget(text_edit, 1, 0)
-			markdown_tab.layout().setRowStretch(1, 0)
+			markdown_edit_section.addWidget(text_edit)
+			markdown_tab.layout().addWidget(markdown_edit_section, 1, 0)
+			markdown_tab.layout().setRowStretch(0, 0)
 
 			return text_edit
 
@@ -736,29 +709,37 @@ class MainWidget(QWidget):
 
 			convert_to_markdown_button_clicked(text=content)
 
-		def preview_markdown_in_browser():
+		def preview_markdown():
+			def stop_previewing():
+				markdown_previewer = self.widgets["markdown_previewer"][-1]
+				
+				if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
+					self.save_geometry_at_end = True	
+					self.parent.restore_geometry()
+	
+				markdown_previewer.setParent(None)
+				self.widgets["markdown_previewer"].pop()
+
 			def preview_already_live():
 				answer = WarningDialog(
 					"Markdown preview already open", 
 					"You are already previewing the Markdown.", 
-					yes_btn_text="Switch to window", 
+					yes_btn_text="OK", 
 					yes_btn_callback=2, 
-					no_btn_text="Close window", 
+					no_btn_text="Stop previewing", 
 					no_btn_callback=1, 
 					parent=self
 				).exec_()
 				
-				markdown_previewer = self.widgets["markdown_previewer"][-1]
-
-				if answer == 2: # Means switch
-					markdown_previewer.activateWindow()
-				elif answer == 1: # Means stop
-					markdown_previewer.close()
+				if answer == 1: # Means stop
+					stop_previewing()
 
 			def markdown_previewer_scrollbar_changed(point):
-				if not self.mouse_hover and self.prefs.file["settings"]["preview_markdown"]["synchronize_scrollbars"]["value"]:
+				if markdown_previewer.mouse_hover and self.prefs.file["settings"]["preview_markdown"]["synchronize_scrollbars"]["value"]:
 					y = int(point.y())
 					self.widgets["markdown_text_edit"][-1].verticalScrollBar().setValue(y)
+			
+			nonlocal markdown_edit_section
 
 			if self.prefs.file['current_markdown'] == "":
 				QMessageBox.critical(self, "No markdown to preview", "You must create a markdown first to preview.")
@@ -768,40 +749,23 @@ class MainWidget(QWidget):
 				preview_already_live()
 				return
 
-			markdown_previewer = MarkdownPreviewer(self.prefs, self.prefs.file['current_markdown'], scroll_link=self.widgets["markdown_text_edit"][-1].verticalScrollBar())
-			markdown_previewer.closed.connect(self.widgets["markdown_previewer"].pop)
-			markdown_previewer.closed.connect(self.parent.restore_geometry)
-			markdown_previewer.web_view.page().scrollPositionChanged.connect(markdown_previewer_scrollbar_changed)
-			
-			markdown_previewer.show()
+			self.save_geometry_at_end = False
 
-			if self.prefs.file["settings"]["preview_markdown"]["make_windows_side_by_side"]["value"]:
+			markdown_previewer = MarkdownPreviewer(self.prefs, self.prefs.file['current_markdown'], scroll_link=self.widgets["markdown_text_edit"][-1].verticalScrollBar(), parent=self)			
+			markdown_previewer.page().scrollPositionChanged.connect(markdown_previewer_scrollbar_changed)
+			markdown_previewer.stop.connect(stop_previewing)
+
+			markdown_edit_section.addWidget(markdown_previewer)
+			
+			equal_width = max(self.widgets["markdown_text_edit"][-1].minimumSizeHint().width(), markdown_previewer.minimumSizeHint().width())
+			extra_width = 15 # An extra value to subtract from left widget's width and add to right widget's width
+
+			markdown_edit_section.setSizes([equal_width - extra_width, equal_width + extra_width])
+
+			if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
 				self.parent.save_geometry()
-				
-				screen_size = QGuiApplication.primaryScreen().size()
-				screen_height = screen_size.height()
-				half_screen_width = screen_size.width() // 2
+				self.parent.showMaximized()
 
-				if platform.system() == "Windows":
-					# If the system is windows subtract the taskbar height from the total height
-					from win32api import GetMonitorInfo, MonitorFromPoint
-
-					monitor_info = GetMonitorInfo(MonitorFromPoint((0,0)))
-					monitor_area = monitor_info.get("Monitor")
-					work_area = monitor_info.get("Work")					
-
-					task_bar_height = monitor_area[3] - work_area[3]
-
-					screen_height -= task_bar_height
-
-				self.parent.showNormal()
-				self.parent.move(0, 0)
-				self.parent.resize(half_screen_width, screen_height)
-
-				markdown_previewer.showNormal()
-				markdown_previewer.move(half_screen_width, 0)
-				markdown_previewer.resize(half_screen_width, screen_height)
-			
 			self.widgets["markdown_previewer"].append(markdown_previewer)
 
 		if len(self.widgets["markdown_text_edit"]) > 0:
@@ -813,9 +777,20 @@ class MainWidget(QWidget):
 		markdown_tab = QWidget()
 		markdown_tab.setLayout(QGridLayout())
 
+		markdown_edit_section = QSplitter(Qt.Horizontal)
+		markdown_edit_section.setStyleSheet(
+		"""
+		QSplitter::handle {
+		    image: none;
+			width: 0px;
+			height: 0px;
+		}
+		"""
+		)
+
 		convert_to_markdown_button = ButtonWithExtraOptions("Generate API Reference", parent=self, 
 			actions=[
-				("Preview Markdown", preview_markdown_in_browser), 			
+				("Preview Markdown", preview_markdown), 			
 				("Export", self.parent.EXPORT_API_MENU), 
 				("Load Markdown file", load_markdown_file), 
 			]
@@ -826,13 +801,11 @@ class MainWidget(QWidget):
 		markdown_tab.layout().addWidget(convert_to_markdown_button, 0, 0)
 		markdown_tab.layout().setRowStretch(1, 1)
 
-		self.widgets["markdown_tab"].append(markdown_tab)
-
 		if self.prefs.file['current_markdown'] != "":
 			convert_to_markdown_button_clicked(text=self.prefs.file['current_markdown'])
 
 		return markdown_tab
-
+	
 	def restore_tree(self, tree=None):
 		if tree is None:
 			tree = self.prefs.file["current_module"]
@@ -847,13 +820,18 @@ class MainWidget(QWidget):
 		"""Get the tree, add collapsed and checked key to restore it later. 
 		"""
 		if collapsible_tree is None:
-			if len(self.widgets["module_content_scrollarea"]) < 1:
+			if len(self.widgets["module_tabs"]) < 1:
 				return {}
 
-			module_content_scrollarea = self.widgets["module_content_scrollarea"][-1]
-			module_collapsible = list(get_widgets_from_layout(module_content_scrollarea.main_widget.layout()))[0]
+			tree_scrollarea = self.widgets["module_tabs"][-1].widget(0) # Get the first tab from module_tabs
+			tree_widget_layout = tree_scrollarea.widget().layout() # Get the layout of the main widget in the tree scrollare
+			widgets_in_tree_widget = list(get_widgets_from_layout(tree_widget_layout)) # Get the widgets in the tree widget layout
 
-			collapsible_tree = module_collapsible.tree_to_dict()
+			if len(widgets_in_tree_widget) < 1:
+				return {}
+
+			tree_collapsible = widgets_in_tree_widget[0]
+			collapsible_tree = tree_collapsible.tree_to_dict()
 
 		if tree is None:
 			tree = self.module_content
@@ -878,10 +856,13 @@ class MainWidget(QWidget):
 		"""With using the collapsible_tree and the tree, filter the tree with the checked checkbox on the collapsible_tree
 		"""
 		if collapsible_tree is None:
-			module_content_scrollarea = self.widgets["module_content_scrollarea"][-1]
-			module_collapsible = list(get_widgets_from_layout(module_content_scrollarea.main_widget.layout()))[0]
+			tree_scrollarea = self.widgets["module_tabs"][-1].widget(0) # Get the first tab from module_tabs
+			tree_widget_layout = tree_scrollarea.widget().layout() # Get the layout of the main widget in the tree scrollare
+			widgets_in_tree_widget = list(get_widgets_from_layout(tree_widget_layout)) # Get the widgets in the tree widget layout
 
-			collapsible_tree = module_collapsible.tree_to_dict()
+			tree_collapsible = widgets_in_tree_widget[0]
+
+			collapsible_tree = tree_collapsible.tree_to_dict()
 
 			# print(PREFS.convert_to_prefs(collapsible_tree))
 
@@ -930,41 +911,28 @@ class MainWidget(QWidget):
 	def create_tree_tab(self):
 		module_content_widget = QWidget()
 		module_content_widget.setLayout(QVBoxLayout())
+		
 		font = QFont()
 		module_content_widget.setStyleSheet(
 		f"""
 		*{{
-			font-family: {THEME['module_collapsible_font_family']};
+			font-family: {THEME['tree_font_family']};
 		}}
 		QToolTip {{
 			font-family: {font.defaultFamily()};
 		}}
 		""")
 
-		# print(PREFS.convert_to_prefs(self.module_content))
-		module_collapsible = self.create_module_tree(self.module_content, collapse_button=CollapseButton)
+		tree_collapsible = self.create_module_tree(self.module_content, collapse_button=CollapseButton)
 		
-		module_collapsible.uncollapse()
+		tree_collapsible.uncollapse()
 
-		module_content_widget.layout().addWidget(module_collapsible)
+		module_content_widget.layout().addWidget(tree_collapsible)
 		module_content_widget.layout().addStretch(1)
 
 		module_content_scrollarea = ScrollArea(module_content_widget)
 
-		self.widgets["module_content_scrollarea"].append(module_content_scrollarea)
 		return module_content_scrollarea
-
-	def create_collapsible_widget(self, title: str, color=None, collapse_button=CheckBoxCollapseButton, parent=None) -> QWidget:
-		if parent is None:
-			parent = self
-			
-		collapsible_widget = CollapsibleWidget(
-			title, 
-			color, 
-			collapse_button, 
-			parent)
-
-		return collapsible_widget
 
 	def create_module_tree(self, object_content: dict, collapse_button=CheckBoxCollapseButton):
 		"""Generates a collapsible widget for a given object_content generated by inspect_object
@@ -1086,6 +1054,18 @@ class MainWidget(QWidget):
 		add_object_properties_to_collapsible(object_content[object_name], collapsible_object, parent=object_name)
 
 		return collapsible_object
+
+	def create_collapsible_widget(self, title: str, color=None, collapse_button=CheckBoxCollapseButton, parent=None) -> QWidget:
+		if parent is None:
+			parent = self
+			
+		collapsible_widget = CollapsibleWidget(
+			title, 
+			color, 
+			collapse_button, 
+			parent)
+
+		return collapsible_widget
 
 	def find_object_type_color(self, object_type: str, change_types_dict: dict={"class": "type"}) -> str:
 		if object_type in change_types_dict:

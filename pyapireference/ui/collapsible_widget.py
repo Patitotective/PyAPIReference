@@ -4,10 +4,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QCursor
 
 if __name__ == "__main__":
-    raise RuntimeError("collapsible_widget.py requires get_widgets_from_layout from extra.py which is outside this folder, you can't run this script as main")
+    raise RuntimeError("This module requires extra.py module which is outside this folder, you can't run this script as main")
 else:
-    import GUI.collapsible_widget_resources
-    from extra import get_widgets_from_layout 
+    import pyapireference.ui.collapsible_widget_resources
+    from pyapireference.extra import get_widgets_from_layout, create_menu
 
 VERTICAL_ARROW_PATH = ":/vertical_arrow_collapsible.png"
 HORIZONTAL_ARROW_PATH = ":/horizontal_arrow_collapsible.png"
@@ -83,38 +83,29 @@ class CollapsibleWidget(QWidget):
         self.layout().addWidget(self.init_content())
 
     def context_menu(self):
-        menu = QMenu(self.parent)
-        fold_action = QAction("Fold")
-        fold_action.triggered.connect(self.collapse)
-        
-        unfold_action = QAction("Unfold")
-        unfold_action.triggered.connect(self.uncollapse)
-
-        fold_all_action = QAction("Fold all")
-        fold_all_action.triggered.connect(self.fold_all)
-        
-        unfold_all_action = QAction("Unfold all")
-        unfold_all_action.triggered.connect(self.unfold_all)
-       
-        check_all_action = QAction("Check all")
-        check_all_action.triggered.connect(self.enable_all_checkboxes)
-
-        uncheck_all_action = QAction("Uncheck all")
-        uncheck_all_action.triggered.connect(self.disable_all_checkboxes)
-       
-        # print_tree_action = QAction("Print tree")
-        # print_tree_action.triggered.connect(lambda ignore: print(self.tree_to_dict()))
-           
-        menu.addAction(fold_action)
-        menu.addAction(unfold_action)
-           
-        menu.addAction(fold_all_action)
-        menu.addAction(unfold_all_action)
-
-        menu.addAction(check_all_action)
-        menu.addAction(uncheck_all_action)
-
-        # menu.addAction(print_tree_action)
+        menu = create_menu(
+            {
+                "Fold": {
+                    "callback": self.collapse, 
+                }, 
+                "Unfold": {
+                    "callback": self.uncollapse, 
+                }, 
+                "Fold all": {
+                    "callback": self.fold_all, 
+                }, 
+                "Unfold all": {
+                    "callback": self.unfold_all, 
+                }, 
+                "Check all": {
+                    "callback": self.enable_all_checkboxes, 
+                }, 
+                "Uncheck all": {
+                    "callback": self.disable_all_checkboxes, 
+                }, 
+            }, 
+            parent=self.parent
+        )
 
         menu.exec_(QCursor.pos())
 

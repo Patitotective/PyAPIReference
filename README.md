@@ -1,6 +1,16 @@
 # PyAPIReference
 [![PyAPIReference logo](https://github.com/Patitotective/PyAPIReference/blob/main/Assets/logo.png?raw=true)](https://github.com/Patitotective/PyAPIReference)  
 ***
+[![Stars](https://img.shields.io/github/stars/patitotective/pyapireference)](https://github.com/Patitotective/PyAPIReference/stargazers)
+[![Watchers](https://img.shields.io/github/watchers/Patitotective/PyAPIReference)](https://github.com/Patitotective/PyAPIReference/watchers)
+[![Last commit](https://img.shields.io/github/last-commit/Patitotective/PyAPIReference)](https://github.com/Patitotective/PyAPIReference/commits/main)
+[![Size](https://img.shields.io/github/repo-size/Patitotective/PyAPIReference)](https://github.com/Patitotective/PyAPIReference)
+<br>
+[![Top languages](https://img.shields.io/github/languages/top/Patitotective/PyAPIReference)](https://github.com/Patitotective/PyAPIReference)
+[![License MIT](https://img.shields.io/github/license/Patitotective/PyAPIReference)](https://github.com/Patitotective/PyAPIReference/)
+[![Made with Python](https://img.shields.io/badge/made%20with-python-blue)](https://www.python.org/)
+<!-- [![CodeFactor grade](https://img.shields.io/codefactor/grade/github/Patitotective/PyAPIReference/main)](https://github.com/Patitotective/PyAPIReference/) -->
+
 ***[PyAPIReference](https://patitotective.github.io/PyAPIReference/) is a GUI application to generate API References for Python modules.***
 
 _Join our [Discord server](https://discord.gg/as85Q4GnR6) to keep updated._
@@ -24,8 +34,8 @@ _Join our [Discord server](https://discord.gg/as85Q4GnR6) to keep updated._
 Feel free to contribute, join our [Discord server](https://discord.gg/as85Q4GnR6) for more information.
 
 ## Screenshots
-[![Example module tree](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/tree.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
-[![Markdown editor](https://github.com/Patitotective/PyAPIReference/blob/main/Screenshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Example module tree](https://github.com/Patitotective/PyAPIReference/blob/main/screnshots/tree.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Markdown editor](https://github.com/Patitotective/PyAPIReference/blob/main/screnshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
 
 ## Test it from source code
 1. First you will need to clone this repository by pasting this command into your terminal:
@@ -64,7 +74,7 @@ About
 - GitHub: https://github.com/Patitotective/PyAPIReference.
 - Discord server: https://discord.gg/as85Q4GnR6.
 - Patitotective:
-	- Discord: patitotective#0127.
+	- Discord: Patitotective#0127.
 	- GitHub: https://github.com/Patitotective.
 	- Email: [cristobalriaga@gmail.com](mailto:cristobalriaga@gmail.com).
 - Sharkface:
