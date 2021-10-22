@@ -108,6 +108,15 @@ def foo(param1, param2=None, param3: str="Hello world"):
 def emtpy():
 	pass
 
+'''
+unsafe tests. Delete if name == main 
+emtpy()
+x = Person("name", "last_name", "age").display_info()
+foo(1)
+y = foo 
+y()
+'''
+
 if __name__ == "__main__":
 	person = Person("William", "Polo", 15)
 	student = Student(6, "Harward", "Jack", "Sparrow", 45)

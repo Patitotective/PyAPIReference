@@ -50,7 +50,7 @@ from pyapireference.ui.markdown_text_edit import MarkdownTextEdit
 from pyapireference.ui import resources # Qt resources GUI/resources.qrc
 from pyapireference.ui import theme_resource
 
-from pyapireference.inspect_object import inspect_object
+from pyapireference.inspect_object import inspect_object, check_file
 from pyapireference.extra import (
 	create_menu, convert_to_code_block, 
 	get_module_from_path, change_widget_stylesheet, 
@@ -525,6 +525,28 @@ class MainWidget(QWidget):
 			self.create_inspect_module_thread(self.prefs.file["current_module_path"])		
 
 	def create_inspect_module_thread(self, module):
+		# # Check if file is safe 
+		# not_safe_lines, name_main = check_file(module)
+		# lines = ""
+
+		# # If name main is present, file is safe. Otherwise enter here.
+		# if not name_main:
+		# 	if len(not_safe_lines) > 0:
+		# 		for index, line in not_safe_lines:
+		# 			lines += f"Line: {index}, {line}\n"
+				
+		# 		message = "This module contains global calls which can be unsafe when inspecting.\n\n" + f"\nUnsafe Lines: \n{lines}\n\n" + "Consider moving these inside a if __name__ == '__main__' condition."
+		# 		warning = WarningDialog(
+		# 				"File Not Safe", 
+		# 				message, 
+		# 				no_btn_text="Cancel", 
+		# 				yes_btn_text="Continue", 
+		# 				parent=self,
+		# 				safe_dialog=(True, THEME[self.current_theme]["link_color"])).exec_()
+				
+		# 		if not warning:
+		# 			return
+				
 		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 

@@ -2,6 +2,85 @@ import inspect
 import PREFS
 import types
 import sys
+from difflib import SequenceMatcher
+
+def check_file(path):
+    """Non-Safe Test Cases (add more as you think of some)
+    normal call: 
+        test()
+    
+    inside loop
+        for...
+            test()
+    reassignment:
+        x = test
+        x()
+    
+    nested reassignment:
+        x = test
+        y = x
+        y()
+    
+    classes:
+        class Test:
+            def test(self)
+                ...
+        
+        t = Test()
+        t.run()
+    """
+
+    name_main = False
+    main_line = 'if __name__ == "__main__"'
+    with open(fr"{path}", "r") as file:
+        lines = file.readlines()
+
+    inside_func = False
+    function_names = []
+    not_safe_lines = []
+
+    for index, line in enumerate(lines, start=1):
+        if line[0:5] == "class":
+            if "(" in line:
+                i = line.index("(")
+            else:
+                i = line.index(":")
+
+            function_names.append(line[line.index("s")+2:i].strip())
+            inside_func = True
+            continue
+
+        if line[0:3] == "def" or line[0:9] == "async def":
+            # Inside a function
+            function_names.append(line[line.index("f")+1:line.index("(")].strip())
+            inside_func = True
+            continue
+
+        if inside_func and (line[0] not in [" ", "\n", "\t"]):
+            # Exited function (is not starting with space or new line)
+            inside_func = False
+        
+        if not name_main:
+             # Check if they have if name == main condition
+            if line[0:2] == "if" and SequenceMatcher(None, line, main_line).ratio() > 0.8:
+                name_main = True
+
+        if not inside_func:
+            if name_main:
+                # Anything inside name main is safe
+                continue
+
+            for function in function_names:
+                if function in line and "(" in line and ")" in line:
+                    # Function call outside function
+                    not_safe_lines.append((index, line.replace("\n", "")))
+                
+                if "=" in line and function in line:
+                    # Check for reassignment
+                    function_names.append(line[0:line.index("=")].strip())
+                    break
+
+    return not_safe_lines, name_main
 
 def prefs(func: callable):
     """This decorator will pass the result of the given func to PREFS.convert_to_prefs, 
