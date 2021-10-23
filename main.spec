@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 a = Analysis(['main.py'],
              pathex=['./pyapireference'], 
              binaries=[],
-             datas=[('./assets/img/icon.ico', './img'), ('./pyapireference/ui/theme.prefs', './pyapireference/ui')], # For the icon in Windows
+             datas=[('assets/img/icon.ico', 'img'), ('pyapireference/ui/theme.prefs', 'pyapireference/ui')], 
              hiddenimports=hiddenimports,
              hookspath=[],
              hooksconfig={},
@@ -19,6 +19,7 @@ a = Analysis(['main.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 
@@ -40,5 +41,5 @@ exe = EXE(pyz,
           target_arch=None,
           codesign_identity=None,
           entitlements_file=None, 
-          icon='./assets/img/icon.ico' # Windows
+          icon='assets/img/icon.ico' # Windows
         )

@@ -288,7 +288,7 @@ class SettingsDialog(QDialog):
 
 			color_button.clicked.connect(lambda ignore: get_type_color(color_button, display_name, self.prefs.file["colors"][display_name][0], self.prefs.file["colors"][display_name][1]))
 
-			edit_icon = QIcon(f":/Images/edit_icon_{self.prefs.file['theme']}.png")
+			edit_icon = QIcon(f":/img/edit_icon_{self.prefs.file['theme']}.png")
 			edit_icon_size = min(edit_icon.availableSizes())
 
 			edit_button = QPushButton(icon=edit_icon)
@@ -323,18 +323,13 @@ class SettingsDialog(QDialog):
 			return add_btn
 
 		def dark_theme_toggled(state):
-			nonlocal first_time
-			if first_time:
-				first_time = False
-				return
-
 			self.prefs.write_prefs("cache/theme", 'dark' if bool(state) else 'light')
 
 		theme_tab = QWidget()
 		theme_tab.setLayout(FormLayout(stretch=False))
-		first_time = True
 
 		dark_theme_toggle = AnimatedToggle()
+		
 		if self.prefs.file["theme"] == "light":
 			state = 0
 		elif self.prefs.file["theme"] == "dark":

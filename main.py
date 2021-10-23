@@ -48,7 +48,6 @@ from pyapireference.ui.markdown_previewer import MarkdownPreviewer
 from pyapireference.ui.about_dialog import AboutDialog
 from pyapireference.ui.markdown_text_edit import MarkdownTextEdit
 from pyapireference.ui import resources # Qt resources GUI/resources.qrc
-from pyapireference.ui import theme_resource
 
 from pyapireference.inspect_object import inspect_object, check_file
 from pyapireference.extra import (
@@ -62,8 +61,9 @@ from pyapireference.extra import (
 from pyapireference.tree_to_markdown import convert_tree_to_markdown
 
 
-THEME = PREFS.read_prefs_file(":/theme.prefs")
+THEME = PREFS.read_prefs_file("pyapireference/ui/theme.prefs")
 VERSION = "v0.1.50"
+
 
 class TreeExportTypes(Enum):
 	PREFS = ("PREFS", "prefs")
@@ -226,7 +226,6 @@ class MainWindow(QMainWindow):
 
 		self.main_widget = MainWidget(parent=self)
 		
-		#self.set_stylesheet()
 		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme))
 
 		self.setCentralWidget(self.main_widget)
@@ -241,9 +240,12 @@ class MainWindow(QMainWindow):
 		
 	def open_settings_dialog(self):
 		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
+		preivous_theme = self.main_widget.current_theme
+		
 		answer = settings_dialog.exec_()
-
-		self.setStyleSheet(qdarktheme.load_stylesheet(self.main_widget.current_theme)) # Update theme
+		
+		if self.main_widget.current_theme != preivous_theme:
+			self.reset_app()
 
 	def reset_app(self):
 		self.close() # Close

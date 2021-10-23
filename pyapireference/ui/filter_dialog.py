@@ -10,6 +10,7 @@ else:
 	from pyapireference.ui.scrollarea import ScrollArea
 	from pyapireference.ui.warning_dialog import WarningDialog
 	from pyapireference.extra import get_text_size, remove_key_from_dict, interpret_type
+	# from pyapireference.ui import resources # Qt resources GUI/resources.qrc
 
 class FilterDialog(QDialog):
 	def __init__(self, prefs, title="Filter", parent=None):
@@ -134,7 +135,7 @@ class FilterDialog(QDialog):
 			filter_checkbox.setChecked(filter_checked)
 			filter_checkbox.stateChanged.connect(lambda state, filter_name=filter_name, filter_type=filter_type, filter_checkbox=filter_checkbox: self.prefs.write_prefs(f"filter/{filter_name}", (filter_type, bool(filter_checkbox.checkState()))))
 
-			edit_icon = QIcon(f":/Images/edit_icon_{self.prefs.file['theme']}.png")
+			edit_icon = QIcon(f":/img/edit_icon_{self.prefs.file['theme']}.png")
 			edit_icon_size = min(edit_icon.availableSizes())
 
 			filter_edit_button = QPushButton(icon=edit_icon)
