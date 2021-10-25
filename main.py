@@ -357,7 +357,8 @@ class MainWidget(QWidget):
 			"state": {
 				"pos": (-100, -100), 
 				"size": (0, 0), 
-				"is_maximized": False, 
+				"is_maximized": False,
+				"preview_saved": False, 
 			}, 
 			"settings": {
 				"inspect_module": {
@@ -374,7 +375,7 @@ class MainWidget(QWidget):
 					}, 
 					"maximize_window": {
 						"tooltip": "Maximize window when previewing markdown", 
-						"value": True, 
+						"value": True,
 					}
 				}, 
 			}, 
@@ -484,12 +485,19 @@ class MainWidget(QWidget):
 		if len(self.widgets["module_tabs"]) > 0:
 			self.widgets["module_tabs"][-1].setParent(None)
 			self.widgets["module_tabs"] = []
+		
+		if len(self.widgets["markdown_previewer"]) > 0:
+			# Stop markdown when unloading
+			self.widgets["markdown_previewer"].pop()
 
 		self.prefs.write_prefs("current_markdown", "")
 		self.prefs.write_prefs("current_module_path", "")
 		self.prefs.write_prefs("current_module", {})
 
 	def load_module_file(self):
+		if len(self.widgets["markdown_previewer"]) > 0:
+			self.widgets["markdown_previewer"].pop()
+
 		markdown_warning = True
 
 		if self.prefs.file['current_markdown'] != "": # If the markdown is not emtpy
@@ -527,29 +535,28 @@ class MainWidget(QWidget):
 			self.create_inspect_module_thread(self.prefs.file["current_module_path"])		
 
 	def create_inspect_module_thread(self, module):
-		# # Check if file is safe 
-		# not_safe_lines, name_main = check_file(module)
-		# lines = ""
+		# Check if file is safe 
+		not_safe_lines, name_main = check_file(module)
+		lines = ""
 
-		# # If name main is present, file is safe. Otherwise enter here.
-		# if not name_main:
-		# 	if len(not_safe_lines) > 0:
-		# 		for index, line in not_safe_lines:
-		# 			lines += f"Line: {index}, {line}\n"
+		# If name main is present, file is safe. Otherwise enter here.
+		if not name_main:
+			if len(not_safe_lines) > 0:
+				for index, line in not_safe_lines:
+					lines += f"Line: {index}, {line}\n"
 				
-		# 		message = "This module contains global calls which can be unsafe when inspecting.\n\n" + f"\nUnsafe Lines: \n{lines}\n\n" + "Consider moving these inside a if __name__ == '__main__' condition."
-		# 		warning = WarningDialog(
-		# 				"File Not Safe", 
-		# 				message, 
-		# 				no_btn_text="Cancel", 
-		# 				yes_btn_text="Continue", 
-		# 				parent=self,
-		# 				safe_dialog=(True, THEME[self.current_theme]["link_color"])).exec_()
+				message = "This module contains global calls which can be unsafe when inspecting.\n\n" + f"\nUnsafe Lines: \n{lines}\n\n" + "Consider moving these inside a if __name__ == '__main__' condition."
+				warning = WarningDialog(
+						"File Not Safe", 
+						message, 
+						no_btn_text="Cancel", 
+						yes_btn_text="Continue", 
+						parent=self,
+						safe_dialog=(True, THEME[self.current_theme]["link_color"])).exec_()
 				
-		# 		if not warning:
-		# 			return
+				if not warning:
+					return
 				
-		# Disable Load File button
 		self.widgets["load_file_button"][-1].setEnabled(False)
 
 		self.save_tree_at_end = False
@@ -701,6 +708,11 @@ class MainWidget(QWidget):
 			self.widgets["markdown_text_edit"].append(text_edit)
 
 			markdown_edit_section.addWidget(text_edit)
+
+			if len(self.widgets["markdown_previewer"]) > 0:
+				self.widgets["markdown_previewer"].pop()
+				preview_markdown()
+
 			markdown_tab.layout().addWidget(markdown_edit_section, 1, 0)
 			markdown_tab.layout().setRowStretch(0, 0)
 
@@ -735,6 +747,7 @@ class MainWidget(QWidget):
 
 		def preview_markdown():
 			def stop_previewing():
+				self.prefs.write_prefs("state/preview_saved", False)
 				markdown_previewer = self.widgets["markdown_previewer"][-1]
 				
 				if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
@@ -787,7 +800,10 @@ class MainWidget(QWidget):
 			markdown_edit_section.setSizes([equal_width - extra_width, equal_width + extra_width])
 
 			if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
-				self.parent.save_geometry()
+				if not self.prefs.file["state"]["preview_saved"]:
+					self.parent.save_geometry()
+					self.prefs.write_prefs("state/preview_saved", True)
+			
 				self.parent.showMaximized()
 
 			self.widgets["markdown_previewer"].append(markdown_previewer)
@@ -930,6 +946,9 @@ class MainWidget(QWidget):
 		if not answer: # if answer == 0
 			return
 
+		if self.prefs.file["current_module_path"] == "":
+			return
+			
 		self.create_inspect_module_thread(self.prefs.file["current_module_path"])
 
 	def create_tree_tab(self):

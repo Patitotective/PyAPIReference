@@ -194,8 +194,7 @@ class FilterDialog(QDialog):
 	def create_widgets(self):
 		def apply():
 			if self.prefs.file["current_module_path"] == "":
-				QMessageBox.warning(self, "No module to filter", "You must load a module first to apply these changes.")
-				return
+				QMessageBox.warning(self, "No module to filter", "These filters will be applied when module is loaded.")
 
 			self.done(1)
 
