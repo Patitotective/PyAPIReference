@@ -793,7 +793,7 @@ class MainWidget(QWidget):
 			nonlocal markdown_edit_section
 
 			if self.prefs.file['current_markdown'] == "":
-				QMessageBox.critical(self, "No markdown to preview", "You must create a markdown first to preview.")
+				QMessageBox.critical(self, "No Markdown to preview", "You must generate the API Reference first to preview it.")
 				return
 
 			if len(self.widgets["markdown_previewer"]) > 0:
