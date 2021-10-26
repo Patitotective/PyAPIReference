@@ -29,7 +29,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,  
           [],
-          name='PyAPIReference' if platform.system() != 'Linux' else 'PyAPIReference.bin',
+          name='PyAPIReference', # if platform.system() != 'Linux' else 'PyAPIReference.bin',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
@@ -41,5 +41,5 @@ exe = EXE(pyz,
           target_arch=None,
           codesign_identity=None,
           entitlements_file=None, 
-          icon='assets/img/icon.ico' # Windows
+          icon='img/icon.ico' # Windows
         )

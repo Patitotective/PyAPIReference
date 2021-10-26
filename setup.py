@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-from main import VERSION
 
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -22,7 +21,7 @@ github_url = "https://github.com/Patitotective/PyAPIReference"
 
 setup(
   name="PyAPIReference",
-  version=VERSION,
+  version="0.1.50",
   author="Cristobal Riaga",
   author_email="cristobalriaga@gmail.com",
   maintainer="Cristobal Riaga", 

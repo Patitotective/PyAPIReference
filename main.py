@@ -319,6 +319,7 @@ class MainWidget(QWidget):
 			"module_tabs": [], 
 			"load_file_button": [], 
 			"retry_button": [], 
+			"loading_label": [], 
 			"markdown_text_edit": [], 
 			"markdown_previewer": [], 
 		}
@@ -426,6 +427,12 @@ class MainWidget(QWidget):
 		loading_label = QLabel("Loading...")
 		loading_label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 		loading_label.setStyleSheet(f"font-size: 20px; font-family: {THEME['tree_font_family']};")
+
+		if len(self.widgets["loading_label"]) > 0:
+			self.widgets["loading_label"][-1].setParent(None)
+			self.widgets["loading_label"].pop()
+
+		self.widgets["loading_label"].append(loading_label)
 
 		return loading_label
 
@@ -573,6 +580,7 @@ class MainWidget(QWidget):
 		# Delete thread and inspect objects
 		self.worker.finished.connect(self.inspect_object_worker_finished)
 		self.worker.finished.connect(lambda: loading_label.setParent(None))
+		self.worker.expection_found.connect(lambda: loading_label.setParent(None))		
 		self.worker.expection_found.connect(self.inspect_object_worker_exception)
 
 		self.timer = QTimer()
@@ -588,18 +596,24 @@ class MainWidget(QWidget):
 		self.save_tree_at_end = False
 		self.prefs.write_prefs("current_module", {})
 
-		tree_scrollarea = self.widgets["module_tabs"][-1].widget(0)
-		change_widget_stylesheet(tree_scrollarea, "font-size", "15px")
-		
-		tree_scrollarea.setOpenExternalLinks(True)
-		tree_scrollarea.setTextFormat(Qt.TextFormat.RichText)		
-		tree_scrollarea.setText(self.worker.exception_message)
+		exception_label = QLabel(self.worker.exception_message)
+		exception_label.setOpenExternalLinks(True)
+		exception_label.setTextFormat(Qt.TextFormat.RichText)		
+		exception_label.setStyleSheet(f"font-size: 15px; font-family: {THEME['tree_font_family']};")
 
 		retry_button = QPushButton("Retry")
+		retry_button.clicked.connect(lambda: self.widgets["loading_label"][-1].setParent(None) if len(self.widgets["loading_label"]) > 0 else None)
 		retry_button.clicked.connect(lambda: self.create_inspect_module_thread(self.prefs.file["current_module_path"]))
 
-		self.widgets["retry_button"].append(retry_button)
+		if len(self.widgets["loading_label"]) > 0:
+			self.widgets["loading_label"][-1].setParent(None)
+			self.widgets["loading_label"].pop()
 
+		self.widgets["loading_label"].append(exception_label)
+
+		self.widgets["retry_button"].append(retry_button)
+	
+		self.layout().addWidget(exception_label, 2, 0)		
 		self.layout().addWidget(retry_button, 3, 0)
 		
 		self.layout().setRowStretch(1, 0)

@@ -1,29 +1,24 @@
 name: pyapireference
-version: git
-summary: PyAPIReference
+title: PyAPIReference
+contact: cristobalriaga@gmail.com
+issues: https://github.com/Patitotective/PyAPIReference/issues
+source-code: https://github.com/Patitotective/PyAPIReference
+website: https://patitotective.github.io/PyAPIReference/
+license: MIT
+version: '0.1.50'
+summary: Python modules API Reference generator
 description: |
-  PyAPIReference is a GUI application to inspect Python modules, 
-  generate API references in markdown, edit and preview them.
-base: core18
+  PyAPIReferences is a GUI application made with PyQT5 to generate API References for Python modules. 
+  Once after downloading the PyAPIReferences, open it and load the Python module where you want to obtain the API Reference. 
+  It will create a tree with the Python module members (classes, functions, etc), in that tree you can check and uncheck the members you want to include in the API Reference. 
+  Switch to API Reference tab and click Generate API Reference, it will geneate a Markdown text that you can edit and live preview. 
+  When you finish editing it you can export it as HTML, Markdown or ReStructured Text.
+base: core20
 confinement: devmode
 parts:
-  test-offlineimap:
+  pyapireference:
     plugin: python
-    python-version: python3.9
     source: .
-    # stage-packages:
-    #   - PyQt5
-    #   - PyQt5
-    #   - PREFS
-    #   - qtwidgets
-    #   - multipledispatch
-    #   - pyqtdarktheme
-    #   - markdown
-    #   - m2r2
-    #   - casestyle
-    #   - commonmark
-    #   - PyQtWebEngine
-    #   - pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
 apps:
   pyapireference:
-    command: builds/PyAPIReference.bin
+    command: bin/PyAPIReference
