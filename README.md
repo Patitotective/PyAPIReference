@@ -1,5 +1,5 @@
 # PyAPIReference
-[![PyAPIReference logo](https://github.com/Patitotective/PyAPIReference/blob/main/Assets/logo.png?raw=true)](https://github.com/Patitotective/PyAPIReference)  
+[![PyAPIReference logo](https://github.com/Patitotective/PyAPIReference/blob/main/assets/img/logo.png?raw=true)](https://github.com/Patitotective/PyAPIReference)  
 ***
 [![Stars](https://img.shields.io/github/stars/patitotective/pyapireference)](https://github.com/Patitotective/PyAPIReference/stargazers)
 [![Watchers](https://img.shields.io/github/watchers/Patitotective/PyAPIReference)](https://github.com/Patitotective/PyAPIReference/watchers)
@@ -34,8 +34,8 @@ _Join our [Discord server](https://discord.gg/as85Q4GnR6) to keep updated._
 Feel free to contribute, join our [Discord server](https://discord.gg/as85Q4GnR6) for more information.
 
 ## Screenshots
-[![Example module tree](https://github.com/Patitotective/PyAPIReference/blob/main/screnshots/tree.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
-[![Markdown editor](https://github.com/Patitotective/PyAPIReference/blob/main/screnshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Example module tree](https://github.com/Patitotective/PyAPIReference/blob/main/screenshots/tree.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
+[![Markdown editor](https://github.com/Patitotective/PyAPIReference/blob/main/screenshots/markdown.png?raw=true)](https://github.com/Patitotective/PyAPIReference)
 
 ## Test it from source code
 1. First you will need to clone this repository by pasting this command into your terminal:
