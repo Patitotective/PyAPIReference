@@ -86,7 +86,7 @@ def convert_tree_to_markdown(tree: dict):
 				parameter_text = parameters_to_markdown(member_props["parameters"])
 				markdown_text += parameter_text.strip() + "\n\n" if parameter_text is not None else "" 
 
-			elif member_type == "class":
+			elif member_type == "class" or member_type == "wrappertype":
 				class_text = class_to_markdown(member_name, member_props)					
 				markdown_text += class_text.strip() + "\n\n" if class_text is not None and not class_text == "" else "" 
 

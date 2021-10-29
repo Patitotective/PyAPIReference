@@ -60,7 +60,7 @@ class SettingsDialog(QDialog):
 		def cancel_changes():
 			if self.prefs.file["cache"] != {}:
 				warning = WarningDialog(
-					"Discard changes", 
+					"Discard Changes", 
 					"Do you want to discard your changes?", 
 					no_btn_text="Cancel", 
 					parent=self).exec_()
@@ -83,7 +83,7 @@ class SettingsDialog(QDialog):
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
 		apply_button.clicked.connect(apply_changes)
 
-		cancel_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogCancelButton), text="cancel")
+		cancel_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogCancelButton), text="Cancel")
 		cancel_button.clicked.connect(cancel_changes)
 
 		buttons_widget.layout().addWidget(apply_button)
@@ -180,11 +180,11 @@ class SettingsDialog(QDialog):
 		def add_color_pattern_item(edit=False, default_display_name: str="", default_type: str="", default_type_color: str=None):
 			def add_btn_clicked():
 				if display_name_input.text().strip() == "":
-					QMessageBox.critical(self, "Display name emtpy", "You cannot have an item with an emtpy display name.")
+					QMessageBox.critical(self, "Empty Display Name", "You cannot have an item with an emtpy display name.")
 					return
 
 				if type_input.text().strip() == "":
-					QMessageBox.critical(self, "Type emtpy", "You cannot have an item with an emtpy type.")
+					QMessageBox.critical(self, "Empty Type", "You cannot have an item with an emtpy type.")
 					return
 					
 				try:
@@ -192,8 +192,8 @@ class SettingsDialog(QDialog):
 				except AttributeError:
 					QMessageBox.critical(
 						self, 
-						"Not valid type", 
-						"Given type is not a valid type, make sure there is are no typos and the type really exists."
+						"Invalid Type", 
+						"Given type is invalid, make sure there are no typos and the type exists."
 					)
 					return
 
@@ -215,12 +215,12 @@ class SettingsDialog(QDialog):
 			inputs_widget.setLayout(QHBoxLayout())
 
 			display_name_input = QLineEdit(default_display_name)
-			display_name_input.setPlaceholderText("Display name")
-			display_name_input.setToolTip("Name to display")
+			display_name_input.setPlaceholderText("Display Name")
+			display_name_input.setToolTip("Name to Display")
 			
 			type_input = QLineEdit(default_type)
 			type_input.setPlaceholderText("Type")
-			type_input.setToolTip("Python type (types library available)")
+			type_input.setToolTip("Python Type (types library available)")
 				
 			color_button = QPushButton(default_type_color)
 			color_button.setStyleSheet(f"color: {default_type_color};")
@@ -343,7 +343,7 @@ class SettingsDialog(QDialog):
 		color_pattern_widget.setLayout(QVBoxLayout())
 		color_pattern_widget.layout().setSpacing(0)
 
-		color_pattern_title = QLabel("Color pattern<hr>")
+		color_pattern_title = QLabel("Color Pattern<hr>")
 		color_pattern_title.setToolTip("Set the color of each type")
 		color_pattern_title.setStyleSheet("margin-bottom: 0px;")
 
@@ -359,7 +359,7 @@ class SettingsDialog(QDialog):
 		color_pattern_widget.layout().addWidget(create_add_button())
 		color_pattern_widget.layout().addStretch(2)
 
-		theme_tab.layout().addRow("Dark theme: ", dark_theme_toggle)
+		theme_tab.layout().addRow("Dark Theme: ", dark_theme_toggle)
 		theme_tab.layout().addRow(color_pattern_title)
 		theme_tab.layout().addRow(ScrollArea(color_pattern_widget))
 

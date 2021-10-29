@@ -41,8 +41,8 @@ class FilterDialog(QDialog):
 				except AttributeError:
 					QMessageBox.critical(
 						self, 
-						"Not valid type", 
-						"Given type is not a valid type, make sure there is are no typos and the type really exists."
+						"Invalid Type", 
+						"Given type is invalid, make sure there are no typos and the type exists."
 					)
 					return
 
@@ -50,7 +50,7 @@ class FilterDialog(QDialog):
 						
 			dialog = QDialog(self)
 
-			dialog.setWindowTitle("Add filter" if not edit else "Edit filter")
+			dialog.setWindowTitle("Add Filter" if not edit else "Edit Filter")
 			dialog.setLayout(QVBoxLayout())
 
 			# Inputs
@@ -58,12 +58,12 @@ class FilterDialog(QDialog):
 			inputs_widget.setLayout(QHBoxLayout())
 
 			display_name_input = QLineEdit(display_name)
-			display_name_input.setPlaceholderText("Display name")
-			display_name_input.setToolTip("Name to display")
+			display_name_input.setPlaceholderText("Display Name")
+			display_name_input.setToolTip("Name to Display")
 			
 			type_input = QLineEdit(type_)
 			type_input.setPlaceholderText("Type")
-			type_input.setToolTip("Python type (types library available)")
+			type_input.setToolTip("Python Type (types library available)")
 
 			inputs_widget.layout().addWidget(display_name_input)
 			inputs_widget.layout().addWidget(type_input)
@@ -194,7 +194,7 @@ class FilterDialog(QDialog):
 	def create_widgets(self):
 		def apply():
 			if self.prefs.file["current_module_path"] == "":
-				QMessageBox.warning(self, "No module to filter", "These filters will be applied when module is loaded.")
+				QMessageBox.warning(self, "No Module to Filter", "These filters will be applied when module is loaded.")
 
 			self.done(1)
 

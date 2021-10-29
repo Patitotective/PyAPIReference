@@ -40,7 +40,7 @@ class MarkdownPreviewer(QWebEngineView):
     def scroll_pos(self):
         return self.page().scrollPosition()
 
-    def set_scroll_pos(self, x:  int, y: int):
+    def set_scroll_pos(self, x: int=0, y: int=0):
         self.page().runJavaScript(f"window.scrollTo({x}, {y});")
 
     def open_context_menu(self):
@@ -65,11 +65,16 @@ class MarkdownPreviewer(QWebEngineView):
         return super().eventFilter(obj, event)      
 
     def synchronize_scrollbars(self):
-        def scrollbar_changed(value):
+        def scrollbar_changed_x(value):
             if not self.mouse_hover and self.prefs.file["settings"]["preview_markdown"]["synchronize_scrollbars"]["value"]:
-                self.set_scroll_pos(self.scroll_pos.y(), value)
+                self.set_scroll_pos(x=value*2)
+        
+        def scrollbar_changed_y(value):
+            if not self.mouse_hover and self.prefs.file["settings"]["preview_markdown"]["synchronize_scrollbars"]["value"]:
+                self.set_scroll_pos(y=value*2)
 
-        self.scroll_link.valueChanged.connect(scrollbar_changed)
+        self.scroll_link[0].valueChanged.connect(scrollbar_changed_x)
+        self.scroll_link[1].valueChanged.connect(scrollbar_changed_y)
 
     def update_markdown(self, md_text):
         self.setHtml(self.markdown_to_html(md_text))

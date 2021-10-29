@@ -182,20 +182,20 @@ class MainWindow(QMainWindow):
 		}
 
 		self.FILE_MENU = {
-			"Load module": {
+			"Load Module": {
 				"callback": lambda: self.main_widget.load_module_file() if self.main_widget.widgets["load_file_button"][-1].isEnabled() else QMessageBox.critical(self, "Cannot load file", "There is a file already loading, wait for it to load another."), 
 				"shortcut": "Ctrl+O", 
 			}, 
-			"Export tree>": self.EXPORT_TREE_MENU, 
+			"Export Tree>": self.EXPORT_TREE_MENU, 
 			"Export API Reference>": self.EXPORT_API_MENU, 
 			"Close": {
 				"callback": self.close, 
-				"shortcut": "Ctrl+Q", 
+				"shortcut": "Ctrl+W", 
 			}
 		}
 
 		self.EDIT_MENU = {
-			"&Filter tree": {
+			"&Filter Tree": {
 				"callback": lambda: self.main_widget.create_filter_dialog(), 
 				"shortcut": "Ctrl+F", 
 			}, 
@@ -243,7 +243,7 @@ class MainWindow(QMainWindow):
 		preivous_theme = self.main_widget.current_theme
 		
 		answer = settings_dialog.exec_()
-		
+
 		if self.main_widget.current_theme != preivous_theme:
 			self.reset_app()
 
@@ -388,10 +388,10 @@ class MainWidget(QWidget):
 				"Strings": ("str", "#5B82D7"), 
 			}, 
 			"filter": {
+				"Include Imported Members": ("#include_imported_members", False),
 				"Modules": ('types.ModuleType', False), 
 				"Classes": ('type', True), 
 				"Functions": ('types.FunctionType', True), 
-				"Include imported members": ("#include_imported_members", False), 
 			}
 		}
 
@@ -406,10 +406,10 @@ class MainWidget(QWidget):
 		logo.setStyleSheet("margin-bottom: 10px;")
 		logo.setAlignment(Qt.AlignCenter)
 
-		load_file_button = ButtonWithExtraOptions("Load module", parent=self, 
+		load_file_button = ButtonWithExtraOptions("Load Module", parent=self, 
 			actions=[
-				("Reload module", self.load_last_module), 
-				("Unload module", self.unload_file), 
+				("Reload Module", self.load_last_module), 
+				("Unload Module", self.unload_file), 
 				("Filter", self.create_filter_dialog)
 			]
 		)
@@ -475,13 +475,13 @@ class MainWidget(QWidget):
 
 	def unload_file(self):
 		if self.prefs.file["current_module_path"] == "":
-			QMessageBox.warning(self, "No module to unload", "You must load a module first to unload it.")
+			QMessageBox.warning(self, "No Module to Unload", "You must load a module first to unload it.")
 			return
 
 		if self.prefs.file['current_markdown'] != "":
 			warning = WarningDialog(
 				"Lose Markdown", 
-				"If you unload this module, this module's Markdown will get lost.\nExport it if you want to preserve it.", 
+				"If you unload this module, this module's Markdown will be lost.\nExport it to preserve.", 
 				no_btn_text="Cancel", 
 				yes_btn_text="Continue", 
 				parent=self).exec_()
@@ -510,7 +510,7 @@ class MainWidget(QWidget):
 		if self.prefs.file['current_markdown'] != "": # If the markdown is not emtpy
 			markdown_warning = WarningDialog(
 				"Lose Markdown", 
-				"If you load another file this file's Markdown will get lost.\nExport it if you want to preserve it.", 
+				"If you load another module this module's Markdown will be lost.\nExport it to preserve.", 
 				no_btn_text="Cancel", 
 				yes_btn_text="Continue", 
 				parent=self).exec_()
@@ -532,7 +532,7 @@ class MainWidget(QWidget):
 
 	def load_last_module(self, warning: bool=True):
 		if self.prefs.file["current_module_path"] == "" and warning:
-			QMessageBox.warning(self, "No module to reload", "You must load a module first to reload it.")
+			QMessageBox.warning(self, "No Module to Reload", "You must load a module first to reload it.")
 			return
 
 		if not self.prefs.file["current_module_path"] == "":
@@ -764,16 +764,17 @@ class MainWidget(QWidget):
 				self.prefs.write_prefs("state/preview_saved", False)
 				markdown_previewer = self.widgets["markdown_previewer"][-1]
 				
-				if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
-					self.save_geometry_at_end = True	
-					self.parent.restore_geometry()
+				if self.parent.isMaximized():
+					if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
+						self.save_geometry_at_end = True	
+						self.parent.restore_geometry()
 	
 				markdown_previewer.setParent(None)
 				self.widgets["markdown_previewer"].pop()
 
 			def preview_already_live():
 				answer = WarningDialog(
-					"Markdown preview already open", 
+					"Markdown Preview Live", 
 					"You are already previewing the Markdown.", 
 					yes_btn_text="OK", 
 					yes_btn_callback=2, 
@@ -802,7 +803,7 @@ class MainWidget(QWidget):
 
 			self.save_geometry_at_end = False
 
-			markdown_previewer = MarkdownPreviewer(self.prefs, self.prefs.file['current_markdown'], scroll_link=self.widgets["markdown_text_edit"][-1].verticalScrollBar(), parent=self)			
+			markdown_previewer = MarkdownPreviewer(self.prefs, self.prefs.file['current_markdown'], scroll_link=(self.widgets["markdown_text_edit"][-1].horizontalScrollBar(), self.widgets["markdown_text_edit"][-1].verticalScrollBar()), parent=self)			
 			markdown_previewer.page().scrollPositionChanged.connect(markdown_previewer_scrollbar_changed)
 			markdown_previewer.stop.connect(stop_previewing)
 
@@ -1143,7 +1144,9 @@ class MainWidget(QWidget):
 	def export_tree(self, export_type: TreeExportTypes) -> None:
 		"""Export the object tree as a file"""
 
-		if not self.module_content:
+		module_content = self.prefs.file["current_module_path"]
+
+		if module_content == "":
 			# If user has not loaded a file, display export error
 			error_message = QMessageBox.warning(self, f"Export as {export_type.name}", "Nothing to export, load a module first.")
 			return
@@ -1166,7 +1169,7 @@ class MainWidget(QWidget):
 	
 	def export_markdown(self, export_type: MarkdownExportTypes):
 		if len(self.widgets["markdown_text_edit"]) < 1:
-			QMessageBox.critical(self, "Cannot export markdown", "You haven't create any markdown to export.")
+			QMessageBox.critical(self, "Cannot Export Markdown", "No Markdown to export.")
 			return
 
 		markdown_text = self.widgets["markdown_text_edit"][-1].toPlainText()
