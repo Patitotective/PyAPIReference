@@ -17,6 +17,13 @@ class FilterDialog(QDialog):
 		super().__init__(parent=parent)
 
 		self.prefs = prefs
+		
+		self.default_filters = {
+			"Include Imported Members": ("#include_imported_members", False),
+			"Modules": ('types.ModuleType', False), 
+			"Classes": ('type', True), 
+			"Functions": ('types.FunctionType', True), 
+		}
 
 		self.setWindowTitle(title)
 
@@ -29,11 +36,11 @@ class FilterDialog(QDialog):
 		def add_filter_item_dialog(edit=False, display_name: str="", type_: str=""):
 			def add_btn_clicked():
 				if display_name_input.text().strip() == "":
-					QMessageBox.critical(self, "Display name emtpy", "You cannot have an item with an emtpy display name.")
+					QMessageBox.critical(self, "Display Name Emtpy", "You cannot have an item with an emtpy display name.")
 					return
 
 				if type_input.text().strip() == "":
-					QMessageBox.critical(self, "Type emtpy", "You cannot have an item with an emtpy type.")
+					QMessageBox.critical(self, "Type Emtpy", "You cannot have an item with an emtpy type.")
 					return
 					
 				try:
@@ -91,13 +98,19 @@ class FilterDialog(QDialog):
 		
 		def create_add_button():
 			def add_button_clicked():
+				filters = [i[0] for i in self.prefs.file["filter"].values()]
+				
 				answer, display_name, type_ = add_filter_item_dialog() # if add: 1; else: 0
 				if not answer: # if answer == 0
 					return
 
+				if type_ in filters:
+					error_message = QMessageBox.warning(self, f"Filter Already Exists", "This filter is already added.")
+					return
+
 				self.prefs.write_prefs(f"filter/{display_name}", (type_, True))
 
-				filter_widget.layout().insertWidget(filter_widget.layout().count() - (constant_filter_count + 2), create_filter_item(display_name, type_, True))
+				filter_widget.layout().insertWidget(filter_widget.layout().count() - (constant_filter_count + 1), create_filter_item(display_name, type_, True))
 
 			add_btn = QPushButton("+")
 			add_btn.clicked.connect(add_button_clicked)
@@ -191,10 +204,24 @@ class FilterDialog(QDialog):
 
 		return ScrollArea(filter_widget)
 
+	def reset(self):
+		warning = WarningDialog(
+		"Reset Filters", 
+		"All filters will be reset. Would you like to continue?", 
+		no_btn_text="Cancel", 
+		yes_btn_text="Continue", 
+		parent=self).exec_()
+	
+		if not warning:
+			return
+
+		self.prefs.write_prefs("filter", self.default_filters)
+		self.done(0)
+		
 	def create_widgets(self):
 		def apply():
 			if self.prefs.file["current_module_path"] == "":
-				QMessageBox.warning(self, "No Module to Filter", "These filters will be applied when module is loaded.")
+				QMessageBox.warning(self, "No Module to Filter", "Filters will be applied when module is loaded.")
 
 			self.done(1)
 
@@ -203,7 +230,11 @@ class FilterDialog(QDialog):
 		apply_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogApplyButton), text="Apply")
 		apply_button.clicked.connect(apply)
 
+		reset_button = QPushButton(text="Reset Filters")
+		reset_button.clicked.connect(lambda: self.reset())
+
 		self.layout().addWidget(filter_widget)
+		self.layout().addWidget(reset_button)
 		self.layout().addWidget(apply_button)
 
 	@classmethod

@@ -224,8 +224,10 @@ def get_object_properties(object_: object, exclude_types: tuple=(types.ModuleTyp
 
 	if object_type == "type":
 		object_type = "class"
-
-	result = {"type": object_type, "docstring": str(object_.__doc__) if object_.__doc__ is not None else object_.__doc__}
+	
+	datatypes = {"str", "int", "float", "complex", "list", "tuple", "range", "dict", "set", "frozenset", "bool"}
+	
+	result = {"type": object_type, "docstring": str(object_.__doc__) if object_type not in datatypes else None}
 		
 	if inspect.isclass(object_) or inspect.ismodule(object_):
 		

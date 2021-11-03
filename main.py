@@ -241,8 +241,16 @@ class MainWindow(QMainWindow):
 	def open_settings_dialog(self):
 		settings_dialog = SettingsDialog(self.main_widget.prefs, parent=self)
 		preivous_theme = self.main_widget.current_theme
-		
+		previous_colors = self.main_widget.prefs.file["colors"]
+
 		answer = settings_dialog.exec_()
+		
+		if not answer:
+			return
+			
+		if self.main_widget.prefs.file["colors"] != previous_colors:
+			if self.main_widget.prefs.file["current_module_path"]:	
+				self.main_widget.load_last_module(warning=True)
 
 		if self.main_widget.current_theme != preivous_theme:
 			self.reset_app()
@@ -732,7 +740,7 @@ class MainWidget(QWidget):
 
 			return text_edit
 
-		def convert_to_markdown_button_clicked(ignore=None, text: str=None):
+		def convert_to_markdown_button_clicked(ignore=None, text: str=None, load_clicked=True):
 			nonlocal convert_to_markdown_clicked
 
 			if not convert_to_markdown_clicked:
@@ -746,7 +754,10 @@ class MainWidget(QWidget):
 			if not warning:
 				return
 
-			create_markdown_text_edit()
+			if load_clicked:
+				create_markdown_text_edit(text)
+			else:
+				create_markdown_text_edit()
 
 		def load_markdown_file():
 			path = self.load_file("Markdown files (*.md)", directory="") # If directory not empty, filter doesn't work
@@ -757,7 +768,7 @@ class MainWidget(QWidget):
 			with open(path, "r") as file:
 				content = file.read()
 
-			convert_to_markdown_button_clicked(text=content)
+			convert_to_markdown_button_clicked(text=content, load_clicked=True)
 
 		def preview_markdown():
 			def stop_previewing():

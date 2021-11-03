@@ -28,6 +28,34 @@ class SettingsDialog(QDialog):
 
 		self.prefs = prefs
 		self.widgets = {"dark_theme_toggle": []}
+		self.colors_changes = False
+
+		self.default_settings = {
+			"inspect_module": {
+				"recursion_limit": {
+					"tooltip": "Recursion limit when inspecting module (when large modules it should be bigger).", 
+					"value": 10 ** 6, 
+					"min_val": 1500, 
+				}, 
+			}, 
+			"preview_markdown": {
+				"synchronize_scrollbars": {
+					"tooltip": "When previewing markdown synchronize editor's and preview's scrollbar.", 
+					"value": True, 
+				}, 
+				"maximize_window": {
+					"tooltip": "Maximize window when previewing markdown", 
+					"value": True,
+				}
+			}, 
+		}
+		
+		self.default_colors = {
+			"Modules": ("types.ModuleType", "#4e9a06"),			
+			"Classes": ("type", "#b140bf"),
+			"Functions": ("types.FunctionType", "#ce5c00"),
+			"Strings": ("str", "#5B82D7"), 
+		} 
 
 		self.setWindowTitle(title)
 		self.setLayout(QFormLayout())
@@ -37,6 +65,22 @@ class SettingsDialog(QDialog):
 		width = self.sizeHint().width()
 		height = self.sizeHint().height()
 		self.setFixedSize(width if not width > 325 else 325, height if not height > 455 else 455)
+
+	def reset(self):
+		warning = WarningDialog(
+		"Reset Settings", 
+		"All settings will be reset. Would you like to continue?", 
+		no_btn_text="Cancel", 
+		yes_btn_text="Continue", 
+		parent=self).exec_()
+	
+		if not warning:
+			return
+
+		self.prefs.write_prefs("cache", {})
+		self.prefs.write_prefs("settings", self.default_settings)
+		self.prefs.write_prefs("colors", self.default_colors)
+		self.done(1)
 
 	def create_widgets(self):
 		def apply_cache(cache: dict=None, path: str=""):
@@ -85,11 +129,15 @@ class SettingsDialog(QDialog):
 
 		cancel_button = QPushButton(icon=self.style().standardIcon(QStyle.SP_DialogCancelButton), text="Cancel")
 		cancel_button.clicked.connect(cancel_changes)
+		
+		reset_button = QPushButton(text="Reset Settings")
+		reset_button.clicked.connect(lambda: self.reset())
 
 		buttons_widget.layout().addWidget(apply_button)
 		buttons_widget.layout().addWidget(cancel_button)
 
 		self.layout().addRow(tabs)
+		self.layout().addRow(reset_button)
 		self.layout().addRow(buttons_widget)
 
 	def create_general_tab(self):
