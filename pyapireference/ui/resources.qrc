@@ -1,16 +1,16 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/img">
-    <file alias="about_icon.png">img/about_icon.png</file>    
-    <file alias="icon.png">img/icon.png</file>
-    <file alias="logo_without_background.png">img/logo_without_background.png</file>
-    <file alias="edit_icon_dark.png">img/edit_icon_dark.png</file>
-    <file alias="edit_icon_light.png">img/edit_icon_light.png</file>    
+    <file alias="about_icon.png">../../assets/img/about_icon.png</file>    
+    <file alias="icon.png">../../assets/img/icon.png</file>
+    <file alias="logo_without_background.png">../../assets/img/logo_without_background.png</file>
+    <file alias="edit_icon_dark.png">../../assets/img/edit_icon_dark.png</file>
+    <file alias="edit_icon_light.png">../../assets/img/edit_icon_light.png</file>    
 </qresource>
 <qresource prefix="/fonts">
-    <file alias="UbuntuMono-B.ttf">fonts/UbuntuMono-B.ttf</file>
-    <file alias="UbuntuMono-BI.ttf">fonts/UbuntuMono-BI.ttf</file>
-    <file alias="UbuntuMono-R.ttf">fonts/UbuntuMono-R.ttf</file>
-    <file alias="UbuntuMono-RI.ttf">fonts/UbuntuMono-RI.ttf</file>    
+    <file alias="UbuntuMono-B.ttf">../../assets/fonts/UbuntuMono-B.ttf</file>
+    <file alias="UbuntuMono-BI.ttf">../../assets/fonts/UbuntuMono-BI.ttf</file>
+    <file alias="UbuntuMono-R.ttf">../../assets/fonts/UbuntuMono-R.ttf</file>
+    <file alias="UbuntuMono-RI.ttf">../../assets/fonts/UbuntuMono-RI.ttf</file>    
 </qresource>
 </RCC>
 <!-- pyrcc5 resources.qrc -o resources.py -->

@@ -7,7 +7,7 @@
    viewBox="0 0 210 297"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1 (ce6663b3b7, 2021-05-25)"
+   inkscape:version="1.1.1 (eb90963e84, 2021-10-02)"
    sodipodi:docname="PyAPIReference_GUI.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1.0717508"
-     inkscape:cx="107.30106"
-     inkscape:cy="609.74996"
+     inkscape:zoom="2.1435016"
+     inkscape:cx="607.88385"
+     inkscape:cy="333.33308"
      inkscape:window-width="1920"
      inkscape:window-height="948"
      inkscape:window-x="0"
@@ -135,18 +135,18 @@
        x="166.9693"
        y="68.661301"
        ry="14.180115"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/GUI/Images/about_icon.png"
-       inkscape:export-xdpi="50.800003"
-       inkscape:export-ydpi="50.800003" />
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/assets/img/icon.png"
+       inkscape:export-xdpi="63.500004"
+       inkscape:export-ydpi="63.500004" />
     <text
        xml:space="preserve"
        style="font-size:21.1793px;line-height:1.25;font-family:Impact;-inkscape-font-specification:Impact;text-align:center;word-spacing:0px;text-anchor:middle;stroke:#868686;stroke-width:0.211793;stroke-opacity:1"
        x="187.47086"
        y="97.032715"
        id="text109254"
-       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/PyAPIReference/GUI/Images/about_icon.png"
-       inkscape:export-xdpi="50.800003"
-       inkscape:export-ydpi="50.800003"><tspan
+       inkscape:export-filename="/home/cristobal/Documents/Projects/PyAPIReference/assets/img/icon.png"
+       inkscape:export-xdpi="63.500004"
+       inkscape:export-ydpi="63.500004"><tspan
          sodipodi:role="line"
          id="tspan109252"
          style="fill:#ffffff;stroke:#868686;stroke-width:0.211793;stroke-opacity:1"
@@ -228,10 +228,10 @@
        inkscape:export-ydpi="254.00002"><tspan
          x="236.91425"
          y="29.198992"
-         id="tspan1146">Generate API References for Python modules easily with </tspan><tspan
+         id="tspan917">Generate API References for Python modules easily with </tspan><tspan
          x="236.91425"
          y="33.167743"
-         id="tspan1148">a beautiful and intuitive GUI app.</tspan></text>
+         id="tspan919">a beautiful and intuitive GUI app.</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.43958px;line-height:1.25;font-family:'Aller Display';-inkscape-font-specification:'Aller Display';text-align:center;word-spacing:0px;text-anchor:middle;fill:#ffffff;stroke-width:0.264583"

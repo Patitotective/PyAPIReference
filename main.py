@@ -497,17 +497,18 @@ class MainWidget(QWidget):
 			if not warning:
 				return
 
-		if len(self.widgets["module_tabs"]) > 0:
-			self.widgets["module_tabs"][-1].setParent(None)
-			self.widgets["module_tabs"] = []
-		
-		if len(self.widgets["markdown_previewer"]) > 0:
-			# Stop markdown when unloading
-			self.widgets["markdown_previewer"].pop()
+		self.clear_widgets(to_clear=["module_tabs", "markdown_text_edit", "markdown_previewer"])
 
 		self.prefs.write_prefs("current_markdown", "")
 		self.prefs.write_prefs("current_module_path", "")
 		self.prefs.write_prefs("current_module", {})
+
+	def clear_widgets(self, to_clear: list=None):
+		for widget_name, widget_list in self.widgets.items():
+			# print(f"{widget_name}: {len(widget_list) > 1=} and ({to_clear is None=} or {widget_name in to_clear=})")
+			if len(widget_list) > 0 and (to_clear is None or widget_name in to_clear):
+				widget_list[-1].setParent(None)
+				self.widgets[widget_name].pop()
 
 	def load_module_file(self):
 		if len(self.widgets["markdown_previewer"]) > 0:
