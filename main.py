@@ -61,7 +61,7 @@ from pyapireference.extra import (
 from pyapireference.tree_to_markdown import convert_tree_to_markdown
 
 
-THEME = PREFS.read_prefs_file("pyapireference/ui/theme.prefs")
+THEME = PREFS.read_prefs_file(f"pyapireference{os.sep}ui{os.sep}theme.prefs")
 VERSION = "v0.1.50"
 
 
@@ -403,7 +403,7 @@ class MainWidget(QWidget):
 			}
 		}
 
-		self.prefs = PREFS.Prefs(default_prefs, filename="Prefs/settings.prefs")
+		self.prefs = PREFS.Prefs(default_prefs, filename=f"Prefs{os.sep}settings.prefs")
 
 	def main_frame(self):
 		logo = QLabel()
@@ -774,15 +774,13 @@ class MainWidget(QWidget):
 		def preview_markdown():
 			def stop_previewing():
 				self.prefs.write_prefs("state/preview_saved", False)
-				markdown_previewer = self.widgets["markdown_previewer"][-1]
 				
 				if self.parent.isMaximized():
 					if self.prefs.file["settings"]["preview_markdown"]["maximize_window"]["value"]:
 						self.save_geometry_at_end = True	
 						self.parent.restore_geometry()
 	
-				markdown_previewer.setParent(None)
-				self.widgets["markdown_previewer"].pop()
+				self.clear_widgets(to_clear=["markdown_previewer"])
 
 			def preview_already_live():
 				answer = WarningDialog(
