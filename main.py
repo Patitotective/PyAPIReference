@@ -44,6 +44,7 @@ from pyapireference.ui.markdownhighlighter import MarkdownHighlighter
 from pyapireference.ui.warning_dialog import WarningDialog
 from pyapireference.ui.button_with_extra_options import ButtonWithExtraOptions
 from pyapireference.ui.filter_dialog import FilterDialog
+from pyapireference.ui.bug_dialog import BugDialog
 from pyapireference.ui.markdown_previewer import MarkdownPreviewer
 from pyapireference.ui.about_dialog import AboutDialog
 from pyapireference.ui.markdown_text_edit import MarkdownTextEdit
@@ -211,6 +212,9 @@ class MainWindow(QMainWindow):
 			}, 
 			"About &PyAPIReference": {
 				"callback": lambda: AboutDialog(VERSION, THEME[self.main_widget.current_theme]["link_color"], self).exec_()
+			},
+			"Report a Bug": {
+				"callback": self.create_bug_dialog
 			}
 		}
 
@@ -254,6 +258,21 @@ class MainWindow(QMainWindow):
 
 		if self.main_widget.current_theme != preivous_theme:
 			self.reset_app()
+	
+	def create_bug_dialog(self):
+		bug_dialog = BugDialog(parent=self)
+		answer = bug_dialog.exec()
+		
+		if not answer:
+			return
+
+		if answer == 1:
+			#add bug-sent dialog
+			pass
+
+		if answer == 2:
+			#add bug failed dialog
+			pass
 
 	def reset_app(self):
 		self.close() # Close
