@@ -7,5 +7,7 @@ markdown
 m2r2
 casestyle
 commonmark
+cryptography
 PyQtWebEngine
+sendgrid
 pygments>=2.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
